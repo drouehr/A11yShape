@@ -36,7 +36,7 @@ def get_difference(code, prev):
     
     cl = code.split('module')
     pl = prev.split('module')
-    
+
     diff = []
     
     if len(cl) == len(pl):

@@ -110,7 +110,7 @@ def get_concat_h(im1, im2):
 def run(req, model):
     code = req['code']
     if 'prev' in req:
-        d = get_difference(code, prev)
+        d = get_difference(code, req['prev'])
         response = {'description': d}
         return response
     
@@ -411,4 +411,6 @@ module icosahedron(a = 2) {
     """
 
 req = {'code': testing, 'prev': prev}
+
+req = {"code":"$fn=32; cube(); sphere();", "prev":"$fn=32; cube();"}
 #print(run(req, 'gpt4'))
