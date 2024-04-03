@@ -4,8 +4,10 @@
 from flask import Flask, Response, request, jsonify
 from main import run
 from waitress import serve
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/')
 def hello_world():
@@ -15,7 +17,10 @@ def hello_world():
 def code2fab():
     req = request.json
     #return jsonify(req['code'])
-    return jsonify(run(req, 'gpt4'))
+    response = jsonify(run(req, 'gpt4'))
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+    
 
 @app.route('/code2fabtest', methods=['GET'])
 def code2fabtest():
@@ -27,4 +32,4 @@ def code2fabtest():
     #return testing
     return run(testing, 'gpt4')
 
-serve(app, host='0.0.0.0', port=8880, threads=1)
+serve(app, host='0.0.0.0', port=5000, threads=1)

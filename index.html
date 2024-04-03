@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>
+        Code2Fab
+    </title>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+        integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+
+<body class="bg-gray-200">
+    <!-- Main Content -->
+    <div class="flex h-screen">
+        <!-- Sidebar for Code -->
+        <div class="w-1/3 bg-white border-r border-gray-300 flex flex-col">
+            <!-- Code Editor Toolbar -->
+            <div class="bg-white border-b border-gray-300 px-2 py-1 flex justify-between items-center">
+                <div class="flex items-center space-x-1">
+                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="save-code">
+                        <i class="fas fa-save"></i>
+                    </button>
+                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="undo-change">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="redo-change">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+                <div class="flex items-center space-x-1">
+                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="generate-model">
+                        <i class="fas fa-cube"></i>
+                        Generate Model
+                    </button>
+                </div>
+            </div>
+            <!-- Code Editor Area -->
+            <div class="flex-grow overflow-auto">
+                <textarea class="w-full h-full p-2 text-sm text-gray-700 font-mono focus:outline-none"
+                    id="openscad-code" placeholder="// Enter OpenSCAD code here..." style="resize: none;"></textarea>
+            </div>
+            <!-- Prompt and Code2fab Response Area -->
+            <div class="flex-grow border-t border-gray-300 p-2 overflow-auto flex flex-col">
+                <div class="flex-grow">
+                    <p class="text-sm text-gray-700 mb-2">Prompt:</p>
+                    <textarea
+                        class="w-full h-1/2 p-2 text-sm text-gray-700 font-mono focus:outline-none border border-gray-300"
+                        id="gpt-input" placeholder="Enter your prompt here..." style="resize: none;"></textarea>
+                    <!-- Buttons below the prompt textbox -->
+                    <div class="flex justify-between mt-2">
+                        <button id="describe"
+                            class="bg-blue-200 hover:bg-blue-300 text-black font-bold py-2 px-3 rounded">
+                            Describe Model
+                        </button>
+                        <button id="match"
+                            class="bg-green-200 hover:bg-green-300 text-black font-bold py-2 px-3 rounded">
+                            Match Code
+                        </button>
+                        <button id="analysis"
+                            class="bg-yellow-200 hover:bg-yellow-300 text-black font-bold py-2 px-3 rounded">
+                            Analysis Code
+                        </button>
+                        <button id="improve" class="bg-red-200 hover:bg-red-300 text-black font-bold py-2 px-3 rounded">
+                            Improve Code
+                        </button>
+                    </div>
+                </div>
+                <div class="flex-grow border-t border-gray-300 mt-2 pt-2">
+                    <p class="text-sm text-gray-700 mb-2">Code2fab Response:</p>
+                    <div class="w-full h-1/2 p-2 text-sm text-gray-700 font-mono bg-gray-50 overflow-auto">
+                        <!-- GPT response content goes here -->
+                        <p id="code2fab-response" class="text-gray-500">Code2fab responses will appear here...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Main Viewport and Logs -->
+        <div class="w-2/3 h-screen flex-col">
+            <!-- Viewport Header -->
+            <div class="flex">
+            </div>
+            <!-- Viewport Content -->
+            <div class="flex-grow bg-gray-100 overflow-auto flex">
+                <div id="stl_cont" class="w-full h-screen justify-center items-center"></div>
+            </div>
+            <script src="static/stl_viewer/stl_viewer.min.js"></script>
+
+            <!-- JavaScript for sending code to backend and handling response -->
+            <script>
+                var modelIdCounter = 1;
+                var zoom_value = 1;
+
+                document.getElementById('generate-model').addEventListener('click', function () {
+                    var code = document.getElementById('openscad-code').value;
+                    console.log("Generating STL for code:", code);
+
+                    fetch('/generate-stl', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ code: code }),
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.stlUrl) {
+                                stl_viewer.clean()
+                                stl_viewer.add_model({ id: modelIdCounter++, filename: data.stlUrl, color: "#F9D72C", mesh: 100000 });
+                                console.log("Model loaded:", data.stlUrl);
+                            } else {
+                                console.error("STL URL not provided in response.");
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error during STL generation or loading:', error);
+                        });
+                });
+
+                document.getElementById('describe').addEventListener('click', function () {
+                    callGPTAPI('describe');
+                });
+
+                document.getElementById('match').addEventListener('click', function () {
+                    callGPTAPI('match');
+                });
+
+                document.getElementById('analysis').addEventListener('click', function () {
+                    callGPTAPI('analysis');
+                });
+
+                document.getElementById('improve').addEventListener('click', function () {
+                    callGPTAPI('improve');
+                });
+
+                function callGPTAPI(buttonId) {
+                    const text = document.getElementById('openscad-code').value;
+					console.log(text);
+                    
+                    const { timeout = 80000 } = {timeout: 60000};
+                    const controller = new AbortController();
+                    const id = setTimeout(() => controller.abort(), timeout);
+                    
+                    fetch('http://128.46.81.40:5000/code2fab', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code: text, button_id: buttonId }),
+                        signal: controller.signal
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log(data)
+                            document.getElementById('code2fab-response').innerHTML = data.description;
+                        })
+                        .catch(error => console.error('Error:', error));
+                }
+
+
+                var stl_viewer = new StlViewer(document.getElementById("stl_cont"), {
+                    models: [{ filename: "/static/models/bg.stl", color: "#F9D72C", mesh: 1000, display: "flat" }],
+                });
+
+                // Keyboard control for model rotation and movement
+                let controlActive = false;
+                const stlViewerContainer = document.getElementById("stl_cont");
+
+                stlViewerContainer.addEventListener('click', function (event) {
+                    controlActive = !controlActive;
+                    console.log('Model control is ' + (controlActive ? 'active' : 'inactive'));
+                    event.stopPropagation();
+                }, true);
+
+
+                document.addEventListener('click', function () {
+                    if (controlActive) {
+                        controlActive = false;
+                        console.log('Model control deactivated.');
+                    }
+                });
+
+                document.addEventListener('keydown', function (event) {
+                    if (!controlActive) {
+                        return;
+                    }
+
+                    event.preventDefault();
+
+                    if (stl_viewer && stl_viewer.models.length > 0) {
+                        let model_id = modelIdCounter - 1;
+                        let current_position = stl_viewer.get_model_info(model_id).position;
+                        const step = 0.1;
+                        const move_distance = 1;
+
+                        switch (event.key) {
+                            case 'a':
+                            case 'A':
+                                stl_viewer.rotate(model_id, 0, -step, null);
+                                break;
+                            case 'd':
+                            case 'D':
+                                stl_viewer.rotate(model_id, 0, step, null);
+                                break;
+                            case 'w':
+                            case 'W':
+                                stl_viewer.rotate(model_id, -step, null, null);
+                                break;
+                            case 's':
+                            case 'S':
+                                stl_viewer.rotate(model_id, step, null, null);
+                                break;
+                            case 'ArrowRight':
+                                stl_viewer.set_position(model_id, current_position.x + move_distance, current_position.y, current_position.z);
+                                break;
+                            case 'ArrowLeft':
+                                stl_viewer.set_position(model_id, current_position.x - move_distance, current_position.y, current_position.z);
+                                break;
+                            case 'ArrowDown':
+                                stl_viewer.set_position(model_id, current_position.x, current_position.y - move_distance, current_position.z);
+                                break;
+                            case 'ArrowUp':
+                                stl_viewer.set_position(model_id, current_position.x, current_position.y + move_distance, current_position.z);
+                                break;
+                            case 'q':
+                            case 'Q':
+                                zoom_value = Math.max(zoom_value - 0.05, 0.1);
+                                stl_viewer.set_scale(model_id, zoom_value);
+                                break;
+                            case 'e':
+                            case 'E':
+                                zoom_value = Math.min(zoom_value + 0.05, 10);
+                                stl_viewer.set_scale(model_id, zoom_value);
+                                break;
+                        }
+                    }
+                });
+
+            </script>
+
+
+
+</body>
+
+</html>

@@ -108,6 +108,7 @@ def get_concat_h(im1, im2):
     
 
 def run(req, model):
+    #print('running')
     code = req['code']
     if 'prev' in req:
         d = get_difference(code, req['prev'])
