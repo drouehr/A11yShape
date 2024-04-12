@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
@@ -12,8 +11,22 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"
         integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+
+    <style>
+        .code2fab-container {
+            overflow-x: hidden;
+        }
+
+        .code2fab-content {
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            word-break: break-all;
+        }
+    </style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
+
 
 <body class="bg-gray-200">
     <!-- Main Content -->
@@ -23,18 +36,27 @@
             <!-- Code Editor Toolbar -->
             <div class="bg-white border-b border-gray-300 px-2 py-1 flex justify-between items-center">
                 <div class="flex items-center space-x-1">
-                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="save-code">
+                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="settings-button" tabindex="0">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="save-code" tabindex="0">
                         <i class="fas fa-save"></i>
                     </button>
-                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="undo-change">
-                        <i class="fas fa-undo"></i>
+                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="refresh-files" tabindex="0">
+                        <i class="fas fa-sync"></i>
                     </button>
-                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="redo-change">
-                        <i class="fas fa-redo"></i>
+                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="upload-file" tabindex="0">
+                        <i class="fas fa-upload"></i>
                     </button>
+                    <input type="file" id="file-input" style="display: none;" accept=".scad">
+                    <select id="file-list" class="text-gray-600 hover:bg-gray-100 p-1 rounded" tabindex="0">
+                        <option>Select a file</option>
+                    </select>
+
                 </div>
                 <div class="flex items-center space-x-1">
-                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="generate-model">
+                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive" id="generate-model"
+                        tabindex="0" data-hover-text="Generate Model here">
                         <i class="fas fa-cube"></i>
                         Generate Model
                     </button>
@@ -42,40 +64,50 @@
             </div>
             <!-- Code Editor Area -->
             <div class="flex-grow overflow-auto">
-                <textarea class="w-full h-full p-2 text-sm text-gray-700 font-mono focus:outline-none"
-                    id="openscad-code" placeholder="// Enter OpenSCAD code here..." style="resize: none;"></textarea>
+                <textarea class="w-full h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
+                    id="openscad-code" placeholder="// Enter OpenSCAD code here..." style="resize: none;"
+                    data-hover-text="Enter OpenSCAD code here."></textarea>
             </div>
+
             <!-- Prompt and Code2fab Response Area -->
             <div class="flex-grow border-t border-gray-300 p-2 overflow-auto flex flex-col">
                 <div class="flex-grow">
                     <p class="text-sm text-gray-700 mb-2">Prompt:</p>
                     <textarea
-                        class="w-full h-1/2 p-2 text-sm text-gray-700 font-mono focus:outline-none border border-gray-300"
-                        id="gpt-input" placeholder="Enter your prompt here..." style="resize: none;"></textarea>
+                        class="w-full h-1/2 p-2 text-sm text-gray-700 font-mono focus:outline-none border border-gray-300 interactive"
+                        id="gpt-input" placeholder="Enter your prompt here..." style="resize: none;"
+                        data-hover-text="Enter prompt here."></textarea>
                     <!-- Buttons below the prompt textbox -->
                     <div class="flex justify-between mt-2">
                         <button id="describe"
-                            class="bg-blue-200 hover:bg-blue-300 text-black font-bold py-2 px-3 rounded">
+                            class="bg-blue-200 hover:bg-blue-300 text-black font-bold py-2 px-3 rounded interactive"
+                            data-hover-text="Describe Model">
                             Describe Model
                         </button>
                         <button id="match"
-                            class="bg-green-200 hover:bg-green-300 text-black font-bold py-2 px-3 rounded">
+                            class="bg-green-200 hover:bg-green-300 text-black font-bold py-2 px-3 rounded interactive"
+                            data-hover-text="Match code">
                             Match Code
                         </button>
                         <button id="analysis"
-                            class="bg-yellow-200 hover:bg-yellow-300 text-black font-bold py-2 px-3 rounded">
-                            Analysis Code
+                            class="bg-yellow-200 hover:bg-yellow-300 text-black font-bold py-2 px-3 rounded interactive"
+                            data-hover-text="Analyze Code">
+                            Analyze Code
                         </button>
-                        <button id="improve" class="bg-red-200 hover:bg-red-300 text-black font-bold py-2 px-3 rounded">
+                        <button id="improve"
+                            class="bg-red-200 hover:bg-red-300 text-black font-bold py-2 px-3 rounded interactive"
+                            data-hover-text="Improve Code">
                             Improve Code
                         </button>
                     </div>
                 </div>
                 <div class="flex-grow border-t border-gray-300 mt-2 pt-2">
                     <p class="text-sm text-gray-700 mb-2">Code2fab Response:</p>
-                    <div class="w-full h-1/2 p-2 text-sm text-gray-700 font-mono bg-gray-50 overflow-auto">
+                    <div
+                        class="code2fab-container w-full h-1/2 p-2 text-sm text-gray-700 font-mono bg-gray-50 overflow-auto">
                         <!-- GPT response content goes here -->
-                        <p id="code2fab-response" class="text-gray-500">Code2fab responses will appear here...</p>
+                        <div id="code2fab-response" class="code2fab-content text-gray-500 interactive"
+                            data-hover-text="Code2fab's response">Code2fab's responses will appear here...</div>
                     </div>
                 </div>
             </div>
@@ -87,7 +119,21 @@
             </div>
             <!-- Viewport Content -->
             <div class="flex-grow bg-gray-100 overflow-auto flex">
-                <div id="stl_cont" class="w-full h-screen justify-center items-center"></div>
+                <div id="stl_cont" class="w-full h-screen justify-center items-center" style="position: relative;">
+
+                    <div class="flex items-center" style="min-height: 40px;">
+                        <button id="toggle-control"
+                            class="bg-grey-800 hover:bg-grey-900 text-black font-bold py-1 px-3 rounded interactive"
+                            data-hover-text="Control Model">
+                            Control Model
+                        </button>
+                        <div id="statusDisplay"
+                            class="bg-white border-b border-gray-300 px-2 py-1 flex justify-between items-center"
+                            style="min-height: 40px; flex-grow: 1;">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
             <script src="static/stl_viewer/stl_viewer.min.js"></script>
 
@@ -96,9 +142,61 @@
                 var modelIdCounter = 1;
                 var zoom_value = 1;
 
+                const statusDisplay = document.getElementById("statusDisplay");
+                function updateStatusAndSpeak(text) {
+                    statusDisplay.textContent = text;
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.rate = 6;
+                    speechSynthesis.speak(utterance);
+                }
+
+                const elements = [
+                    { id: "save-code", key: "Ctrl+Shift+S", text: "Save the OpenSCAD code." },
+                    { id: "refresh-files", key: "Ctrl+Shift+R", text: "Clear the file list." },
+                    { id: "upload-file", key: "Ctrl+Shift+U", text: "Upload a new OpenSCAD file." },
+                    { id: "file-list", key: "Ctrl+Shift+L", text: "Open the version list." },
+                    { id: "generate-model", key: "Ctrl+Shift+G", text: "Generate a 3D model from the code." },
+                    { id: "openscad-code", key: "Ctrl+Shift+O", text: "Enter OpenSCAD code here." },
+                    { id: "gpt-input", key: "Ctrl+Shift+P", text: "Enter your input here." },
+                    { id: "describe", key: "Ctrl+Shift+D", text: "Describe the current model." },
+                    { id: "match", key: "Ctrl+Shift+M", text: "Match the model and code." },
+                    { id: "analysis", key: "Ctrl+Shift+A", text: "Analyze the code." },
+                    { id: "improve", key: "Ctrl+Shift+I", text: "Improve the code." },
+                    { id: "toggle-control", key: "Ctrl+Shift+T", text: "Click to toggle the control state." }
+                ];
+
+
+                document.addEventListener('keydown', function (event) {
+                    //console.log(event.key, event.ctrlKey, event.shiftKey); 
+                    if (event.ctrlKey && event.shiftKey) {
+                        elements.forEach(item => {
+                            if (event.key.toUpperCase() === item.key.split('+').pop()) {
+                                const element = document.getElementById(item.id);
+                                if (element) {
+                                    element.focus();
+                                    updateStatusAndSpeak(item.text);
+                                }
+                            }
+                        });
+                    }
+                });
+
+                elements.forEach(item => {
+                    const element = document.getElementById(item.id);
+                    if (element) {
+                        element.addEventListener('focus', function () {
+                            updateStatusAndSpeak(item.text);
+                        });
+                        element.addEventListener('mouseenter', function () {
+                            updateStatusAndSpeak(item.text);
+                        });
+                    }
+                });
+
                 document.getElementById('generate-model').addEventListener('click', function () {
                     var code = document.getElementById('openscad-code').value;
                     console.log("Generating STL for code:", code);
+                    updateStatusAndSpeak("Start generating models...");
 
                     fetch('/generate-stl', {
                         method: 'POST',
@@ -118,32 +216,19 @@
                                 stl_viewer.clean()
                                 stl_viewer.add_model({ id: modelIdCounter++, filename: data.stlUrl, color: "#F9D72C", mesh: 100000 });
                                 console.log("Model loaded:", data.stlUrl);
+                                updateStatusAndSpeak("The model has been rendered.");
                             } else {
                                 console.error("STL URL not provided in response.");
+                                updateStatusAndSpeak("Model rendering failed, please check the code or network.");
                             }
                         })
                         .catch(error => {
                             console.error('Error during STL generation or loading:', error);
+                            updateStatusAndSpeak("Model rendering failed: ", error);
                         });
                 });
 
                 document.getElementById('describe').addEventListener('click', function () {
-                    callGPTAPI('describe');
-                });
-
-                document.getElementById('match').addEventListener('click', function () {
-                    callGPTAPI('match');
-                });
-
-                document.getElementById('analysis').addEventListener('click', function () {
-                    callGPTAPI('analysis');
-                });
-
-                document.getElementById('improve').addEventListener('click', function () {
-                    callGPTAPI('improve');
-                });
-
-                function callGPTAPI(buttonId) {
                     const text = document.getElementById('openscad-code').value;
 					console.log(text);
                     
@@ -154,7 +239,7 @@
                     fetch('http://128.46.81.40:5000/code2fab', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ code: text, button_id: buttonId }),
+                        body: JSON.stringify({ code: text, button_id: 'describe' }),
                         signal: controller.signal
                     })
                         .then(response => response.json())
@@ -163,30 +248,203 @@
                             document.getElementById('code2fab-response').innerHTML = data.description;
                         })
                         .catch(error => console.error('Error:', error));
-                }
+                
+                    /*
+                    const code = document.getElementById('openscad-code').value;
+                    const text = document.getElementById('gpt-input').value;
+                    const responseContainer = document.getElementById('code2fab-response');
+                    responseContainer.innerHTML = '<pre></pre>';
+                    const pre = responseContainer.querySelector('pre');
+                    updateStatusAndSpeak("The system reply is loading...")
+
+                    html2canvas(document.getElementById('stl_cont')).then(canvas => {
+                        canvas.toBlob(blob => {
+                            const formData = new FormData();
+                            formData.append('image', blob, 'temp.jpg');
+                            formData.append('text', text);
+                            formData.append('code', code);
+
+                            fetch('/api/describe', {
+                                method: 'POST',
+                                body: formData
+                            })
+                                .then(response => {
+                                    const reader = response.body.getReader();
+                                    function processStream({ done, value }) {
+                                        if (done) {
+                                            console.log('Stream completed');
+                                            updateStatusAndSpeak("Please check the system reply.");
+                                            return;
+                                        }
+                                        const chunk = new TextDecoder().decode(value);
+                                        pre.textContent += chunk;
+
+                                        return reader.read().then(processStream);
+                                    }
+                                    return reader.read().then(processStream);
+                                    updateStatusAndSpeak("Please try again.");
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    updateStatusAndSpeak("Please try again.");
+                                });
+                        });
+                    });
+                    */
+                });
+
+                document.getElementById('match').addEventListener('click', function () {
+                    const code = document.getElementById('openscad-code').value;
+                    const text = document.getElementById('gpt-input').value;
+                    const responseContainer = document.getElementById('code2fab-response');
+                    responseContainer.innerHTML = '<pre></pre>';
+                    const pre = responseContainer.querySelector('pre');
+                    updateStatusAndSpeak("The system reply is loading...")
+
+                    html2canvas(document.getElementById('stl_cont')).then(canvas => {
+                        canvas.toBlob(blob => {
+                            const formData = new FormData();
+                            formData.append('image', blob, 'temp.jpg');
+                            formData.append('text', text);
+                            formData.append('code', code);
+
+                            fetch('/api/match', {
+                                method: 'POST',
+                                body: formData
+                            })
+                                .then(response => {
+                                    const reader = response.body.getReader();
+                                    function processStream({ done, value }) {
+                                        if (done) {
+                                            console.log('Stream completed');
+                                            updateStatusAndSpeak("Please check the system reply.");
+                                            return;
+                                        }
+                                        const chunk = new TextDecoder().decode(value);
+                                        pre.textContent += chunk;
+
+                                        return reader.read().then(processStream);
+                                    }
+                                    return reader.read().then(processStream);
+                                    updateStatusAndSpeak("Please try again.");
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    updateStatusAndSpeak("Please try again.");
+                                });
+                        });
+                    });
+                });
+
+
+                document.getElementById('analysis').addEventListener('click', function () {
+                    const text = document.getElementById('gpt-input').value;
+                    const responseContainer = document.getElementById('code2fab-response');
+                    responseContainer.innerHTML = '<pre></pre>';
+                    const pre = responseContainer.querySelector('pre');
+                    updateStatusAndSpeak("The system reply is loading...");
+
+                    fetch('/api/analysis', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: text })
+                    })
+                        .then(response => {
+                            const reader = response.body.getReader();
+                            function processStream({ done, value }) {
+                                if (done) {
+                                    console.log('Stream completed');
+                                    updateStatusAndSpeak("Please check the system reply.");
+                                    return;
+                                }
+                                const chunk = new TextDecoder().decode(value);
+                                pre.textContent += chunk;
+
+                                return reader.read().then(processStream);
+                            }
+                            return reader.read().then(processStream);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            updateStatusAndSpeak("Please try again.");
+                        });
+                });
+
+                document.getElementById('improve').addEventListener('click', function () {
+                    const text = document.getElementById('gpt-input').value;
+                    const responseContainer = document.getElementById('code2fab-response');
+                    responseContainer.innerHTML = '<pre></pre>';
+                    const pre = responseContainer.querySelector('pre');
+                    updateStatusAndSpeak("The system reply is loading...");
+
+                    fetch('/api/improve', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: text })
+                    })
+                        .then(response => {
+                            const reader = response.body.getReader();
+                            function processStream({ done, value }) {
+                                if (done) {
+                                    console.log('Stream completed');
+                                    updateStatusAndSpeak("Please check the system reply.");
+                                    return;
+                                }
+                                const chunk = new TextDecoder().decode(value);
+                                pre.textContent += chunk;
+
+                                return reader.read().then(processStream);
+                            }
+                            return reader.read().then(processStream);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            updateStatusAndSpeak("Please try again.");
+                        });
+                });
 
 
                 var stl_viewer = new StlViewer(document.getElementById("stl_cont"), {
                     models: [{ filename: "/static/models/bg.stl", color: "#F9D72C", mesh: 1000, display: "flat" }],
                 });
 
-                // Keyboard control for model rotation and movement
                 let controlActive = false;
                 const stlViewerContainer = document.getElementById("stl_cont");
+                const toggleControlButton = document.getElementById("toggle-control");
 
-                stlViewerContainer.addEventListener('click', function (event) {
+                toggleControlButton.addEventListener('click', function () {
                     controlActive = !controlActive;
-                    console.log('Model control is ' + (controlActive ? 'active' : 'inactive'));
-                    event.stopPropagation();
-                }, true);
+                    updateStatus();
+                });
 
-
-                document.addEventListener('click', function () {
-                    if (controlActive) {
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === "Escape") {
                         controlActive = false;
-                        console.log('Model control deactivated.');
+                        updateStatus();
                     }
                 });
+
+                const fileList = document.getElementById('file-list');
+
+                fileList.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter' || event.keyCode === 13) {
+                        const mouseEvent = new MouseEvent('mousedown', {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window
+                        });
+                        fileList.dispatchEvent(mouseEvent);
+                    }
+                });
+
+                function updateStatus() {
+                    const statusText = 'Control is ' + (controlActive ? 'active. Clike or enter ESC key to cancel.' : 'disabled');
+                    statusDisplay.textContent = statusText;
+
+                    const utterance = new SpeechSynthesisUtterance(statusText);
+                    utterance.rate = 8;
+                    speechSynthesis.speak(utterance);
+                }
 
                 document.addEventListener('keydown', function (event) {
                     if (!controlActive) {
@@ -244,10 +502,127 @@
                     }
                 });
 
+                let currentFileIndex = -1;
+                let files = [];
+
+                document.getElementById('save-code').addEventListener('click', function () {
+                    const code = document.getElementById('openscad-code').value;
+                    let fileName = prompt("Enter file name (leave blank for automatic naming):");
+
+                    if (fileName === null) {
+                        return;
+                    }
+
+                    if (fileName.trim() === '') {
+                        fileName = undefined;
+                    } else {
+                        if (!fileName.endsWith('.scad')) {
+                            fileName += '.scad';
+                        }
+                    }
+
+                    fetch('/save-code', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ code, fileName })
+                    })
+                        .then(response => response.text())
+                        .then(result => {
+                            console.log(result);
+                            loadFileList();
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Error saving file.');
+                        });
+                });
+
+                document.getElementById('refresh-files').addEventListener('click', function () {
+                    if (confirm('Are you sure you want to delete all files? This action cannot be undone.')) {
+                        const userInput = prompt('Please type "clear" to confirm deletion:');
+                        if (userInput === 'clear') {
+                            fetch('/delete-all-files', {
+                                method: 'POST'
+                            })
+                                .then(response => response.text())
+                                .then(result => {
+                                    console.log(result);
+                                    loadFileList();
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    alert('Error deleting files.');
+                                });
+                        } else {
+                            alert('Deletion cancelled. Incorrect confirmation word.');
+                        }
+                    }
+                });
+
+                function loadCode(fileName) {
+                    fetch(`/load-code/${fileName}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById('openscad-code').value = data.code;
+                            console.log(`Loaded code from file: ${fileName}`);
+                        })
+                        .catch(error => {
+                            console.error('Error loading code:', error);
+                            alert('Error loading file.');
+                        });
+                }
+
+                document.getElementById('upload-file').addEventListener('click', function () {
+                    document.getElementById('file-input').click();
+                });
+
+                document.getElementById('file-input').addEventListener('change', function (event) {
+                    const file = event.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        document.getElementById('openscad-code').value = e.target.result;
+                        console.log(`Uploaded file: ${file.name}`);
+                    };
+                    reader.readAsText(file);
+                });
+
+                document.getElementById('file-list').addEventListener('change', function () {
+                    const fileName = this.value;
+                    if (fileName !== 'Select a file') {
+                        fetch(`/load-code/${fileName}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                document.getElementById('openscad-code').value = data.code;
+                                console.log(`Loaded code from file: ${fileName}`);
+                            })
+                            .catch(error => {
+                                console.error('Error loading code:', error);
+                                alert('Error loading file.');
+                            });
+                    }
+                });
+
+                function loadFileList() {
+                    fetch('/get-files')
+                        .then(response => response.json())
+                        .then(files => {
+                            const fileList = document.getElementById('file-list');
+                            fileList.innerHTML = '<option>Select a file</option>';
+                            files.forEach(file => {
+                                const option = document.createElement('option');
+                                option.value = file;
+                                option.textContent = file;
+                                fileList.appendChild(option);
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error fetching file list:', error);
+                            alert('Error loading file list.');
+                        });
+                }
+                loadFileList();
             </script>
-
-
-
 </body>
-
 </html>
