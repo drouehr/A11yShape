@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
@@ -23,508 +24,378 @@
             overflow-wrap: break-word;
             word-break: break-all;
         }
+
+        .hidden {
+            display: none;
+        }
+        .text-left {
+    text-align: left;
+}
+        pre {
+            white-space: pre-wrap;
+        }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 
 
-<body class="bg-gray-200">
-    <!-- Main Content -->
-    <div class="flex h-screen">
-        <!-- Sidebar for Code -->
-        <div class="w-1/3 bg-white border-r border-gray-300 flex flex-col">
-            <!-- Code Editor Toolbar -->
-            <div class="bg-white border-b border-gray-300 px-2 py-1 flex justify-between items-center">
-                <div class="flex items-center space-x-1">
-                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="settings-button" tabindex="0">
-                        <i class="fas fa-cog"></i>
-                    </button>
-                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="save-code" tabindex="0">
-                        <i class="fas fa-save"></i>
-                    </button>
-                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="refresh-files" tabindex="0">
-                        <i class="fas fa-sync"></i>
-                    </button>
-                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded" id="upload-file" tabindex="0">
-                        <i class="fas fa-upload"></i>
-                    </button>
-                    <input type="file" id="file-input" style="display: none;" accept=".scad">
-                    <select id="file-list" class="text-gray-600 hover:bg-gray-100 p-1 rounded" tabindex="0">
-                        <option>Select a file</option>
-                    </select>
+<body class="bg-gray-100 h-screen border border-black">
+    <div class="flex h-3/4">
+        <!-- Main Content -->
+        <div class="flex w-full h-screen border border-black p-1">
+            <!-- Sidebar for Code -->
+            <div class="w-3/5 h-3/4 bg-white border-t border-gray-300 flex flex-col flex flex-col">
+                <div class="flex h-4/5 border border-black p-1">
+                    <!-- Code Editor Area 1 -->
+                    <div class="w-1/2 h-full overflow-auto border border-black p-1">
+                        <!-- Code Editor Toolbar -->
+                        <div
+                            class="bg-white border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none border border-black p-1">
+                            <div class="flex items-center space-x-1">
+                                <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black p-1"
+                                    id="save-code" tabindex="0">
+                                    <i class="fas fa-save"></i>
+                                </button>
+                                <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black p-1"
+                                    id="refresh-files" tabindex="0">
+                                    <i class="fas fa-sync"></i>
+                                </button>
+                                <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black p-1"
+                                    id="upload-file" tabindex="0">
+                                    <i class="fas fa-upload"></i>
+                                </button>
+                                <input type="file" id="file-input" style="display: none;" accept=".scad">
+                                <select id="file-list"
+                                    class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black p-1"
+                                    tabindex="0">
+                                    <option>Select a file</option>
+                                </select>
 
-                </div>
-                <div class="flex items-center space-x-1">
-                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive" id="generate-model"
-                        tabindex="0" data-hover-text="Generate Model here">
-                        <i class="fas fa-cube"></i>
-                        Generate Model
-                    </button>
-                </div>
-            </div>
-            <!-- Code Editor Area -->
-            <div class="flex-grow overflow-auto">
-                <textarea class="w-full h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
-                    id="openscad-code" placeholder="// Enter OpenSCAD code here..." style="resize: none;"
-                    data-hover-text="Enter OpenSCAD code here."></textarea>
-            </div>
-
-            <!-- Prompt and Code2fab Response Area -->
-            <div class="flex-grow border-t border-gray-300 p-2 overflow-auto flex flex-col">
-                <div class="flex-grow">
-                    <p class="text-sm text-gray-700 mb-2">Prompt:</p>
-                    <textarea
-                        class="w-full h-1/2 p-2 text-sm text-gray-700 font-mono focus:outline-none border border-gray-300 interactive"
-                        id="gpt-input" placeholder="Enter your prompt here..." style="resize: none;"
-                        data-hover-text="Enter prompt here."></textarea>
-                    <!-- Buttons below the prompt textbox -->
-                    <div class="flex justify-between mt-2">
-                        <button id="describe"
-                            class="bg-blue-200 hover:bg-blue-300 text-black font-bold py-2 px-3 rounded interactive"
-                            data-hover-text="Describe Model">
-                            Describe Model
-                        </button>
-                        <button id="match"
-                            class="bg-green-200 hover:bg-green-300 text-black font-bold py-2 px-3 rounded interactive"
-                            data-hover-text="Match code">
-                            Match Code
-                        </button>
-                        <button id="analysis"
-                            class="bg-yellow-200 hover:bg-yellow-300 text-black font-bold py-2 px-3 rounded interactive"
-                            data-hover-text="Analyze Code">
-                            Analyze Code
-                        </button>
-                        <button id="improve"
-                            class="bg-red-200 hover:bg-red-300 text-black font-bold py-2 px-3 rounded interactive"
-                            data-hover-text="Improve Code">
-                            Improve Code
-                        </button>
+                            </div>
+                            <div class="flex items-center space-x-1 border border-black p-1">
+                                <button class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive"
+                                    id="generate-model" tabindex="0" data-hover-text="Generate Model here">
+                                    <i class="fas fa-cube"></i>
+                                    Generate Model
+                                </button>
+                            </div>
+                        </div>
+                        <textarea class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
+                            id="openscad-code" placeholder="// Enter OpenSCAD code here..."
+                            style="resize: none; height: calc(55vh - 36px); width: calc(100% - 4px);"
+                            data-hover-text="Enter OpenSCAD code here."></textarea>
+                    </div>
+                    <!-- Area 2 -->
+                    <div class="w-1/2 h-full overflow-auto  border border-black p-1">
+                        <textarea
+                            class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive border border-black"
+                            id="openscad-code2" placeholder="// The modular structure of the code will appear here..."
+                            style="resize: none; height: 57.5vh; width: calc(100% - 2px);"
+                            data-hover-text="Enter OpenSCAD code here."></textarea>
                     </div>
                 </div>
-                <div class="flex-grow border-t border-gray-300 mt-2 pt-2">
-                    <p class="text-sm text-gray-700 mb-2">Code2fab Response:</p>
-                    <div
-                        class="code2fab-container w-full h-1/2 p-2 text-sm text-gray-700 font-mono bg-gray-50 overflow-auto">
-                        <!-- GPT response content goes here -->
-                        <div id="code2fab-response" class="code2fab-content text-gray-500 interactive"
-                            data-hover-text="Code2fab's response">Code2fab's responses will appear here...</div>
+
+                <!-- Prompt and Code2fab Response Area -->
+                <div class="h-1/5 overflow-auto flex flex-col border border-black p-1">
+                    <div class="h-1/3">
+                        <p class="text-sm text-gray-700 mb-2">Prompt:</p>
+                        <textarea
+                            class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive border border-black p-1"
+                            id="gpt-input" placeholder="Enter your prompt here..." style="resize: none; height: 38px;"
+                            data-hover-text="Enter prompt here."></textarea>
+                        <!-- Buttons below the prompt textbox -->
+                        <div class="flex justify-end items-end"><button
+                                class="mt-1 text-black font-bold py-1 px-4 rounded border border-black p-1 "
+                                id="callGPT">
+                                Enter
+                            </button></div>
+
+                    </div>
+                </div>
+            </div>
+            <!-- Main Viewport and Logs -->
+            <!--                         <button id="toggle-control"
+                            class="bg-grey-800 hover:bg-grey-900 text-black font-bold py-1 px-3 rounded interactive border border-black p-1"
+                            data-hover-text="Control Model">
+                            Change views
+                        </button> -->
+            <div class="w-2/5 h-3/4 flex-col">
+                <!-- Viewport Header -->
+                <div class="flex">
+                    <div class="flex items-center" style="min-height: 40px;">
+                        <div id="statusDisplay" class="bg-grey-800 border-b px-2 py-1 flex justify-between items-center"
+                            style="min-height: 40px; flex-grow: 1;">
+                            <i class="fas fa-exclamation-circle"> <span id="statusText">Status Bar</span></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- Viewport Content -->
+                <div class="flex-grow bg-gray-100 flex border border-black p-1" style="height: calc(75vh - 47px);">
+                    <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
+                        <!-- Model viewer goes here -->
+                        <img id="modelImage" src="" alt="Model not available" class="max-w-full max-h-full hidden">
+                        <!-- Initially hide the image -->
+                        <div id="placeholder" class="text-left">
+                            <p>Welcome to Code2Fab!</p><br
+                            <p>Quick Navigation and Operation Guide using Keyboard Shortcuts:</p>
+                            <ul>
+                                <li><strong>Code Editing:</strong> <code>&lt;Ctrl+Shift+O&gt;</code> to navigate to the code editor.</li>
+                                <li><strong>Model Generation:</strong> <code>&lt;Ctrl+Shift+G&gt;</code> to generate a model after editing.</li>
+                                <li><strong>View Switching:</strong> Hold <code>&lt;Shift&gt;</code> and use <code>&lt;Left/Right Arrow Keys&gt;</code> to change views.</li>
+                                <li><strong>Save Code:</strong> <code>&lt;Ctrl+Shift+S&gt;</code> to save your current code.</li>
+                                <li><strong>Upload Code:</strong> <code>&lt;Ctrl+Shift+U&gt;</code> to upload existing code for use.</li>
+                                <li><strong>Version Control:</strong> <code>&lt;Ctrl+Shift+L&gt;</code> to view different code versions.</li>
+                                <li><strong>Clear Versions:</strong> <code>&lt;Ctrl+Shift+R&gt;</code> to clear the version list.</li>
+                                <li><strong>Inquiry System:</strong> <code>&lt;Ctrl+Shift+P&gt;</code> to navigate to the inquiry input area. </li><br>
+                                    <li>To interact with the system, use the default keyword like &lt;describe&gt; at the beginning of the input field to start specific functions, currently support match, describe, analysis, improve several functions. If you enter a command that does not come with a keyword or the system does not detect a match, the system will provide an answer based on your input.</li>
+                            </ul><br>
+                            <p>Code2Fab aims to enhance your efficiency from code to creation with powerful, intuitive tools tailored for designers, engineers, and enthusiasts alike.</p>
+                        </div><!-- Placeholder text -->
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Main Viewport and Logs -->
-        <div class="w-2/3 h-screen flex-col">
-            <!-- Viewport Header -->
-            <div class="flex">
-            </div>
-            <!-- Viewport Content -->
-            <div class="flex-grow bg-gray-100 overflow-auto flex">
-                <div id="stl_cont" class="w-full h-screen justify-center items-center" style="position: relative;">
+    </div>
 
-                    <div class="flex items-center" style="min-height: 40px;">
-                        <button id="toggle-control"
-                            class="bg-grey-800 hover:bg-grey-900 text-black font-bold py-1 px-3 rounded interactive"
-                            data-hover-text="Control Model">
-                            Control Model
-                        </button>
-                        <div id="statusDisplay"
-                            class="bg-white border-b border-gray-300 px-2 py-1 flex justify-between items-center"
-                            style="min-height: 40px; flex-grow: 1;">
-                            <i class="fas fa-exclamation-circle"></i>
-                        </div>
-                    </div>
+    <!-- Response Area at the bottom -->
+    <div class="w-full h-1/4 overflow-auto border-t border-gray-300 p-2 flex flex-col">
+        <div class="border border-black p-1 mt-2 pt-2">
+            <button id="enlarge-icon"
+                class="bg-grey-800 hover:bg-grey-900 text-black font-bold py-1 px-3 rounded interactive flex items-center border border-black p-1">
+                <i class="fas fa-search-plus mr-2"></i>
+                <p class="text-sm text-gray-700 mb-0">Code2fab Response:</p>
+            </button>
+
+            <div class="code2fab-container w-full text-sm text-gray-700 font-mono bg-gray-50 flex-col"
+                style="height: calc(25vh - 65px);">
+                <!-- GPT response content goes here -->
+                <div id="code2fab-response"
+                    class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0" tabindex="0"
+                    data-hover-text="Code2fab's response"><br><br> Code2fab's responses will appear here...
                 </div>
             </div>
-            <script src="static/stl_viewer/stl_viewer.min.js"></script>
+        </div>
+    </div>
 
-            <!-- JavaScript for sending code to backend and handling response -->
-            <script>
-                var modelIdCounter = 1;
-                var zoom_value = 1;
+    <script>
 
-                const statusDisplay = document.getElementById("statusDisplay");
-                function updateStatusAndSpeak(text) {
-                    statusDisplay.textContent = text;
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.rate = 6;
-                    speechSynthesis.speak(utterance);
-                }
+        // Display and update the status
+        const statusDisplay = document.getElementById('statusText');
+        function updateStatusAndSpeak(text) {
+            speechSynthesis.cancel();
+            statusDisplay.textContent = text;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 5;
+            speechSynthesis.speak(utterance);
+        }
 
-                const elements = [
-                    { id: "save-code", key: "Ctrl+Shift+S", text: "Save the OpenSCAD code." },
-                    { id: "refresh-files", key: "Ctrl+Shift+R", text: "Clear the file list." },
-                    { id: "upload-file", key: "Ctrl+Shift+U", text: "Upload a new OpenSCAD file." },
-                    { id: "file-list", key: "Ctrl+Shift+L", text: "Open the version list." },
-                    { id: "generate-model", key: "Ctrl+Shift+G", text: "Generate a 3D model from the code." },
-                    { id: "openscad-code", key: "Ctrl+Shift+O", text: "Enter OpenSCAD code here." },
-                    { id: "gpt-input", key: "Ctrl+Shift+P", text: "Enter your input here." },
-                    { id: "describe", key: "Ctrl+Shift+D", text: "Describe the current model." },
-                    { id: "match", key: "Ctrl+Shift+M", text: "Match the model and code." },
-                    { id: "analysis", key: "Ctrl+Shift+A", text: "Analyze the code." },
-                    { id: "improve", key: "Ctrl+Shift+I", text: "Improve the code." },
-                    { id: "toggle-control", key: "Ctrl+Shift+T", text: "Click to toggle the control status." }
-                ];
+        const elements = [
+            { id: "save-code", key: "Ctrl+Shift+S", text: "Save the OpenSCAD code." },
+            { id: "refresh-files", key: "Ctrl+Shift+R", text: "Clear the file list." },
+            { id: "upload-file", key: "Ctrl+Shift+U", text: "Upload a new OpenSCAD file." },
+            { id: "file-list", key: "Ctrl+Shift+L", text: "Open the version list." },
+            { id: "generate-model", key: "Ctrl+Shift+G", text: "Generate a 3D model from the code." },
+            { id: "openscad-code", key: "Ctrl+Shift+O", text: "Enter OpenSCAD code here." },
+            { id: "gpt-input", key: "Ctrl+Shift+P", text: "Enter your input here." },
+        ];
 
 
-                document.addEventListener('keydown', function (event) {
-                    //console.log(event.key, event.ctrlKey, event.shiftKey); 
-                    if (event.ctrlKey && event.shiftKey) {
-                        elements.forEach(item => {
-                            if (event.key.toUpperCase() === item.key.split('+').pop()) {
-                                const element = document.getElementById(item.id);
-                                if (element) {
-                                    element.focus();
-                                    updateStatusAndSpeak(item.text);
-                                }
-                            }
-                        });
-                    }
-                });
-
+        document.addEventListener('keydown', function (event) {
+            //console.log(event.key, event.ctrlKey, event.shiftKey); 
+            if (event.ctrlKey && event.shiftKey) {
                 elements.forEach(item => {
-                    const element = document.getElementById(item.id);
-                    if (element) {
-                        element.addEventListener('focus', function () {
+                    if (event.key.toUpperCase() === item.key.split('+').pop()) {
+                        const element = document.getElementById(item.id);
+                        if (element) {
+                            element.focus();
                             updateStatusAndSpeak(item.text);
-                        });
-                        element.addEventListener('mouseenter', function () {
-                            updateStatusAndSpeak(item.text);
-                        });
+                        }
                     }
                 });
+            }
+        });
 
-                document.getElementById('generate-model').addEventListener('click', function () {
-                    var code = document.getElementById('openscad-code').value;
-                    console.log("Generating STL for code:", code);
-                    updateStatusAndSpeak("Start generating models...");
+        elements.forEach(item => {
+            const element = document.getElementById(item.id);
+            if (element) {
+                element.addEventListener('focus', function () {
+                    updateStatusAndSpeak(item.text);
+                });
+                element.addEventListener('mouseenter', function () {
+                    updateStatusAndSpeak(item.text);
+                });
+            }
+        });
 
-                    fetch('/generate-stl', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ code: code }),
-                    })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! Status: ${response.status}`);
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.stlUrl) {
-                                stl_viewer.clean()
-                                stl_viewer.add_model({ id: modelIdCounter++, filename: data.stlUrl, color: "#F9D72C", mesh: 100000 });
-                                console.log("Model loaded:", data.stlUrl);
-                                updateStatusAndSpeak("The model has been rendered.");
-                            } else {
-                                console.error("STL URL not provided in response.");
-                                updateStatusAndSpeak("Model rendering failed, please check the code or network.");
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error during STL generation or loading:', error);
-                            updateStatusAndSpeak("Model rendering failed: ", error);
-                        });
+        const imageBasePath = '/static/img/model/';
+        const totalImages = 7; // Assuming images are named from 0.jpg to 6.jpg
+        let currentImageIndex = 0;
+
+        document.getElementById('generate-model').addEventListener('click', async function () {
+            const code = document.getElementById('openscad-code').value;
+            const text = document.getElementById('gpt-input').value;
+            const responseContainer = document.getElementById('code2fab-response');
+            responseContainer.innerHTML = '<pre></pre>';
+            const pre = responseContainer.querySelector('pre');
+
+            console.log("Generating images for code:", code);
+
+            try {
+                // Generate images from code
+                const generateResponse = await fetch('/generate-img', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
                 });
 
-                document.getElementById('describe').addEventListener('click', function () {
-                    const code = document.getElementById('openscad-code').value;
-                    const text = document.getElementById('gpt-input').value;
-                    const responseContainer = document.getElementById('code2fab-response');
-                    responseContainer.innerHTML = '<pre></pre>';
-                    const pre = responseContainer.querySelector('pre');
-                    updateStatusAndSpeak("The system reply is loading...")
-
-                    html2canvas(document.getElementById('stl_cont')).then(canvas => {
-                        canvas.toBlob(blob => {
-                            const formData = new FormData();
-                            formData.append('image', blob, 'temp.jpg');
-                            formData.append('text', text);
-                            formData.append('code', code);
-
-                            fetch('/api/describe', {
-                                method: 'POST',
-                                body: formData
-                            })
-                                .then(response => {
-                                    const reader = response.body.getReader();
-                                    function processStream({ done, value }) {
-                                        if (done) {
-                                            console.log('Stream completed');
-                                            updateStatusAndSpeak("Please check the system reply.");
-                                            return;
-                                        }
-                                        const chunk = new TextDecoder().decode(value);
-                                        pre.textContent += chunk;
-
-                                        return reader.read().then(processStream);
-                                    }
-                                    return reader.read().then(processStream);
-                                    updateStatusAndSpeak("Please try again.");
-                                })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                    updateStatusAndSpeak("Please try again.");
-                                });
-                        });
-                    });
-                });
-
-                document.getElementById('match').addEventListener('click', function () {
-                    const code = document.getElementById('openscad-code').value;
-                    const text = document.getElementById('gpt-input').value;
-                    const responseContainer = document.getElementById('code2fab-response');
-                    responseContainer.innerHTML = '<pre></pre>';
-                    const pre = responseContainer.querySelector('pre');
-                    updateStatusAndSpeak("The system reply is loading...")
-
-                    html2canvas(document.getElementById('stl_cont')).then(canvas => {
-                        canvas.toBlob(blob => {
-                            const formData = new FormData();
-                            formData.append('image', blob, 'temp.jpg');
-                            formData.append('text', text);
-                            formData.append('code', code);
-
-                            fetch('/api/match', {
-                                method: 'POST',
-                                body: formData
-                            })
-                                .then(response => {
-                                    const reader = response.body.getReader();
-                                    function processStream({ done, value }) {
-                                        if (done) {
-                                            console.log('Stream completed');
-                                            updateStatusAndSpeak("Please check the system reply.");
-                                            return;
-                                        }
-                                        const chunk = new TextDecoder().decode(value);
-                                        pre.textContent += chunk;
-
-                                        return reader.read().then(processStream);
-                                    }
-                                    return reader.read().then(processStream);
-                                    updateStatusAndSpeak("Please try again.");
-                                })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                    updateStatusAndSpeak("Please try again.");
-                                });
-                        });
-                    });
-                });
-
-
-                document.getElementById('analysis').addEventListener('click', function () {
-                    const code = document.getElementById('openscad-code').value;
-                    const text = document.getElementById('gpt-input').value;
-                    const responseContainer = document.getElementById('code2fab-response');
-                    responseContainer.innerHTML = '<pre></pre>';
-                    const pre = responseContainer.querySelector('pre');
-                    updateStatusAndSpeak("The system reply is loading...")
-
-                    html2canvas(document.getElementById('stl_cont')).then(canvas => {
-                        canvas.toBlob(blob => {
-                            const formData = new FormData();
-                            formData.append('image', blob, 'temp.jpg');
-                            formData.append('text', text);
-                            formData.append('code', code);
-
-                            fetch('/api/analysis', {
-                                method: 'POST',
-                                body: formData
-                            })
-                                .then(response => {
-                                    const reader = response.body.getReader();
-                                    function processStream({ done, value }) {
-                                        if (done) {
-                                            console.log('Stream completed');
-                                            updateStatusAndSpeak("Please check the system reply.");
-                                            return;
-                                        }
-                                        const chunk = new TextDecoder().decode(value);
-                                        pre.textContent += chunk;
-
-                                        return reader.read().then(processStream);
-                                    }
-                                    return reader.read().then(processStream);
-                                    updateStatusAndSpeak("Please try again.");
-                                })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                    updateStatusAndSpeak("Please try again.");
-                                });
-                        });
-                    });
-                });
-
-
-                document.getElementById('improve').addEventListener('click', function () {
-                    const code = document.getElementById('openscad-code').value;
-                    const text = document.getElementById('gpt-input').value;
-                    const responseContainer = document.getElementById('code2fab-response');
-                    responseContainer.innerHTML = '<pre></pre>';
-                    const pre = responseContainer.querySelector('pre');
-                    updateStatusAndSpeak("The system reply is loading...")
-
-                    html2canvas(document.getElementById('stl_cont')).then(canvas => {
-                        canvas.toBlob(blob => {
-                            const formData = new FormData();
-                            formData.append('image', blob, 'temp.jpg');
-                            formData.append('text', text);
-                            formData.append('code', code);
-
-                            fetch('/api/improve', {
-                                method: 'POST',
-                                body: formData
-                            })
-                                .then(response => {
-                                    const reader = response.body.getReader();
-                                    function processStream({ done, value }) {
-                                        if (done) {
-                                            console.log('Stream completed');
-                                            updateStatusAndSpeak("Please check the system reply.");
-                                            return;
-                                        }
-                                        const chunk = new TextDecoder().decode(value);
-                                        pre.textContent += chunk;
-
-                                        return reader.read().then(processStream);
-                                    }
-                                    return reader.read().then(processStream);
-                                    updateStatusAndSpeak("Please try again.");
-                                })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                    updateStatusAndSpeak("Please try again.");
-                                });
-                        });
-                    });
-                });
-
-                var stl_viewer = new StlViewer(document.getElementById("stl_cont"), {
-                    models: [{ filename: "/static/models/bg.stl", color: "#F9D72C", mesh: 1000, display: "flat" }],
-                });
-
-                let controlActive = false;
-                const stlViewerContainer = document.getElementById("stl_cont");
-                const toggleControlButton = document.getElementById("toggle-control");
-
-                toggleControlButton.addEventListener('click', function () {
-                    controlActive = !controlActive;
-                    updateStatus();
-                });
-
-                document.addEventListener('keydown', function (event) {
-                    if (event.key === "Escape") {
-                        controlActive = false;
-                        updateStatus();
-                    }
-                });
-
-                const fileList = document.getElementById('file-list');
-
-                fileList.addEventListener('keydown', function (event) {
-                    if (event.key === 'Enter' || event.keyCode === 13) {
-                        const mouseEvent = new MouseEvent('mousedown', {
-                            bubbles: true,
-                            cancelable: true,
-                            view: window
-                        });
-                        fileList.dispatchEvent(mouseEvent);
-                    }
-                });
-
-                function updateStatus() {
-                    const statusText = 'Control is ' + (controlActive ? 'active. Clike or enter ESC key to cancel.' : 'disabled');
-                    statusDisplay.textContent = statusText;
-
-                    const utterance = new SpeechSynthesisUtterance(statusText);
-                    utterance.rate = 8;
-                    speechSynthesis.speak(utterance);
+                if (!generateResponse.ok) {
+                    throw new Error(`HTTP error! Status: ${generateResponse.status}`);
                 }
 
-                document.addEventListener('keydown', function (event) {
-                    if (!controlActive) {
-                        return;
-                    }
+                const generateData = await generateResponse.json();
 
-                    event.preventDefault();
+                if (generateData.message && generateData.message === "Images generated successfully") {
+                    updateStatusAndSpeak("Images have been successfully generated.");
+                    updateImageDisplay(0); // Reset to the first image
 
-                    if (stl_viewer && stl_viewer.models.length > 0) {
-                        let model_id = modelIdCounter - 1;
-                        let current_position = stl_viewer.get_model_info(model_id).position;
-                        const step = 0.1;
-                        const move_distance = 1;
+                    // Now process the model image and send it along with the text and code
+                    updateStatusAndSpeak("The system reply is loading...");
 
-                        switch (event.key) {
-                            case 'a':
-                            case 'A':
-                                stl_viewer.rotate(model_id, 0, -step, null);
-                                break;
-                            case 'd':
-                            case 'D':
-                                stl_viewer.rotate(model_id, 0, step, null);
-                                break;
-                            case 'w':
-                            case 'W':
-                                stl_viewer.rotate(model_id, -step, null, null);
-                                break;
-                            case 's':
-                            case 'S':
-                                stl_viewer.rotate(model_id, step, null, null);
-                                break;
-                            case 'ArrowRight':
-                                stl_viewer.set_position(model_id, current_position.x + move_distance, current_position.y, current_position.z);
-                                break;
-                            case 'ArrowLeft':
-                                stl_viewer.set_position(model_id, current_position.x - move_distance, current_position.y, current_position.z);
-                                break;
-                            case 'ArrowDown':
-                                stl_viewer.set_position(model_id, current_position.x, current_position.y - move_distance, current_position.z);
-                                break;
-                            case 'ArrowUp':
-                                stl_viewer.set_position(model_id, current_position.x, current_position.y + move_distance, current_position.z);
-                                break;
-                            case 'q':
-                            case 'Q':
-                                zoom_value = Math.max(zoom_value - 0.05, 0.1);
-                                stl_viewer.set_scale(model_id, zoom_value);
-                                break;
-                            case 'e':
-                            case 'E':
-                                zoom_value = Math.min(zoom_value + 0.05, 10);
-                                stl_viewer.set_scale(model_id, zoom_value);
-                                break;
-                        }
-                    }
+                    // Wait for the model image to be updated in the DOM
+                    setTimeout(() => {
+                        const code = document.getElementById('openscad-code').value;
+                        const text = document.getElementById('gpt-input').value;
+                        const responseContainer = document.getElementById('code2fab-response');
+                        responseContainer.innerHTML = '<pre></pre>';
+                        const pre = responseContainer.querySelector('pre');
+                        updateStatusAndSpeak("The system reply is loading...")
+
+                        html2canvas(document.getElementById('modelImage')).then(canvas => {
+                            canvas.toBlob(blob => {
+                                const formData = new FormData();
+                                formData.append('image', blob, 'temp.jpg');
+                                formData.append('text', text);
+                                formData.append('code', code);
+
+                                fetch('/api/describe', {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                    .then(response => {
+                                        const reader = response.body.getReader();
+                                        function processStream({ done, value }) {
+                                            if (done) {
+                                                console.log('Stream completed');
+                                                updateStatusAndSpeak("Please check the system reply.");
+                                                return;
+                                            }
+                                            const chunk = new TextDecoder().decode(value);
+                                            pre.textContent += chunk;
+
+                                            return reader.read().then(processStream);
+                                        }
+                                        return reader.read().then(processStream);
+                                        updateStatusAndSpeak("Please try again.");
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        updateStatusAndSpeak("Please try again.");
+                                    });
+                            });
+                        });
+
+                    }, 1);
+
+                } else {
+                    console.error("Failed to generate or retrieve images.");
+                    updateStatusAndSpeak("Failed to generate images.");
+                }
+            } catch (error) {
+                console.error('Error during generation or loading:', error);
+                updateStatusAndSpeak("An error occurred during image generation.");
+            }
+        });
+
+
+        document.addEventListener('keydown', function (event) {
+            if (event.shiftKey && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) {
+                if (event.key === 'ArrowRight') {
+                    currentImageIndex = (currentImageIndex + 1) % totalImages; // Increment index and loop back to 0
+                } else if (event.key === 'ArrowLeft') {
+                    currentImageIndex = (currentImageIndex - 1 + totalImages) % totalImages; // Decrement index and loop back to 6
+                }
+                updateImageDisplay(currentImageIndex);
+                updateStatusAndSpeak(`Viewing image number ${currentImageIndex}.`);
+            }
+        });
+
+        function updateImageDisplay(index) {
+            const imageElement = document.getElementById('modelImage');
+            const placeholder = document.getElementById('placeholder');
+
+            // Check if the index is within the valid range
+            if (index >= 0 && index <= 6) {
+                const imagePath = `${imageBasePath}${index}.png`;
+                imageElement.src = imagePath;
+                imageElement.onerror = function () {
+                    // If the image fails to load, hide the image and show the placeholder
+                    imageElement.classList.add('hidden');
+                    placeholder.classList.remove('hidden');
+                };
+                imageElement.onload = function () {
+                    // If the image loads successfully, show the image and hide the placeholder
+                    imageElement.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                };
+            } else {
+                // If the index is out of the valid range, hide the image and show the placeholder
+                imageElement.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+        }
+
+        // Save the code to a file
+        document.getElementById('save-code').addEventListener('click', function () {
+            const code = document.getElementById('openscad-code').value;
+            let fileName = prompt("Enter file name (leave blank for automatic naming):");
+
+            if (fileName === null) {
+                return;
+            }
+
+            if (fileName.trim() === '') {
+                fileName = undefined;
+            } else {
+                if (!fileName.endsWith('.scad')) {
+                    fileName += '.scad';
+                }
+            }
+
+            fetch('/save-code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code, fileName })
+            })
+                .then(response => response.text())
+                .then(result => {
+                    console.log(result);
+                    loadFileList();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error saving file.');
                 });
+        });
 
-                let currentFileIndex = -1;
-                let files = [];
-
-                document.getElementById('save-code').addEventListener('click', function () {
-                    const code = document.getElementById('openscad-code').value;
-                    let fileName = prompt("Enter file name (leave blank for automatic naming):");
-
-                    if (fileName === null) {
-                        return;
-                    }
-
-                    if (fileName.trim() === '') {
-                        fileName = undefined;
-                    } else {
-                        if (!fileName.endsWith('.scad')) {
-                            fileName += '.scad';
-                        }
-                    }
-
-                    fetch('/save-code', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ code, fileName })
+        // Refresh the file list
+        document.getElementById('refresh-files').addEventListener('click', function () {
+            if (confirm('Are you sure you want to delete all files? This action cannot be undone.')) {
+                const userInput = prompt('Please type "clear" to confirm deletion:');
+                if (userInput === 'clear') {
+                    fetch('/delete-all-files', {
+                        method: 'POST'
                     })
                         .then(response => response.text())
                         .then(result => {
@@ -533,94 +404,147 @@
                         })
                         .catch(error => {
                             console.error('Error:', error);
-                            alert('Error saving file.');
+                            alert('Error deleting files.');
                         });
-                });
+                } else {
+                    alert('Deletion cancelled. Incorrect confirmation word.');
+                }
+            }
+        });
 
-                document.getElementById('refresh-files').addEventListener('click', function () {
-                    if (confirm('Are you sure you want to delete all files? This action cannot be undone.')) {
-                        const userInput = prompt('Please type "clear" to confirm deletion:');
-                        if (userInput === 'clear') {
-                            fetch('/delete-all-files', {
-                                method: 'POST'
-                            })
-                                .then(response => response.text())
-                                .then(result => {
-                                    console.log(result);
-                                    loadFileList();
-                                })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                    alert('Error deleting files.');
-                                });
-                        } else {
-                            alert('Deletion cancelled. Incorrect confirmation word.');
-                        }
-                    }
+        // Load code from a file
+        function loadCode(fileName) {
+            fetch(`/load-code/${fileName}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('openscad-code').value = data.code;
+                    console.log(`Loaded code from file: ${fileName}`);
+                })
+                .catch(error => {
+                    console.error('Error loading code:', error);
+                    alert('Error loading file.');
                 });
+        }
 
-                function loadCode(fileName) {
-                    fetch(`/load-code/${fileName}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById('openscad-code').value = data.code;
-                            console.log(`Loaded code from file: ${fileName}`);
+        // Upload a file
+        document.getElementById('upload-file').addEventListener('click', function () {
+            document.getElementById('file-input').click();
+        });
+        document.getElementById('file-input').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('openscad-code').value = e.target.result;
+                console.log(`Uploaded file: ${file.name}`);
+            };
+            reader.readAsText(file);
+        });
+
+        // Load the file list
+        document.getElementById('file-list').addEventListener('change', function () {
+            const fileName = this.value;
+            if (fileName !== 'Select a file') {
+                fetch(`/load-code/${fileName}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('openscad-code').value = data.code;
+                        console.log(`Loaded code from file: ${fileName}`);
+                    })
+                    .catch(error => {
+                        console.error('Error loading code:', error);
+                        alert('Error loading file.');
+                    });
+            }
+        });
+
+        function loadFileList() {
+            fetch('/get-files')
+                .then(response => response.json())
+                .then(files => {
+                    const fileList = document.getElementById('file-list');
+                    fileList.innerHTML = '<option>Select a file</option>';
+                    files.forEach(file => {
+                        const option = document.createElement('option');
+                        option.value = file;
+                        option.textContent = file;
+                        fileList.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching file list:', error);
+                    alert('Error loading file list.');
+                });
+        }
+        loadFileList();
+
+
+
+        document.getElementById('callGPT').addEventListener('click', function () {
+            const textInput = document.getElementById('gpt-input').value.trim();
+            let apiUrl = '/api/callGPT';
+            let command = '';
+
+            const commandMap = {
+                '<describe>': '/api/describe',
+                '<match>': '/api/match',
+                '<analysis>': '/api/analysis',
+                '<improve>': '/api/improve'
+            };
+
+            for (let cmd in commandMap) {
+                if (textInput.startsWith(cmd)) {
+                    apiUrl = commandMap[cmd];
+                    command = textInput.slice(cmd.length).trim();
+                    break;
+                }
+            }
+
+            if (command === '') {
+                command = textInput;
+            }
+
+            const code = document.getElementById('openscad-code').value;
+            const responseContainer = document.getElementById('code2fab-response');
+            responseContainer.innerHTML = '<pre></pre>';
+            const pre = responseContainer.querySelector('pre');
+            updateStatusAndSpeak("The system reply is loading...");
+
+            html2canvas(document.getElementById('modelImage')).then(canvas => {
+                canvas.toBlob(blob => {
+                    const formData = new FormData();
+                    formData.append('image', blob, 'temp.jpg');
+                    formData.append('text', command);
+                    formData.append('code', code);
+
+                    fetch(apiUrl, {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(response => response.body.getReader())
+                        .then(reader => {
+                            function processStream({ done, value }) {
+                                if (done) {
+                                    console.log('Stream completed');
+                                    updateStatusAndSpeak("Please check the system reply.");
+                                    return;
+                                }
+                                const chunk = new TextDecoder().decode(value);
+                                pre.textContent += chunk;
+                                return reader.read().then(processStream);
+                            }
+                            return reader.read().then(processStream);
                         })
                         .catch(error => {
-                            console.error('Error loading code:', error);
-                            alert('Error loading file.');
+                            console.error('Error:', error);
+                            updateStatusAndSpeak("Please try again.");
                         });
-                }
-
-                document.getElementById('upload-file').addEventListener('click', function () {
-                    document.getElementById('file-input').click();
                 });
+            });
+        });
+    </script>
 
-                document.getElementById('file-input').addEventListener('change', function (event) {
-                    const file = event.target.files[0];
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        document.getElementById('openscad-code').value = e.target.result;
-                        console.log(`Uploaded file: ${file.name}`);
-                    };
-                    reader.readAsText(file);
-                });
 
-                document.getElementById('file-list').addEventListener('change', function () {
-                    const fileName = this.value;
-                    if (fileName !== 'Select a file') {
-                        fetch(`/load-code/${fileName}`)
-                            .then(response => response.json())
-                            .then(data => {
-                                document.getElementById('openscad-code').value = data.code;
-                                console.log(`Loaded code from file: ${fileName}`);
-                            })
-                            .catch(error => {
-                                console.error('Error loading code:', error);
-                                alert('Error loading file.');
-                            });
-                    }
-                });
 
-                function loadFileList() {
-                    fetch('/get-files')
-                        .then(response => response.json())
-                        .then(files => {
-                            const fileList = document.getElementById('file-list');
-                            fileList.innerHTML = '<option>Select a file</option>';
-                            files.forEach(file => {
-                                const option = document.createElement('option');
-                                option.value = file;
-                                option.textContent = file;
-                                fileList.appendChild(option);
-                            });
-                        })
-                        .catch(error => {
-                            console.error('Error fetching file list:', error);
-                            alert('Error loading file list.');
-                        });
-                }
-                loadFileList();
-            </script>
 </body>
+
 </html>
