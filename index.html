@@ -28,9 +28,11 @@
         .hidden {
             display: none;
         }
+
         .text-left {
-    text-align: left;
-}
+            text-align: left;
+        }
+
         pre {
             white-space: pre-wrap;
         }
@@ -133,23 +135,36 @@
                 <div class="flex-grow bg-gray-100 flex border border-black p-1" style="height: calc(75vh - 47px);">
                     <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
                         <!-- Model viewer goes here -->
-                        <img id="modelImage" src="" alt="Model not available" class="max-w-full max-h-full hidden">
+                        <img id="modelImage" src="./static/img/logo.png" alt="Model not available" class="max-w-full max-h-full">
                         <!-- Initially hide the image -->
                         <div id="placeholder" class="text-left">
-                            <p>Welcome to Code2Fab!</p><br
-                            <p>Quick Navigation and Operation Guide using Keyboard Shortcuts:</p>
+                            <p>Welcome to Code2Fab!</p><br <p>Quick Navigation and Operation Guide using Keyboard
+                            Shortcuts:</p>
                             <ul>
-                                <li><strong>Code Editing:</strong> <code>&lt;Ctrl+Shift+O&gt;</code> to navigate to the code editor.</li>
-                                <li><strong>Model Generation:</strong> <code>&lt;Ctrl+Shift+G&gt;</code> to generate a model after editing.</li>
-                                <li><strong>View Switching:</strong> Hold <code>&lt;Shift&gt;</code> and use <code>&lt;Left/Right Arrow Keys&gt;</code> to change views.</li>
-                                <li><strong>Save Code:</strong> <code>&lt;Ctrl+Shift+S&gt;</code> to save your current code.</li>
-                                <li><strong>Upload Code:</strong> <code>&lt;Ctrl+Shift+U&gt;</code> to upload existing code for use.</li>
-                                <li><strong>Version Control:</strong> <code>&lt;Ctrl+Shift+L&gt;</code> to view different code versions.</li>
-                                <li><strong>Clear Versions:</strong> <code>&lt;Ctrl+Shift+R&gt;</code> to clear the version list.</li>
-                                <li><strong>Inquiry System:</strong> <code>&lt;Ctrl+Shift+P&gt;</code> to navigate to the inquiry input area. </li><br>
-                                    <li>To interact with the system, use the default keyword like &lt;describe&gt; at the beginning of the input field to start specific functions, currently support match, describe, analysis, improve several functions. If you enter a command that does not come with a keyword or the system does not detect a match, the system will provide an answer based on your input.</li>
+                                <li><strong>Code Editing:</strong> <code>&lt;Ctrl+Shift+O&gt;</code> to navigate to the
+                                    code editor.</li>
+                                <li><strong>Model Generation:</strong> <code>&lt;Ctrl+Shift+G&gt;</code> to generate a
+                                    model after editing.</li>
+                                <li><strong>View Switching:</strong> Hold <code>&lt;Shift&gt;</code> and use
+                                    <code>&lt;Left/Right Arrow Keys&gt;</code> to change views.</li>
+                                <li><strong>Save Code:</strong> <code>&lt;Ctrl+Shift+S&gt;</code> to save your current
+                                    code.</li>
+                                <li><strong>Upload Code:</strong> <code>&lt;Ctrl+Shift+U&gt;</code> to upload existing
+                                    code for use.</li>
+                                <li><strong>Version Control:</strong> <code>&lt;Ctrl+Shift+L&gt;</code> to view
+                                    different code versions.</li>
+                                <li><strong>Clear Versions:</strong> <code>&lt;Ctrl+Shift+R&gt;</code> to clear the
+                                    version list.</li>
+                                <li><strong>Inquiry System:</strong> <code>&lt;Ctrl+Shift+P&gt;</code> to navigate to
+                                    the inquiry input area. </li><br>
+                                <li>To interact with the system, use the default keyword like @describe at the beginning
+                                    of the input field to start specific functions, currently support match, describe,
+                                    analysis, improve and create functions. If you enter a command that does not come
+                                    with a keyword or the system does not detect a match, the system will provide an
+                                    answer based on your input.</li>
                             </ul><br>
-                            <p>Code2Fab aims to enhance your efficiency from code to creation with powerful, intuitive tools tailored for designers, engineers, and enthusiasts alike.</p>
+                            <p>Code2Fab aims to enhance your efficiency from code to creation with powerful, intuitive
+                                tools tailored for designers, engineers, and enthusiasts alike.</p>
                         </div><!-- Placeholder text -->
                     </div>
                 </div>
@@ -485,10 +500,11 @@
             let command = '';
 
             const commandMap = {
-                '<describe>': '/api/describe',
-                '<match>': '/api/match',
-                '<analysis>': '/api/analysis',
-                '<improve>': '/api/improve'
+                '@create': '/api/create',
+                '@describe': '/api/describe',
+                '@match': '/api/match',
+                '@analysis': '/api/analysis',
+                '@improve': '/api/improve'
             };
 
             for (let cmd in commandMap) {
