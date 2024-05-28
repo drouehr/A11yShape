@@ -413,5 +413,5 @@ module icosahedron(a = 2) {
 
 req = {'code': testing, 'prev': prev}
 
-req = {"code":"$fn=32; cube(); sphere();", "prev":"$fn=32; cube();"}
-#print(run(req, 'gpt4'))
+req = {"code":"$fn=32; sphere();"}
+print(run(req, 'gpt4'))

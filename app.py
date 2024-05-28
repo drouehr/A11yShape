@@ -22,10 +22,12 @@ from flask import (
     Response,
     stream_with_context,
 )
+from flask_cors import CORS, cross_origin
 import base64
 import requests
 import logging
 import os
+from os.path import isfile, join
 import subprocess
 from openai import OpenAI 
 import autogen
@@ -37,8 +39,9 @@ from autogen.agentchat.contrib.multimodal_conversable_agent import (
 
 logging.basicConfig(level=logging.INFO)
 
-api_key = "Insert your API key here"
+api_key = "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"
 # client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", 'Insert you api key here'))
+#client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", api_key))
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", api_key))
 
 """AutoGen Config"""
@@ -112,8 +115,25 @@ groupchat = autogen.GroupChat(
 manager = autogen.GroupChatManager(
     groupchat=groupchat, llm_config=config_list_4)
 
+
 app = Flask(__name__)
+CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 PORT = int(os.environ.get("PORT", 3000))
+
+
+
+
+@app.route('/')
+def hello_world():
+    return 'Hello from Flask6!'
+
+@app.route('/code2fab', methods=['POST'])
+def code2fab():
+    req = request.json
+    #return jsonify(req['code'])
+    return jsonify(request.json)
+
 
 
 def encode_image(image_path):
@@ -132,43 +152,24 @@ def upload_image(image_path):
     return None
 
 current_process = None
-'''
-@app.route("/generate-stl", methods=["POST"])
-def generate_stl():
-    global current_process
-    code = request.json.get("code")
-    if current_process and current_process.poll() is None:
-        current_process.terminate()
-    try:
-        current_process = subprocess.Popen(
-            ["openscad", "-o", "./static/models/temp.stl", "-"],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        stdout, stderr = current_process.communicate(input=code)
-        if current_process.returncode != 0:
-            print(f"exec error: {stderr}")
-            return jsonify(error="Failed to generate STL file"), 500
-        print(f"stdout: {stdout}")
-        return jsonify(stlUrl="/static/models/temp.stl")
-    except Exception as e:
-        print(f"Execution error: {e}")
-        return jsonify(error="Failed to generate model."), 500
-'''
 
 @app.route("/generate-img", methods=["POST"])
 def generate_images():
     global current_process
     code = request.json.get("code")
+    imageIndex = request.json.get("imageIndex")
     if current_process and current_process.poll() is None:
         current_process.terminate()
 
     try:
-        output_dir = "./static/img/model"
+        output_dir = "temp"
         os.makedirs(output_dir, exist_ok=True)
         
+        file = 'model.scad'
+        f = open(join(output_dir, file), "w")
+        f.write(code)
+        f.close()
+            
         views = [
             "50,50,50,60,30,210,300",  
             "0,0,50,0,0,0,200",        
@@ -179,10 +180,14 @@ def generate_images():
             "0,-50,0,-90,-90,0,200"    
         ]
         
+        encoded_imgs = []
+        
         for index, view in enumerate(views):
+            if index != imageIndex:
+                continue
             output_path = f'{output_dir}/{index}.png'
             current_process = subprocess.Popen(
-                ["openscad", "-o", output_path, "--camera="+view, "--viewall", "--autocenter", "--imgsize=2048,2048", "-"],
+                ["openscad", "-o", output_path, "--camera="+view, "--viewall", "--autocenter", "--imgsize=256,256", join(output_dir, file)],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -194,15 +199,63 @@ def generate_images():
                 return jsonify(error=f"Failed to generate image {index}"), 500
             print(f"stdout {stdout}")
 
-        return jsonify(message="Images generated successfully")
+            with open(output_path, "rb") as img_file:
+                encoded_imgs.append(base64.b64encode(img_file.read()).decode("utf-8"))
+        
+        #description = describe(request, code, encoded_imgs)
+        print('image')
+        
+        return jsonify({"message": "Images generated successfully", "image": encoded_imgs[0]})
     except Exception as e:
         print(f"Execution error: {e}")
         return jsonify(error="Failed to generate images."), 500
 
 
-@app.route("/")
-def index():
-    return send_from_directory(".", "index.html")
+@app.route("/api/describe", methods=["POST"])
+def describe():
+    try:
+        text = request.json.get("text")
+        code = request.json.get("code")
+        image = request.json.get("image")
+        logging.info(f"Received text: {text}")
+        
+        def gpt_action(image):
+            try:
+                completion = client.chat.completions.create(
+                    model="gpt-4o",
+                    temperature=0.0,
+                    timeout=10,
+                    stream=True,
+                    messages=[
+                        {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": "Given the same 3D model viewed from different angles, describe the shape such that a blind user could understand it."},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{image}",
+                            },
+                            },
+                        ],
+                        }
+                    ],
+                )
+                for chunk in completion:
+                    if chunk.choices[0].delta:
+                        yield chunk.choices[0].delta.content.encode("utf-8")
+                    else:
+                        yield b"Processing...\n"
+            except (AttributeError, TypeError) as e:
+                if str(e) != "'NoneType' object has no attribute 'encode'":
+                    yield "Error: " + str(e)
+
+        return Response(gpt_action(image), mimetype="text/event-stream")
+
+    except Exception as e:
+        logging.error(f"Error processing request: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
 
 
 CODE_DIRECTORY = "./static/code"
@@ -335,67 +388,6 @@ Code2Fab is a system that helps the blind to use OpenSCAD to model for 3D printi
         logging.error(f"Error processing request: {e}")
         return jsonify({"error": "Internal server error"}), 500
     
-@app.route("/api/describe", methods=["POST"])
-def describe():
-    try:
-        text = request.form["text"]
-        code = request.form["code"]
-        image = request.files["image"]
-        logging.info(f"Received text: {text}")
-
-        # Save the image and encode it
-        image_path = "./static/img/temp.jpg"
-        image.save(image_path)
-        img_url = "data:image/jpeg;base64," + encode_image(image_path)
-
-        template = """
-        {text}
-        ***Report Begins***
-        {code}
-        ***Report Ends***
-        Follow the template below to output the result:
-        ***Template Begins***
-
-        ***Template Ends***
-        """
-
-        def gpt_action(img_url):
-            try:
-                completion = client.chat.completions.create(
-                    model="gpt-4o",
-                    temperature=0.0,
-                    timeout=10,
-                    stream=True,
-                    messages=[
-                        {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": "Given the same 3D model viewed from different angles, describe the shape such that a blind user could understand it."},
-                            {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": img_url,
-                            },
-                            },
-                        ],
-                        }
-                    ],
-                )
-                for chunk in completion:
-                    if chunk.choices[0].delta:
-                        yield chunk.choices[0].delta.content.encode("utf-8")
-                    else:
-                        yield b"Processing...\n"
-            except (AttributeError, TypeError) as e:
-                if str(e) != "'NoneType' object has no attribute 'encode'":
-                    yield "Error: " + str(e)
-
-        return Response(gpt_action(img_url), mimetype="text/event-stream")
-
-    except Exception as e:
-        logging.error(f"Error processing request: {e}")
-        return jsonify({"error": "Internal server error"}), 500
-
 
 @app.route("/api/match", methods=["POST"])
 def match():
@@ -682,5 +674,8 @@ Follow the template below to output the result:
         return jsonify({"error": "Internal server error"}), 500
 
 
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT)
+    

@@ -1,0 +1,6 @@
+flask
+flask-cors
+gunicorn
+openai
+pyautogen
+pillow

@@ -193,6 +193,7 @@
     </div>
 
     <script>
+        const serverUrl = 'http://128.46.81.40:3000'
 
         // Display and update the status
         const statusDisplay = document.getElementById('statusText');
@@ -245,22 +246,21 @@
         const imageBasePath = '/static/img/model/';
         const totalImages = 7; // Assuming images are named from 0.jpg to 6.jpg
         let currentImageIndex = 0;
-
-        document.getElementById('generate-model').addEventListener('click', async function () {
+        
+        async function genImageAndDescribe(index) {
             const code = document.getElementById('openscad-code').value;
             const text = document.getElementById('gpt-input').value;
             const responseContainer = document.getElementById('code2fab-response');
             responseContainer.innerHTML = '<pre></pre>';
             const pre = responseContainer.querySelector('pre');
-
             console.log("Generating images for code:", code);
-
+            
             try {
                 // Generate images from code
-                const generateResponse = await fetch('/generate-img', {
+                const generateResponse = await fetch(serverUrl+'/generate-img', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: code })
+                    body: JSON.stringify({ code: code, imageIndex: index})
                 });
 
                 if (!generateResponse.ok) {
@@ -268,10 +268,23 @@
                 }
 
                 const generateData = await generateResponse.json();
+                
+                console.log(generateData);
 
                 if (generateData.message && generateData.message === "Images generated successfully") {
                     updateStatusAndSpeak("Images have been successfully generated.");
-                    updateImageDisplay(0); // Reset to the first image
+                    
+                    const byteCharacters = atob(generateData.image);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    
+                    const imageElement = document.getElementById('modelImage');
+                    imageElement.src = URL.createObjectURL(new Blob([byteArray], { type: 'image/png' }));
+                        
+                    //updateImageDisplay(0); // Reset to the first image
 
                     // Now process the model image and send it along with the text and code
                     updateStatusAndSpeak("The system reply is loading...");
@@ -285,39 +298,33 @@
                         const pre = responseContainer.querySelector('pre');
                         updateStatusAndSpeak("The system reply is loading...")
 
-                        html2canvas(document.getElementById('modelImage')).then(canvas => {
-                            canvas.toBlob(blob => {
-                                const formData = new FormData();
-                                formData.append('image', blob, 'temp.jpg');
-                                formData.append('text', text);
-                                formData.append('code', code);
+                        fetch(serverUrl+'/api/describe', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({text: text, code: code, image: generateData.image})
+                        })
+                            .then(response => {
+                            
+                                console.log(response);
+                                const reader = response.body.getReader();
+                                function processStream({ done, value }) {
+                                    if (done) {
+                                        console.log('Stream completed');
+                                        updateStatusAndSpeak("Please check the system reply.");
+                                        return;
+                                    }
+                                    const chunk = new TextDecoder().decode(value);
+                                    pre.textContent += chunk;
 
-                                fetch('/api/describe', {
-                                    method: 'POST',
-                                    body: formData
-                                })
-                                    .then(response => {
-                                        const reader = response.body.getReader();
-                                        function processStream({ done, value }) {
-                                            if (done) {
-                                                console.log('Stream completed');
-                                                updateStatusAndSpeak("Please check the system reply.");
-                                                return;
-                                            }
-                                            const chunk = new TextDecoder().decode(value);
-                                            pre.textContent += chunk;
-
-                                            return reader.read().then(processStream);
-                                        }
-                                        return reader.read().then(processStream);
-                                        updateStatusAndSpeak("Please try again.");
-                                    })
-                                    .catch(error => {
-                                        console.error('Error:', error);
-                                        updateStatusAndSpeak("Please try again.");
-                                    });
+                                    return reader.read().then(processStream);
+                                }
+                                return reader.read().then(processStream);
+                                updateStatusAndSpeak("Please try again.");
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                updateStatusAndSpeak("Please try again.");
                             });
-                        });
 
                     }, 1);
 
@@ -329,17 +336,25 @@
                 console.error('Error during generation or loading:', error);
                 updateStatusAndSpeak("An error occurred during image generation.");
             }
+        
+        }
+
+        document.getElementById('generate-model').addEventListener('click', async function () {
+            
+            await genImageAndDescribe(currentImageIndex);
+            
         });
 
 
-        document.addEventListener('keydown', function (event) {
+        document.addEventListener('keydown', async function (event) {
             if (event.shiftKey && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) {
                 if (event.key === 'ArrowRight') {
                     currentImageIndex = (currentImageIndex + 1) % totalImages; // Increment index and loop back to 0
                 } else if (event.key === 'ArrowLeft') {
                     currentImageIndex = (currentImageIndex - 1 + totalImages) % totalImages; // Decrement index and loop back to 6
                 }
-                updateImageDisplay(currentImageIndex);
+                //updateImageDisplay(currentImageIndex);
+                await genImageAndDescribe(currentImageIndex);
                 updateStatusAndSpeak(`Viewing image number ${currentImageIndex}.`);
             }
         });
@@ -386,7 +401,7 @@
                 }
             }
 
-            fetch('/save-code', {
+            fetch(serverUrl+'/save-code', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -409,7 +424,7 @@
             if (confirm('Are you sure you want to delete all files? This action cannot be undone.')) {
                 const userInput = prompt('Please type "clear" to confirm deletion:');
                 if (userInput === 'clear') {
-                    fetch('/delete-all-files', {
+                    fetch(serverUrl+'/delete-all-files', {
                         method: 'POST'
                     })
                         .then(response => response.text())
@@ -429,7 +444,7 @@
 
         // Load code from a file
         function loadCode(fileName) {
-            fetch(`/load-code/${fileName}`)
+            fetch(serverUrl+`/load-code/${fileName}`)
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('openscad-code').value = data.code;
@@ -437,7 +452,7 @@
                 })
                 .catch(error => {
                     console.error('Error loading code:', error);
-                    alert('Error loading file.');
+                    console.error('Error loading file.');
                 });
         }
 
@@ -459,7 +474,7 @@
         document.getElementById('file-list').addEventListener('change', function () {
             const fileName = this.value;
             if (fileName !== 'Select a file') {
-                fetch(`/load-code/${fileName}`)
+                fetch(serverUrl+`/load-code/${fileName}`)
                     .then(response => response.json())
                     .then(data => {
                         document.getElementById('openscad-code').value = data.code;
@@ -467,13 +482,13 @@
                     })
                     .catch(error => {
                         console.error('Error loading code:', error);
-                        alert('Error loading file.');
+                        console.error('Error loading file.');
                     });
             }
         });
 
         function loadFileList() {
-            fetch('/get-files')
+            fetch(serverUrl+'/get-files')
                 .then(response => response.json())
                 .then(files => {
                     const fileList = document.getElementById('file-list');
@@ -487,7 +502,7 @@
                 })
                 .catch(error => {
                     console.error('Error fetching file list:', error);
-                    alert('Error loading file list.');
+                    console.error('Error loading file list.');
                 });
         }
         loadFileList();
@@ -532,7 +547,7 @@
                     formData.append('text', command);
                     formData.append('code', code);
 
-                    fetch(apiUrl, {
+                    fetch(serverUrl+apiUrl, {
                         method: 'POST',
                         body: formData
                     })
