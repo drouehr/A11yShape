@@ -126,7 +126,7 @@
                 <div class="flex-grow bg-gray-100 flex border border-black p-1" style="height: calc(75vh - 47px);">
                     <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
                         <!-- Model viewer goes here -->
-                        <img id="modelImage" src="./static/img/logo.png" alt="Model not available" class="max-w-full max-h-full">
+                        <img id="modelImage" src="logo.png" alt="Model not available" class="max-w-full max-h-full">
                         <!-- Initially hide the image -->
                         <div id="placeholder" class="text-left">
                             <p>Welcome to Code2Fab!</p><br <p>Quick Navigation and Operation Guide using Keyboard
@@ -427,6 +427,7 @@
                 document.getElementById('openscad-code').value = e.target.result;
                 console.log(`Uploaded file: ${file.name}`);
                 parseCode(e.target.result.toLowerCase());
+                genImageAndDescribe(currentImageIndex);
             };
             reader.readAsText(file);
         });
