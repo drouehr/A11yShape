@@ -497,6 +497,7 @@
         });
         
       
+      // get primitive parts from list of available primitives
       const primitives = ["circle", "square", "polygon", "text", "import", "projection", "sphere", "cube", "cylinder", "polyhedron", "linear_extrude", "rotate_extrude", "surface"];
       function getPrimitives(code, id, parent) {
         let parts = [];
@@ -517,7 +518,7 @@
         });
         return parts;
       }
-      
+
       function getClosingBracket(code, open, close) {
         var lev = 1;
         for (let i = 0; i < code.length; i++) {
@@ -562,10 +563,16 @@
           isModule: false
         });
         
+        // code that's not in modules
+        var globalCode = [];
+        
         var id = 1;
         if (code.includes('module ')) {
           modules = code.split('module ');
+          
+          // code before 1st module
           if (code.indexOf('module ') != 0) {
+            globalCode.push(modules[0].trim());
             var primParts = getPrimitives(modules[0].trim(), id, 0);
             parts = parts.concat(primParts);
             id += primParts.length;
@@ -591,6 +598,7 @@
                 parts.push(modulePart);
                 id++;
                 
+                // primitives in module
                 var primParts = getPrimitives(modulePart.code, id, modulePart.id);
                 primParts.forEach(p => {
                   parts[modulePart.id].children.push(p.id);
@@ -599,10 +607,11 @@
                 id += primParts.length;
                 
                 
-
+                // code after module
                 if (endIndex < moduleCode.length-1) {
                   var endCode = moduleCode.substring(endIndex+1).trim();
                   if (endCode.length > 0) {
+                    globalCode.push(endCode);
                     var primParts = getPrimitives(endCode, id, 0);
                     parts = parts.concat(primParts);
                     id += primParts.length;
@@ -610,30 +619,33 @@
                 }
               }
           });
+          
+          // module hierarchy
+          for (let i = 1; i < parts.length; i++) {
+            let part = parts[i];
+            if (part.isModule == false) {
+              continue;
+            }
+            for (let j = 1; j < parts.length; j++) {
+              let p = parts[j];
+              if (p.code.includes(part.name+'(')) {
+                part.parents.push(p.id);
+                p.children.push(part.id);
+              }
+            }
+            if (part.parents.length == 0) {
+              part.parents.push(0);
+            }
+          }
         } else {
+          // no modules
           var primParts = getPrimitives(code, id, 0);
           parts = parts.concat(primParts);
           id += primParts.length;
+          globalCode.push(code);
         }
-        
-        for (let i = 1; i < parts.length; i++) {
-          let part = parts[i];
-          if (part.isModule == false) {
-            continue;
-          }
-          for (let j = 1; j < parts.length; j++) {
-            let p = parts[j];
-            if (p.code.includes(part.name+'(')) {
-              part.parents.push(p.id);
-              p.children.push(part.id);
-            }
-          }
-          if (part.parents.length == 0) {
-            part.parents.push(0);
-          }
-        }
-        
-        
+
+        // get children of root
         for (let i = 1; i < parts.length; i++) {
           let part = parts[i];
           if (part.parents.includes(0)) {
@@ -642,12 +654,13 @@
         }
         console.log(parts);
         
-        
+        // generate display tree
         var tree = getDisplayTree(parts[0], parts);
         document.getElementById('openscad-code2').innerHTML="<ul>"+tree+"</ul>";
       
       }
       
+      // on code change
       var prevCode = '';
       document.getElementById('openscad-code').addEventListener('change', function () {
         var code = document.getElementById('openscad-code').value;
