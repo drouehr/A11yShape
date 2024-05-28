@@ -80,11 +80,11 @@
                     </div>
                     <!-- Area 2 -->
                     <div class="w-1/2 h-full overflow-auto  border border-black p-1">
-                        <textarea
+                        <div
                             class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive border border-black"
                             id="openscad-code2" placeholder="// The modular structure of the code will appear here..."
                             style="resize: none; height: 57.5vh; width: calc(100% - 2px);"
-                            data-hover-text="Enter OpenSCAD code here."></textarea>
+                            data-hover-text="Enter OpenSCAD code here."></div>
                     </div>
                 </div>
 
@@ -495,12 +495,159 @@
             });
         });
         
+      
+      const primitives = ["circle", "square", "polygon", "text", "import", "projection", "sphere", "cube", "cylinder", "polyhedron", "linear_extrude", "rotate_extrude", "surface"];
+      function getPrimitives(code, id, parent) {
+        let parts = [];
+        //console.log(code);
+        primitives.forEach(primitive => {
+          if (code.includes(primitive+"(")) {
+            parts.push({
+              id: id,
+              name: primitive,
+              description: "",
+              parents: [parent],
+              children: [],
+              code: "",
+              isModule: false
+            });
+            id++;
+          }
+        });
+        return parts;
+      }
+      
+      function getClosingBracket(code, open, close) {
+        var lev = 1;
+        for (let i = 0; i < code.length; i++) {
+          var c = code[i];
+
+          if (c == open) {
+            lev++;
+          } else if (c == close) {
+            lev--;
+          }
+          if (lev == 0) {
+            return i;
+          }
+        }
+        return code.length;
+      }
+      
+      function getDisplayTree(root, parts) {
+        const children = root.children;
+        let tree = "<div style=\"padding-left: 20px;\">&gt;&nbsp;"+root.name+"</div>";
+        if (children.length == 0) {
+          return tree;
+        }
         
+        tree = tree + "<div style=\"padding-left: 20px;\">";
+        for (let i = 0; i < children.length; i++) { 
+          tree = tree + getDisplayTree(parts[children[i]], parts);
+        }
+        tree = tree + "</div>";
+        return tree;
+      }
+      
       var prevCode = '';
       document.getElementById('openscad-code').addEventListener('change', function () {
-        const code = document.getElementById('openscad-code').value;
-        console.log(prevCode, code);
+        var code = document.getElementById('openscad-code').value;
+        code = code.toLowerCase();
         
+        //console.log(prevCode, code);
+        
+        var parts = [];
+        parts.push({
+          id: 0,
+          name: "Model",
+          description: "",
+          parents: [],
+          children: [],
+          code: code,
+          isModule: false
+        });
+        
+        var id = 1;
+        if (code.includes('module ')) {
+          modules = code.split('module ');
+          if (code.indexOf('module ') != 0) {
+            var primParts = getPrimitives(modules[0].trim(), id, 0);
+            parts = parts.concat(primParts);
+            id += primParts.length;
+            modules.shift();
+          }
+          
+          modules.forEach(module => {
+              var name = module.substring(0, module.indexOf('(')).trim();
+              
+              var moduleCode = module.substring(module.indexOf('{')+1);
+              var endIndex = getClosingBracket(moduleCode, "{", "}");
+
+              var modulePart = {
+                id: id,
+                name: name,
+                description: "",
+                parents: [],
+                children: [],
+                code: moduleCode.substring(0, endIndex-1).trim(),
+                isModule: true
+              };
+              parts.push(modulePart);
+              id++;
+              
+              var primParts = getPrimitives(modulePart.code, id, modulePart.id);
+              primParts.forEach(p => {
+                parts[modulePart.id].children.push(p.id);
+              });
+              parts = parts.concat(primParts);
+              id += primParts.length;
+              
+              
+
+              if (endIndex < moduleCode.length-1) {
+                var endCode = moduleCode.substring(endIndex+1).trim();
+                if (endCode.length > 0) {
+                  var primParts = getPrimitives(endCode, id, 0);
+                  parts = parts.concat(primParts);
+                  id += primParts.length;
+                }
+              }
+          });
+        } else {
+          var primParts = getPrimitives(code, id, 0);
+          parts = parts.concat(primParts);
+          id += primParts.length;
+        }
+        
+        for (let i = 1; i < parts.length; i++) {
+          let part = parts[i];
+          if (part.isModule == false) {
+            continue;
+          }
+          for (let j = 1; j < parts.length; j++) {
+            let p = parts[j];
+            if (p.code.includes(part.name+'(')) {
+              part.parents.push(p.id);
+              p.children.push(part.id);
+            }
+          }
+          if (part.parents.length == 0) {
+            part.parents.push(0);
+          }
+        }
+        
+        
+        for (let i = 1; i < parts.length; i++) {
+          let part = parts[i];
+          if (part.parents.includes(0)) {
+            parts[0].children.push(part.id);
+          }
+        }
+        console.log(parts);
+        
+        
+        var tree = getDisplayTree(parts[0], parts);
+        document.getElementById('openscad-code2').innerHTML="<ul>"+tree+"</ul>";
         
         prevCode = code;
 
