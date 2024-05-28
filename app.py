@@ -258,55 +258,6 @@ def describe():
 
 
 
-CODE_DIRECTORY = "./static/code"
-unnamed_counter = 1
-
-
-@app.route("/save-code", methods=["POST"])
-def save_code():
-    global unnamed_counter
-    data = request.json
-    code = data["code"]
-    file_name = data.get("fileName")
-
-    if not file_name:
-        file_name = f"unnamed_version{unnamed_counter}.scad"
-        unnamed_counter += 1
-
-    file_path = os.path.join(CODE_DIRECTORY, file_name)
-
-    os.makedirs(CODE_DIRECTORY, exist_ok=True)
-
-    try:
-        with open(file_path, "w") as file:
-            file.write(code)
-        return "File saved"
-    except Exception as e:
-        print(f"Error saving file: {e}")
-        return "Error saving file", 500
-
-
-@app.route("/get-files", methods=["GET"])
-def get_files():
-    try:
-        files = os.listdir(CODE_DIRECTORY)
-        return jsonify(files)
-    except Exception as e:
-        print(f"Error reading directory: {e}")
-        return "Error reading directory", 500
-
-
-@app.route("/load-code/<file_name>", methods=["GET"])
-def load_code(file_name):
-    file_path = os.path.join(CODE_DIRECTORY, file_name)
-    try:
-        with open(file_path, "r") as file:
-            code = file.read()
-        return jsonify({"code": code})
-    except Exception as e:
-        print(f"Error loading file: {file_name}, {e}")
-        return "Error loading file", 500
-
 @app.route("/api/callGPT", methods=["POST"])
 def callGPT():
     try:

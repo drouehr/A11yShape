@@ -4,3 +4,4 @@ gunicorn
 openai
 pyautogen
 pillow
+pyopenssl
