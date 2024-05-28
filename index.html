@@ -426,6 +426,7 @@
             reader.onload = function (e) {
                 document.getElementById('openscad-code').value = e.target.result;
                 console.log(`Uploaded file: ${file.name}`);
+                parseCode(e.target.result.toLowerCase());
             };
             reader.readAsText(file);
         });
@@ -549,13 +550,7 @@
         return tree;
       }
       
-      var prevCode = '';
-      document.getElementById('openscad-code').addEventListener('change', function () {
-        var code = document.getElementById('openscad-code').value;
-        code = code.toLowerCase();
-        
-        //console.log(prevCode, code);
-        
+      function parseCode(code) {
         var parts = [];
         parts.push({
           id: 0,
@@ -579,37 +574,39 @@
           
           modules.forEach(module => {
               var name = module.substring(0, module.indexOf('(')).trim();
+              if (name.length > 0 && !name.includes(' ')) {
               
-              var moduleCode = module.substring(module.indexOf('{')+1);
-              var endIndex = getClosingBracket(moduleCode, "{", "}");
+                var moduleCode = module.substring(module.indexOf('{')+1);
+                var endIndex = getClosingBracket(moduleCode, "{", "}");
 
-              var modulePart = {
-                id: id,
-                name: name,
-                description: "",
-                parents: [],
-                children: [],
-                code: moduleCode.substring(0, endIndex-1).trim(),
-                isModule: true
-              };
-              parts.push(modulePart);
-              id++;
-              
-              var primParts = getPrimitives(modulePart.code, id, modulePart.id);
-              primParts.forEach(p => {
-                parts[modulePart.id].children.push(p.id);
-              });
-              parts = parts.concat(primParts);
-              id += primParts.length;
-              
-              
+                var modulePart = {
+                  id: id,
+                  name: name,
+                  description: "",
+                  parents: [],
+                  children: [],
+                  code: moduleCode.substring(0, endIndex-1).trim(),
+                  isModule: true
+                };
+                parts.push(modulePart);
+                id++;
+                
+                var primParts = getPrimitives(modulePart.code, id, modulePart.id);
+                primParts.forEach(p => {
+                  parts[modulePart.id].children.push(p.id);
+                });
+                parts = parts.concat(primParts);
+                id += primParts.length;
+                
+                
 
-              if (endIndex < moduleCode.length-1) {
-                var endCode = moduleCode.substring(endIndex+1).trim();
-                if (endCode.length > 0) {
-                  var primParts = getPrimitives(endCode, id, 0);
-                  parts = parts.concat(primParts);
-                  id += primParts.length;
+                if (endIndex < moduleCode.length-1) {
+                  var endCode = moduleCode.substring(endIndex+1).trim();
+                  if (endCode.length > 0) {
+                    var primParts = getPrimitives(endCode, id, 0);
+                    parts = parts.concat(primParts);
+                    id += primParts.length;
+                  }
                 }
               }
           });
@@ -648,6 +645,15 @@
         
         var tree = getDisplayTree(parts[0], parts);
         document.getElementById('openscad-code2').innerHTML="<ul>"+tree+"</ul>";
+      
+      }
+      
+      var prevCode = '';
+      document.getElementById('openscad-code').addEventListener('change', function () {
+        var code = document.getElementById('openscad-code').value;
+        code = code.toLowerCase();
+        
+        parseCode(code);
         
         prevCode = code;
 
