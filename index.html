@@ -41,147 +41,138 @@
 </head>
 
 
-<body class="bg-gray-100 h-screen border border-black">
-    <div class="flex h-3/4">
-        <!-- Main Content -->
-        <div class="flex w-full h-screen border border-black p-1">
-            <!-- Sidebar for Code -->
-            <div class="w-3/5 h-3/4 bg-white border-t border-gray-300 flex flex-col flex flex-col">
-                <div class="flex h-4/5 border border-black p-1">
-                    <!-- Code Editor Area 1 -->
-                    <div class="w-1/2 h-full overflow-auto border border-black p-1">
-                        <!-- Code Editor Toolbar -->
-                        <div
-                            class="bg-white border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none border border-black p-1">
-                            <div class="flex items-center space-x-1">
-                                <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black p-1"
-                                    id="save-code" tabindex="0">
-                                    <i class="fas fa-save"></i>
-                                </button>
-                                <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black p-1"
-                                    id="upload-file" tabindex="0">
-                                    <i class="fas fa-upload"></i>
-                                </button>
-                                <input type="file" id="file-input" style="display: none;" accept=".scad">
+<body class="bg-white h-screen ">
+    <!-- Main Content -->
+    <div class="flex w-full h-screen ">
+        <!-- Traditional area -->
+        <!-- Sidebar for Code -->
+        <div class="w-1/3 bg-white border border-black ml-1 mt-1 mb-1 flex-col flex flex-col ">
+            <div class="flex ">
+                <!-- Code Editor Area 1 -->
+                <div class="h-full w-full ">
+                    <!-- Code Editor Toolbar -->
+                    <div
+                        class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
+                        <div class="flex items-center space-x-1">
+                            <button class="text-gray-600 hover:bg-gray-100 p-1 rounded  border border-black" id="save-code" tabindex="0">
+                                <i class="fas fa-save"></i>
+                            </button>
 
-                            </div>
-                            <div class="flex items-center space-x-1 border border-black p-1">
-                                <button class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive"
-                                    id="generate-model" tabindex="0" data-hover-text="Generate Model here">
-                                    <i class="fas fa-cube"></i>
-                                    Generate Model
-                                </button>
-                            </div>
+                            <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black " id="upload-file" tabindex="0">
+                                <i class="fas fa-upload"></i>
+                            </button>
+                            <input type="file" id="file-input" style="display: none;" accept=".scad">
+
                         </div>
-                        <textarea class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
-                            id="openscad-code" placeholder="// Enter OpenSCAD code here..."
-                            style="resize: none; height: calc(55vh - 36px); width: calc(100% - 4px);"
-                            data-hover-text="Enter OpenSCAD code here."></textarea>
+                        <div class="flex items-center space-x-1  ">
+                            <button class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black" id="generate-model"
+                                tabindex="0" data-hover-text="Generate Model here">
+                                <i class="fas fa-cube"></i>
+                                Generate Model
+                            </button>
+                        </div>
                     </div>
-                    <!-- Area 2 -->
-                    <div class="w-1/2 h-full overflow-auto  border border-black p-1">
-                        <div
-                            class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive border border-black"
-                            id="openscad-code2" placeholder="// The modular structure of the code will appear here..."
-                            style="resize: none; height: 57.5vh; width: calc(100% - 2px);"
-                            data-hover-text="Enter OpenSCAD code here."></div>
-                    </div>
+                    <textarea class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
+                        id="openscad-code" placeholder="// Enter OpenSCAD code here..."
+                        style="resize: none; height: calc(92vh - 36px); width: calc(100% - 4px);"
+                        data-hover-text="Enter OpenSCAD code here."></textarea>
                 </div>
-
-                <!-- Prompt and Code2fab Response Area -->
-                <div class="h-1/5 overflow-auto flex flex-col border border-black p-1">
-                    <div class="h-1/3">
-                        <p class="text-sm text-gray-700 mb-2">Prompt:</p>
-                        <textarea
-                            class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive border border-black p-1"
-                            id="gpt-input" placeholder="Enter your prompt here..." style="resize: none; height: 38px;"
-                            data-hover-text="Enter prompt here."></textarea>
-                        <!-- Buttons below the prompt textbox -->
-                        <div class="flex justify-end items-end"><button
-                                class="mt-1 text-black font-bold py-1 px-4 rounded border border-black p-1 "
-                                id="callGPT">
-                                Enter
-                            </button></div>
-
+            </div>
+        </div>
+        <div class="w-1/3 flex-col border border-black m-1">
+            <!-- Viewport Header -->
+            <div class="flex border-b border-black ">
+                <div class="flex items-center" style="min-height: 40px;">
+                    <div id="statusDisplay" class="px-2 py-1 flex justify-between items-center "
+                        style="min-height: 40px; flex-grow: 1;">
+                        <i class="fas fa-exclamation-circle"> <span id="statusText">Status Bar</span></i>
                     </div>
                 </div>
             </div>
-            <!-- Main Viewport and Logs -->
-            <!--                         <button id="toggle-control"
-                            class="bg-grey-800 hover:bg-grey-900 text-black font-bold py-1 px-3 rounded interactive border border-black p-1"
-                            data-hover-text="Control Model">
-                            Change views
-                        </button> -->
-            <div class="w-2/5 h-3/4 flex-col">
-                <!-- Viewport Header -->
-                <div class="flex">
-                    <div class="flex items-center" style="min-height: 40px;">
-                        <div id="statusDisplay" class="bg-grey-800 border-b px-2 py-1 flex justify-between items-center"
-                            style="min-height: 40px; flex-grow: 1;">
-                            <i class="fas fa-exclamation-circle"> <span id="statusText">Status Bar</span></i>
-                        </div>
-                    </div>
+            <!-- Viewport Content -->
+            <div class="flex-grow  flex " style="height: calc(50vh - 40px);">
+                <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
+                    <!-- Model viewer goes here -->
+                    <img id="modelImage" src="logo.png" alt="Model not available" class="max-w-full max-h-full">
+                    <!-- Initially hide the image -->
+                    <div id="placeholder" class="text-left p-2">
+                        <p>Welcome to Code2Fab!</p><br <p>Quick Navigation and Operation Guide using Keyboard
+                        Shortcuts:</p> 
+                        <ul>
+                            <li><strong>Code Editing:</strong> <code>&lt;Ctrl+Shift+O&gt;</code> to navigate to the
+                                code editor.</li>
+                            <li><strong>Model Generation:</strong> <code>&lt;Ctrl+Shift+G&gt;</code> to generate a
+                                model after editing.</li>
+                            <li><strong>View Switching:</strong> Hold <code>&lt;Shift&gt;</code> and use
+                                <code>&lt;Left/Right Arrow Keys&gt;</code> to change views.
+                            </li>
+                            <li><strong>Save Code:</strong> <code>&lt;Ctrl+Shift+S&gt;</code> to save your current
+                                code.</li>
+                            <li><strong>Upload Code:</strong> <code>&lt;Ctrl+Shift+U&gt;</code> to upload existing
+                                code for use.</li>
+                            <li><strong>Version Control:</strong> <code>&lt;Ctrl+Shift+L&gt;</code> to view
+                                different code versions.</li>
+                            <li><strong>Clear Versions:</strong> <code>&lt;Ctrl+Shift+R&gt;</code> to clear the
+                                version list.</li>
+                            <li><strong>Inquiry System:</strong> <code>&lt;Ctrl+Shift+P&gt;</code> to navigate to
+                                the inquiry input area. </li><br>
+                            <li>To interact with the system, use the default keyword like @describe at the beginning
+                                of the input field to start specific functions, currently support match, describe,
+                                analysis, improve and create functions. If you enter a command that does not come
+                                with a keyword or the system does not detect a match, the system will provide an
+                                answer based on your input.</li>
+                        </ul><br>
+                        <p>Code2Fab aims to enhance your efficiency from code to creation with powerful, intuitive
+                            tools tailored for designers, engineers, and enthusiasts alike.</p>
+                    </div><!-- Placeholder text -->
                 </div>
-                <!-- Viewport Content -->
-                <div class="flex-grow bg-gray-100 flex border border-black p-1" style="height: calc(75vh - 47px);">
-                    <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
-                        <!-- Model viewer goes here -->
-                        <img id="modelImage" src="logo.png" alt="Model not available" class="max-w-full max-h-full">
-                        <!-- Initially hide the image -->
-                        <div id="placeholder" class="text-left">
-                            <p>Welcome to Code2Fab!</p><br <p>Quick Navigation and Operation Guide using Keyboard
-                            Shortcuts:</p>
-                            <ul>
-                                <li><strong>Code Editing:</strong> <code>&lt;Ctrl+Shift+O&gt;</code> to navigate to the
-                                    code editor.</li>
-                                <li><strong>Model Generation:</strong> <code>&lt;Ctrl+Shift+G&gt;</code> to generate a
-                                    model after editing.</li>
-                                <li><strong>View Switching:</strong> Hold <code>&lt;Shift&gt;</code> and use
-                                    <code>&lt;Left/Right Arrow Keys&gt;</code> to change views.</li>
-                                <li><strong>Save Code:</strong> <code>&lt;Ctrl+Shift+S&gt;</code> to save your current
-                                    code.</li>
-                                <li><strong>Upload Code:</strong> <code>&lt;Ctrl+Shift+U&gt;</code> to upload existing
-                                    code for use.</li>
-                                <li><strong>Version Control:</strong> <code>&lt;Ctrl+Shift+L&gt;</code> to view
-                                    different code versions.</li>
-                                <li><strong>Clear Versions:</strong> <code>&lt;Ctrl+Shift+R&gt;</code> to clear the
-                                    version list.</li>
-                                <li><strong>Inquiry System:</strong> <code>&lt;Ctrl+Shift+P&gt;</code> to navigate to
-                                    the inquiry input area. </li><br>
-                                <li>To interact with the system, use the default keyword like @describe at the beginning
-                                    of the input field to start specific functions, currently support match, describe,
-                                    analysis, improve and create functions. If you enter a command that does not come
-                                    with a keyword or the system does not detect a match, the system will provide an
-                                    answer based on your input.</li>
-                            </ul><br>
-                            <p>Code2Fab aims to enhance your efficiency from code to creation with powerful, intuitive
-                                tools tailored for designers, engineers, and enthusiasts alike.</p>
-                        </div><!-- Placeholder text -->
+            </div>
+            <!-- Area for code's structure -->
+            <div class="w-full h-1/2 overflow-auto  border-t border-black">
+                <div class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive "
+                    id="openscad-code2" placeholder="// The modular structure of the code will appear here..."
+                    style="resize: none; height: 1/2; width: calc(100% - 2px);"
+                    data-hover-text="Enter OpenSCAD code here."></div>
+            </div>
+        </div>
+        <!-- AI Area -->
+        <div class="w-1/3 bg-gray-100 border-2 border-black px-1 pt-3 m-1 flex-col">
+            <!-- Prompt Area at the top-->
+            <div class="h-1/2 overflow-auto flex flex-col border border-black mx-1">
+                <div class="h-1/3">
+                    <p class="text-sm text-gray-700 m-2">Prompt:</p>
+                    <textarea class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive mb-4 bg-gray-50"
+                        id="gpt-input" placeholder="Enter your prompt here..." style="resize: none; height: 28vh;"
+                        data-hover-text="Enter prompt here."></textarea>
+                    <!-- Buttons below the prompt textbox -->
+                    <div class="flex justify-end items-end"><button
+                            class="mt-1 text-black font-bold py-1 px-4 rounded border border-black m-2" id="callGPT">
+                            Enter
+                        </button></div>
+                </div>
+            </div>
+            <!-- Response Area at the bottom -->
+            <div class=" mt-2 pt-2 ">
+                <button id="enlarge-icon"
+                    class="bg-grey-800 hover:bg-grey-900 text-black font-bold py-1 px-3 rounded interactive flex items-center border border-black">
+                    <i class="fas fa-search-plus mr-2"></i>
+                    <p class="text-sm text-gray-700 mb-0">Code2fab Response:</p>
+                </button>
+
+                <div class="code2fab-container w-full text-sm text-gray-700 font-mono bg-gray-30 flex-col "
+                    style="height: 1/2;">
+                    <!-- GPT response content goes here -->
+                    <div id="code2fab-response"
+                        class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0"
+                        tabindex="0" data-hover-text="Code2fab's response"><br><br> Code2fab's responses will appear here...
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Response Area at the bottom -->
-    <div class="w-full h-1/4 overflow-auto border-t border-gray-300 p-2 flex flex-col">
-        <div class="border border-black p-1 mt-2 pt-2">
-            <button id="enlarge-icon"
-                class="bg-grey-800 hover:bg-grey-900 text-black font-bold py-1 px-3 rounded interactive flex items-center border border-black p-1">
-                <i class="fas fa-search-plus mr-2"></i>
-                <p class="text-sm text-gray-700 mb-0">Code2fab Response:</p>
-            </button>
-
-            <div class="code2fab-container w-full text-sm text-gray-700 font-mono bg-gray-50 flex-col"
-                style="height: calc(25vh - 65px);">
-                <!-- GPT response content goes here -->
-                <div id="code2fab-response"
-                    class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0" tabindex="0"
-                    data-hover-text="Code2fab's response"><br><br> Code2fab's responses will appear here...
-                </div>
-            </div>
-        </div>
     </div>
+    </div>
+
 
     <script>
         const serverUrl = 'http://128.46.81.40:3000'
@@ -237,7 +228,7 @@
         const imageBasePath = '/static/img/model/';
         const totalImages = 7; // Assuming images are named from 0.jpg to 6.jpg
         let currentImageIndex = 0;
-        
+
         async function genImageAndDescribe(index) {
             const code = document.getElementById('openscad-code').value;
             const text = document.getElementById('gpt-input').value;
@@ -245,13 +236,13 @@
             responseContainer.innerHTML = '<pre></pre>';
             const pre = responseContainer.querySelector('pre');
             console.log("Generating images for code:", code);
-            
+
             try {
                 // Generate images from code
-                const generateResponse = await fetch(serverUrl+'/generate-img', {
+                const generateResponse = await fetch(serverUrl + '/generate-img', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: code, imageIndex: index})
+                    body: JSON.stringify({ code: code, imageIndex: index })
                 });
 
                 if (!generateResponse.ok) {
@@ -259,22 +250,22 @@
                 }
 
                 const generateData = await generateResponse.json();
-                
+
                 console.log(generateData);
 
                 if (generateData.message && generateData.message === "Images generated successfully") {
                     updateStatusAndSpeak("Images have been successfully generated.");
-                    
+
                     const byteCharacters = atob(generateData.image);
                     const byteNumbers = new Array(byteCharacters.length);
                     for (let i = 0; i < byteCharacters.length; i++) {
                         byteNumbers[i] = byteCharacters.charCodeAt(i);
                     }
                     const byteArray = new Uint8Array(byteNumbers);
-                    
+
                     const imageElement = document.getElementById('modelImage');
                     imageElement.src = URL.createObjectURL(new Blob([byteArray], { type: 'image/png' }));
-                        
+
                     //updateImageDisplay(0); // Reset to the first image
 
                     // Now process the model image and send it along with the text and code
@@ -289,13 +280,13 @@
                         const pre = responseContainer.querySelector('pre');
                         updateStatusAndSpeak("The system reply is loading...")
 
-                        fetch(serverUrl+'/api/describe', {
+                        fetch(serverUrl + '/api/describe', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({text: text, code: code, image: generateData.image})
+                            body: JSON.stringify({ text: text, code: code, image: generateData.image })
                         })
                             .then(response => {
-                            
+
                                 console.log(response);
                                 const reader = response.body.getReader();
                                 function processStream({ done, value }) {
@@ -327,13 +318,13 @@
                 console.error('Error during generation or loading:', error);
                 updateStatusAndSpeak("An error occurred during image generation.");
             }
-        
+
         }
 
         document.getElementById('generate-model').addEventListener('click', async function () {
-            
+
             await genImageAndDescribe(currentImageIndex);
-            
+
         });
 
 
@@ -391,7 +382,7 @@
                     fileName += '.scad';
                 }
             }
-            
+
             const link = document.createElement("a");
             const content = code;
             const file = new Blob([content], { type: 'text/plain' });
@@ -404,7 +395,7 @@
 
         // Load code from a file
         function loadCode(fileName) {
-            fetch(serverUrl+`/load-code/${fileName}`)
+            fetch(serverUrl + `/load-code/${fileName}`)
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('openscad-code').value = data.code;
@@ -431,7 +422,7 @@
             };
             reader.readAsText(file);
         });
-        
+
 
         document.getElementById('callGPT').addEventListener('click', function () {
             const textInput = document.getElementById('gpt-input').value.trim();
@@ -471,7 +462,7 @@
                     formData.append('text', command);
                     formData.append('code', code);
 
-                    fetch(serverUrl+apiUrl, {
+                    fetch(serverUrl + apiUrl, {
                         method: 'POST',
                         body: formData
                     })
@@ -496,182 +487,182 @@
                 });
             });
         });
-        
-      
-      // get primitive parts from list of available primitives
-      const primitives = ["circle", "square", "polygon", "text", "import", "projection", "sphere", "cube", "cylinder", "polyhedron", "linear_extrude", "rotate_extrude", "surface"];
-      function getPrimitives(code, id, parent) {
-        let parts = [];
-        //console.log(code);
-        primitives.forEach(primitive => {
-          if (code.includes(primitive+"(")) {
-            parts.push({
-              id: id,
-              name: primitive,
-              description: "",
-              parents: [parent],
-              children: [],
-              code: "",
-              isModule: false
+
+
+        // get primitive parts from list of available primitives
+        const primitives = ["circle", "square", "polygon", "text", "import", "projection", "sphere", "cube", "cylinder", "polyhedron", "linear_extrude", "rotate_extrude", "surface"];
+        function getPrimitives(code, id, parent) {
+            let parts = [];
+            //console.log(code);
+            primitives.forEach(primitive => {
+                if (code.includes(primitive + "(")) {
+                    parts.push({
+                        id: id,
+                        name: primitive,
+                        description: "",
+                        parents: [parent],
+                        children: [],
+                        code: "",
+                        isModule: false
+                    });
+                    id++;
+                }
             });
-            id++;
-          }
-        });
-        return parts;
-      }
-
-      function getClosingBracket(code, open, close) {
-        var lev = 1;
-        for (let i = 0; i < code.length; i++) {
-          var c = code[i];
-
-          if (c == open) {
-            lev++;
-          } else if (c == close) {
-            lev--;
-          }
-          if (lev == 0) {
-            return i;
-          }
+            return parts;
         }
-        return code.length;
-      }
-      
-      function getDisplayTree(root, parts) {
-        const children = root.children;
-        let tree = "<div style=\"padding-left: 20px;\">&gt;&nbsp;"+root.name+"</div>";
-        if (children.length == 0) {
-          return tree;
-        }
-        
-        tree = tree + "<div style=\"padding-left: 20px;\">";
-        for (let i = 0; i < children.length; i++) { 
-          tree = tree + getDisplayTree(parts[children[i]], parts);
-        }
-        tree = tree + "</div>";
-        return tree;
-      }
-      
-      function parseCode(code) {
-        var parts = [];
-        parts.push({
-          id: 0,
-          name: "Model",
-          description: "",
-          parents: [],
-          children: [],
-          code: code,
-          isModule: false
-        });
-        
-        // code that's not in modules
-        var globalCode = [];
-        
-        var id = 1;
-        if (code.includes('module ')) {
-          modules = code.split('module ');
-          
-          // code before 1st module
-          if (code.indexOf('module ') != 0) {
-            globalCode.push(modules[0].trim());
-            var primParts = getPrimitives(modules[0].trim(), id, 0);
-            parts = parts.concat(primParts);
-            id += primParts.length;
-            modules.shift();
-          }
-          
-          modules.forEach(module => {
-              var name = module.substring(0, module.indexOf('(')).trim();
-              if (name.length > 0 && !name.includes(' ')) {
-              
-                var moduleCode = module.substring(module.indexOf('{')+1);
-                var endIndex = getClosingBracket(moduleCode, "{", "}");
 
-                var modulePart = {
-                  id: id,
-                  name: name,
-                  description: "",
-                  parents: [],
-                  children: [],
-                  code: moduleCode.substring(0, endIndex-1).trim(),
-                  isModule: true
-                };
-                parts.push(modulePart);
-                id++;
-                
-                // primitives in module
-                var primParts = getPrimitives(modulePart.code, id, modulePart.id);
-                primParts.forEach(p => {
-                  parts[modulePart.id].children.push(p.id);
-                });
-                parts = parts.concat(primParts);
-                id += primParts.length;
-                
-                
-                // code after module
-                if (endIndex < moduleCode.length-1) {
-                  var endCode = moduleCode.substring(endIndex+1).trim();
-                  if (endCode.length > 0) {
-                    globalCode.push(endCode);
-                    var primParts = getPrimitives(endCode, id, 0);
+        function getClosingBracket(code, open, close) {
+            var lev = 1;
+            for (let i = 0; i < code.length; i++) {
+                var c = code[i];
+
+                if (c == open) {
+                    lev++;
+                } else if (c == close) {
+                    lev--;
+                }
+                if (lev == 0) {
+                    return i;
+                }
+            }
+            return code.length;
+        }
+
+        function getDisplayTree(root, parts) {
+            const children = root.children;
+            let tree = "<div style=\"padding-left: 20px;\">&gt;&nbsp;" + root.name + "</div>";
+            if (children.length == 0) {
+                return tree;
+            }
+
+            tree = tree + "<div style=\"padding-left: 20px;\">";
+            for (let i = 0; i < children.length; i++) {
+                tree = tree + getDisplayTree(parts[children[i]], parts);
+            }
+            tree = tree + "</div>";
+            return tree;
+        }
+
+        function parseCode(code) {
+            var parts = [];
+            parts.push({
+                id: 0,
+                name: "Model",
+                description: "",
+                parents: [],
+                children: [],
+                code: code,
+                isModule: false
+            });
+
+            // code that's not in modules
+            var globalCode = [];
+
+            var id = 1;
+            if (code.includes('module ')) {
+                modules = code.split('module ');
+
+                // code before 1st module
+                if (code.indexOf('module ') != 0) {
+                    globalCode.push(modules[0].trim());
+                    var primParts = getPrimitives(modules[0].trim(), id, 0);
                     parts = parts.concat(primParts);
                     id += primParts.length;
-                  }
+                    modules.shift();
                 }
-              }
-          });
-          
-          // module hierarchy
-          for (let i = 1; i < parts.length; i++) {
-            let part = parts[i];
-            if (part.isModule == false) {
-              continue;
+
+                modules.forEach(module => {
+                    var name = module.substring(0, module.indexOf('(')).trim();
+                    if (name.length > 0 && !name.includes(' ')) {
+
+                        var moduleCode = module.substring(module.indexOf('{') + 1);
+                        var endIndex = getClosingBracket(moduleCode, "{", "}");
+
+                        var modulePart = {
+                            id: id,
+                            name: name,
+                            description: "",
+                            parents: [],
+                            children: [],
+                            code: moduleCode.substring(0, endIndex - 1).trim(),
+                            isModule: true
+                        };
+                        parts.push(modulePart);
+                        id++;
+
+                        // primitives in module
+                        var primParts = getPrimitives(modulePart.code, id, modulePart.id);
+                        primParts.forEach(p => {
+                            parts[modulePart.id].children.push(p.id);
+                        });
+                        parts = parts.concat(primParts);
+                        id += primParts.length;
+
+
+                        // code after module
+                        if (endIndex < moduleCode.length - 1) {
+                            var endCode = moduleCode.substring(endIndex + 1).trim();
+                            if (endCode.length > 0) {
+                                globalCode.push(endCode);
+                                var primParts = getPrimitives(endCode, id, 0);
+                                parts = parts.concat(primParts);
+                                id += primParts.length;
+                            }
+                        }
+                    }
+                });
+
+                // module hierarchy
+                for (let i = 1; i < parts.length; i++) {
+                    let part = parts[i];
+                    if (part.isModule == false) {
+                        continue;
+                    }
+                    for (let j = 1; j < parts.length; j++) {
+                        let p = parts[j];
+                        if (p.code.includes(part.name + '(')) {
+                            part.parents.push(p.id);
+                            p.children.push(part.id);
+                        }
+                    }
+                    if (part.parents.length == 0) {
+                        part.parents.push(0);
+                    }
+                }
+            } else {
+                // no modules
+                var primParts = getPrimitives(code, id, 0);
+                parts = parts.concat(primParts);
+                id += primParts.length;
+                globalCode.push(code);
             }
-            for (let j = 1; j < parts.length; j++) {
-              let p = parts[j];
-              if (p.code.includes(part.name+'(')) {
-                part.parents.push(p.id);
-                p.children.push(part.id);
-              }
+
+            // get children of root
+            for (let i = 1; i < parts.length; i++) {
+                let part = parts[i];
+                if (part.parents.includes(0)) {
+                    parts[0].children.push(part.id);
+                }
             }
-            if (part.parents.length == 0) {
-              part.parents.push(0);
-            }
-          }
-        } else {
-          // no modules
-          var primParts = getPrimitives(code, id, 0);
-          parts = parts.concat(primParts);
-          id += primParts.length;
-          globalCode.push(code);
+            console.log(parts);
+
+            // generate display tree
+            var tree = getDisplayTree(parts[0], parts);
+            document.getElementById('openscad-code2').innerHTML = "<ul>" + tree + "</ul>";
+
         }
 
-        // get children of root
-        for (let i = 1; i < parts.length; i++) {
-          let part = parts[i];
-          if (part.parents.includes(0)) {
-            parts[0].children.push(part.id);
-          }
-        }
-        console.log(parts);
-        
-        // generate display tree
-        var tree = getDisplayTree(parts[0], parts);
-        document.getElementById('openscad-code2').innerHTML="<ul>"+tree+"</ul>";
-      
-      }
-      
-      // on code change
-      var prevCode = '';
-      document.getElementById('openscad-code').addEventListener('change', function () {
-        var code = document.getElementById('openscad-code').value;
-        code = code.toLowerCase();
-        
-        parseCode(code);
-        
-        prevCode = code;
+        // on code change
+        var prevCode = '';
+        document.getElementById('openscad-code').addEventListener('change', function () {
+            var code = document.getElementById('openscad-code').value;
+            code = code.toLowerCase();
 
-      });
+            parseCode(code);
+
+            prevCode = code;
+
+        });
     </script>
 
 

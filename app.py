@@ -33,9 +33,7 @@ from openai import OpenAI
 import autogen
 from autogen import Agent, AssistantAgent, ConversableAgent, UserProxyAgent
 import requests
-from autogen.agentchat.contrib.multimodal_conversable_agent import (
-    MultimodalConversableAgent,
-)
+from autogen.agentchat.contrib.multimodal_conversable_agent import MultimodalConversableAgent
 
 logging.basicConfig(level=logging.INFO)
 
