@@ -229,6 +229,7 @@
         const totalImages = 7; // Assuming images are named from 0.jpg to 6.jpg
         let currentImageIndex = 0;
         
+        var prevCode = '';
         var parts = [];
         let currentPartIndex = 0;
         parts.push({
@@ -365,6 +366,7 @@
             if (event.ctrlKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key.toUpperCase() == 'M')) {
                 const prevPart = document.getElementById('part-'+parts[currentPartIndex].id);
                 prevPart.innerHTML = prevPart.innerHTML.replace(" (selected)","");
+                prevPart.style["color"] = "";
                 if (event.key === 'ArrowUp') {
                   currentPartIndex--;
                 } else if (event.key === 'ArrowDown') {
@@ -375,6 +377,20 @@
                 currentPartIndex = ((currentPartIndex%parts.length) + parts.length) % parts.length;
                 const curPart = document.getElementById('part-'+parts[currentPartIndex].id);
                 curPart.innerHTML = curPart.innerHTML + " (selected)"
+                curPart.style["color"] = "blue";
+            }
+            
+            if (event.ctrlKey && event.shiftKey) {
+              if (event.key.toUpperCase() == 'G') {
+                await genImageAndDescribe(currentImageIndex);
+              } else if (event.key.toUpperCase() == 'C') {
+                var code = document.getElementById('openscad-code').value;
+                code = code.toLowerCase();
+
+                parseCode(code);
+
+                prevCode = code;
+              }
             }
         });
 
@@ -567,12 +583,12 @@
 
         function getDisplayTree(root, parts, index) {
             const children = root.children;
-            let tree = "<div id=\"part-"+root.id+"\" style=\"padding-left: 20px;\">"+index+"&nbsp;" + root.name + "</div>";
+            let tree = "<div id=\"part-"+root.id+"\" style=\"padding-left: 10px;\">"+index+"&nbsp;" + root.name + "</div>";
             if (children.length == 0) {
                 return tree;
             }
 
-            tree = tree + "<div style=\"padding-left: 20px;\">";
+            tree = tree + "<div style=\"padding-left: 10px;\">";
             for (let i = 0; i < children.length; i++) {
                 tree = tree + getDisplayTree(parts[children[i]], parts, index+(i+1)+".");
             }
@@ -689,11 +705,11 @@
             document.getElementById('openscad-code2').innerHTML = "<ul id=\"parts-tree\">" + tree + "</ul>";
             const curPart = document.getElementById('part-'+parts[currentPartIndex].id);
             curPart.innerHTML = curPart.innerHTML + " (selected)"
+            curPart.style["color"] = "blue";
 
         }
 
         // on code change
-        var prevCode = '';
         document.getElementById('openscad-code').addEventListener('change', function () {
             var code = document.getElementById('openscad-code').value;
             code = code.toLowerCase();
