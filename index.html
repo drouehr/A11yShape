@@ -265,6 +265,9 @@
 
                     const imageElement = document.getElementById('modelImage');
                     imageElement.src = URL.createObjectURL(new Blob([byteArray], { type: 'image/png' }));
+                    
+                    const instructions = document.getElementById('placeholder');
+                    instructions.style["display"] = "none";
 
                     //updateImageDisplay(0); // Reset to the first image
 
@@ -283,7 +286,7 @@
                         fetch(serverUrl + '/api/describe', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ text: text, code: code, image: generateData.image })
+                            body: JSON.stringify({ text: text, code: code, image: generateData.thumbnail })
                         })
                             .then(response => {
 

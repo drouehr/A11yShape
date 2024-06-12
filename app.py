@@ -34,6 +34,8 @@ import autogen
 from autogen import Agent, AssistantAgent, ConversableAgent, UserProxyAgent
 import requests
 from autogen.agentchat.contrib.multimodal_conversable_agent import MultimodalConversableAgent
+from PIL import Image
+import io
 
 logging.basicConfig(level=logging.INFO)
 
@@ -138,6 +140,12 @@ def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
 
+def pil_to_bytes(img):
+    buf = io.BytesIO()
+    img.save(buf, format='JPEG')
+    byte_im = buf.getvalue()
+    return base64.b64encode(byte_im).decode("utf-8")
+
 def upload_image(image_path):
     headers = {'Authorization': 'ICcEBQDFvmdJGPfwpGMSYxgkSEYHnVyw'}
     url = "https://sm.ms/api/v2/upload"
@@ -179,13 +187,14 @@ def generate_images():
         ]
         
         encoded_imgs = []
+        encoded_imgs_sm = []
         
         for index, view in enumerate(views):
             if index != imageIndex:
                 continue
             output_path = f'{output_dir}/{index}.png'
             current_process = subprocess.Popen(
-                ["openscad", "-o", output_path, "--camera="+view, "--viewall", "--autocenter", "--imgsize=256,256", join(output_dir, file)],
+                ["openscad", "-o", output_path, "--camera="+view, "--viewall", "--autocenter", "--imgsize=1024,1024", join(output_dir, file)],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -196,14 +205,17 @@ def generate_images():
                 print(f"exec error: {stderr}")
                 return jsonify(error=f"Failed to generate image {index}"), 500
             print(f"stdout {stdout}")
-
-            with open(output_path, "rb") as img_file:
-                encoded_imgs.append(base64.b64encode(img_file.read()).decode("utf-8"))
+            
+            img = Image.open(output_path)
+            encoded_imgs.append(pil_to_bytes(img))
+            imgsize = 256, 256
+            img.thumbnail(imgsize, Image.Resampling.LANCZOS)
+            encoded_imgs_sm.append(pil_to_bytes(img))
         
         #description = describe(request, code, encoded_imgs)
         print('image')
         
-        return jsonify({"message": "Images generated successfully", "image": encoded_imgs[0]})
+        return jsonify({"message": "Images generated successfully", "image": encoded_imgs[0], "thumbnail": encoded_imgs_sm[0]})
     except Exception as e:
         print(f"Execution error: {e}")
         return jsonify(error="Failed to generate images."), 500
