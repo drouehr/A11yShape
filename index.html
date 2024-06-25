@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>
-        Code2Fab
+        Code2Fab: OpenSCAD-based BLV user assistance
     </title>
     <script src="https://cdn.tailwindcss.com">
     </script>
@@ -51,28 +51,30 @@
                 <!-- Code Editor Area 1 -->
                 <div class="h-full w-full ">
                     <!-- Code Editor Toolbar -->
-                    <div
-                        class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
+                    <div aria-label="Code Editor's Tool Bar" class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
                         <div class="flex items-center space-x-1">
-                            <button class="text-gray-600 hover:bg-gray-100 p-1 rounded  border border-black" id="save-code" tabindex="0">
-                                <i class="fas fa-save"></i>
+                            <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
+                                id="save-code" tabindex="0" aria-label="Save the OpenSCAD code.">
+                                <i class="fas fa-save" aria-hidden="true"></i>
                             </button>
 
-                            <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black " id="upload-file" tabindex="0">
-                                <i class="fas fa-upload"></i>
+                            <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
+                                id="upload-file" tabindex="0" aria-label="Upload a new OpenSCAD file."
+                                aria-controls="file-input">
+                                <i class="fas fa-upload" aria-hidden="true"></i>
                             </button>
                             <input type="file" id="file-input" style="display: none;" accept=".scad">
-
                         </div>
+
                         <div class="flex items-center space-x-1  ">
-                            <button class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black" id="generate-model"
-                                tabindex="0" data-hover-text="Generate Model here">
+                            <button tabindex="0" aria-label="Generate Model" class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
+                                id="generate-model" tabindex="0">
                                 <i class="fas fa-cube"></i>
                                 Generate Model
                             </button>
                         </div>
                     </div>
-                    <textarea class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
+                    <textarea tabindex="0" aria-label="The entire left side of the interface, this is the code editor" class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
                         id="openscad-code" placeholder="// Enter OpenSCAD code here..."
                         style="resize: none; height: calc(92vh - 36px); width: calc(100% - 4px);"
                         data-hover-text="Enter OpenSCAD code here."></textarea>
@@ -91,14 +93,14 @@
             </div>
             <!-- Viewport Content -->
             <div class="flex-grow  flex " style="height: calc(50vh - 40px);">
-                <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
+                <div tabindex="0" aria-label="The entire upper middle area of the interface shows the rendered model and an introduction to Code2fab" class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
                     <!-- Model viewer goes here -->
-                    <img id="modelImage" src="logo.png" alt="Model not available" class="max-w-full max-h-full">
+                    <img id="modelImage" src="logo.png" tabindex="0" aria-label="Area to present the rendered model" class="max-w-full max-h-full">
                     <!-- Initially hide the image -->
-                    <div id="placeholder" class="text-left p-2">
+                    <div id="placeholder" tabindex="0" aria-label="The introduction of Code2Fab" class="text-left p-2">
                         <p>Welcome to Code2Fab!</p><br <p>Quick Navigation and Operation Guide using Keyboard
-                        Shortcuts:</p> 
-                        <ul>
+                        Shortcuts:</p>
+                        <ol>
                             <li><strong>Code Editing:</strong> <code>&lt;Ctrl+Shift+O&gt;</code> to navigate to the
                                 code editor.</li>
                             <li><strong>Model Generation:</strong> <code>&lt;Ctrl+Shift+G&gt;</code> to generate a
@@ -110,18 +112,14 @@
                                 code.</li>
                             <li><strong>Upload Code:</strong> <code>&lt;Ctrl+Shift+U&gt;</code> to upload existing
                                 code for use.</li>
-                            <li><strong>Version Control:</strong> <code>&lt;Ctrl+Shift+L&gt;</code> to view
-                                different code versions.</li>
-                            <li><strong>Clear Versions:</strong> <code>&lt;Ctrl+Shift+R&gt;</code> to clear the
-                                version list.</li>
-                            <li><strong>Inquiry System:</strong> <code>&lt;Ctrl+Shift+P&gt;</code> to navigate to
+                            <li><strong>AI System:</strong> <code>&lt;Ctrl+Shift+P&gt;</code> to navigate to
                                 the inquiry input area. </li><br>
                             <li>To interact with the system, use the default keyword like @describe at the beginning
-                                of the input field to start specific functions, currently support match, describe,
-                                analysis, improve and create functions. If you enter a command that does not come
+                                of the input field to start specific functions, currently support match, analysis,
+                                improve and create functions. If you enter a command that does not come
                                 with a keyword or the system does not detect a match, the system will provide an
                                 answer based on your input.</li>
-                        </ul><br>
+                        </ol><br>
                         <p>Code2Fab aims to enhance your efficiency from code to creation with powerful, intuitive
                             tools tailored for designers, engineers, and enthusiasts alike.</p>
                     </div><!-- Placeholder text -->
@@ -129,42 +127,45 @@
             </div>
             <!-- Area for code's structure -->
             <div class="w-full h-1/2 overflow-auto  border-t border-black">
-                <div class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive "
+                <div tabindex="0" aria-label="The lower middle area of the entire interface shows the structure of the code" class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive "
                     id="openscad-code2" placeholder="// The modular structure of the code will appear here..."
                     style="resize: none; height: 1/2; width: calc(100% - 2px);"
-                    data-hover-text="Enter OpenSCAD code here."></div>
+                    ></div>
             </div>
         </div>
         <!-- AI Area -->
-        <div class="w-1/3 bg-gray-100 border-2 border-black px-1 pt-3 m-1 flex-col">
+        <div tabindex="0" aria-label="This is the right area of the entire screen, where you will enter your prompt in the upper section and then view the responses in the lower section" class="w-1/3 bg-gray-100 border-2 border-black px-1 pt-3 m-1 flex-col overflow-auto">
             <!-- Prompt Area at the top-->
             <div class="h-1/4 overflow-auto flex flex-col border border-black mx-1">
                 <div class="h-1/4">
                     <p class="text-sm text-gray-700 m-2">Prompt:</p>
-                    <textarea class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive mb-4 bg-gray-50"
+                    <textarea
+                        class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive mb-4 bg-gray-50"
                         id="gpt-input" placeholder="Enter your prompt here..." style="resize: none; height: 14vh;"
-                        data-hover-text="Enter prompt here."></textarea>
+                        aria-label="Enter prompt here."></textarea>
                     <!-- Buttons below the prompt textbox -->
-                    <div class="flex justify-end items-end"><button
-                            class="mt-1 text-black font-bold py-1 px-4 rounded border border-black m-2" id="callGPT">
-                            Enter
-                        </button></div>
+                    <button aria-label="Enter your prompt here and click to get a response from the AI system."
+                        class="flex justify-end items-end mt-1 text-black font-bold py-1 px-4 rounded border border-black m-2"
+                        id="callGPT">
+                        Enter
+                    </button>
+
                 </div>
             </div>
             <!-- Response Area at the bottom -->
             <div class=" mt-2 pt-2 ">
-                <button id="enlarge-icon"
-                    class="bg-grey-800 hover:bg-grey-900 text-black font-bold py-1 px-3 rounded interactive flex items-center border border-black">
+                <div id="enlarge-icon"
+                    class="bg-grey-800 hover:bg-grey-900 text-black font-bold py-1 px-3 rounded interactive flex items-center ">
                     <i class="fas fa-search-plus mr-2"></i>
                     <p class="text-sm text-gray-700 mb-0">Code2fab Response:</p>
-                </button>
+            </div>
 
-                <div class="code2fab-container w-full text-sm text-gray-700 font-mono bg-gray-30 flex-col "
+                <div class="code2fab-container w-full text-sm text-gray-700 font-mono bg-gray-30 flex-col"
                     style="height: 3/4;">
                     <!-- GPT response content goes here -->
                     <div id="code2fab-response"
                         class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0"
-                        tabindex="0" data-hover-text="Code2fab's response"><br><br> Code2fab's responses will appear here...
+                        tabindex="0" data-hover-text="Code2fab's response"><br><br> Code2fab's responses will appear here...<br>
                     </div>
                 </div>
             </div>
@@ -180,18 +181,18 @@
         // Display and update the status
         const statusDisplay = document.getElementById('statusText');
         function updateStatusAndSpeak(text) {
-            speechSynthesis.cancel();
+            //speechSynthesis.cancel();
             statusDisplay.textContent = text;
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = 5;
-            speechSynthesis.speak(utterance);
+            //speechSynthesis.speak(utterance);
         }
 
         const elements = [
             { id: "save-code", key: "Ctrl+Shift+S", text: "Save the OpenSCAD code." },
-            { id: "refresh-files", key: "Ctrl+Shift+R", text: "Clear the file list." },
+            //{ id: "refresh-files", key: "Ctrl+Shift+R", text: "Clear the file list." },
             { id: "upload-file", key: "Ctrl+Shift+U", text: "Upload a new OpenSCAD file." },
-            { id: "file-list", key: "Ctrl+Shift+L", text: "Open the version list." },
+            //{ id: "file-list", key: "Ctrl+Shift+L", text: "Open the version list." },
             { id: "generate-model", key: "Ctrl+Shift+G", text: "Generate a 3D model from the code." },
             { id: "openscad-code", key: "Ctrl+Shift+O", text: "Enter OpenSCAD code here." },
             { id: "gpt-input", key: "Ctrl+Shift+P", text: "Enter your input here." },
@@ -228,7 +229,7 @@
         const imageBasePath = '/static/img/model/';
         const totalImages = 7; // Assuming images are named from 0.jpg to 6.jpg
         let currentImageIndex = 0;
-        
+
         var prevCode = '';
         var parts = [];
         let currentPartIndex = 0;
@@ -241,12 +242,12 @@
             code: "",
             isModule: false
         });
-        
+
 
         async function genImageAndDescribe(index) {
             var code = document.getElementById('openscad-code').value;
             if (currentPartIndex != 0) {
-              code = parts[currentPartIndex].code;
+                code = parts[currentPartIndex].code;
             }
             const text = document.getElementById('gpt-input').value;
             const responseContainer = document.getElementById('code2fab-response');
@@ -282,7 +283,7 @@
 
                     const imageElement = document.getElementById('modelImage');
                     imageElement.src = URL.createObjectURL(new Blob([byteArray], { type: 'image/png' }));
-                    
+
                     const instructions = document.getElementById('placeholder');
                     instructions.style["display"] = "none";
 
@@ -295,7 +296,7 @@
                     setTimeout(() => {
                         var code = document.getElementById('openscad-code').value;
                         if (currentPartIndex != 0) {
-                          code = parts[currentPartIndex].code;
+                            code = parts[currentPartIndex].code;
                         }
                         const text = document.getElementById('gpt-input').value;
                         const responseContainer = document.getElementById('code2fab-response');
@@ -362,35 +363,35 @@
                 await genImageAndDescribe(currentImageIndex);
                 updateStatusAndSpeak(`Viewing image number ${currentImageIndex}.`);
             }
-            
+
             if (event.ctrlKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key.toUpperCase() == 'M')) {
-                const prevPart = document.getElementById('part-'+parts[currentPartIndex].id);
-                prevPart.innerHTML = prevPart.innerHTML.replace(" (selected)","");
+                const prevPart = document.getElementById('part-' + parts[currentPartIndex].id);
+                prevPart.innerHTML = prevPart.innerHTML.replace(" (selected)", "");
                 prevPart.style["color"] = "";
                 if (event.key === 'ArrowUp') {
-                  currentPartIndex--;
+                    currentPartIndex--;
                 } else if (event.key === 'ArrowDown') {
-                  currentPartIndex++;
+                    currentPartIndex++;
                 } else if (event.key.toUpperCase() == 'M') {
-                  currentPartIndex = 0;
+                    currentPartIndex = 0;
                 }
-                currentPartIndex = ((currentPartIndex%parts.length) + parts.length) % parts.length;
-                const curPart = document.getElementById('part-'+parts[currentPartIndex].id);
+                currentPartIndex = ((currentPartIndex % parts.length) + parts.length) % parts.length;
+                const curPart = document.getElementById('part-' + parts[currentPartIndex].id);
                 curPart.innerHTML = curPart.innerHTML + " (selected)"
                 curPart.style["color"] = "blue";
             }
-            
+
             if (event.ctrlKey && event.shiftKey) {
-              if (event.key.toUpperCase() == 'G') {
-                await genImageAndDescribe(currentImageIndex);
-              } else if (event.key.toUpperCase() == 'C') {
-                var code = document.getElementById('openscad-code').value;
-                code = code.toLowerCase();
+                if (event.key.toUpperCase() == 'G') {
+                    await genImageAndDescribe(currentImageIndex);
+                } else if (event.key.toUpperCase() == 'C') {
+                    var code = document.getElementById('openscad-code').value;
+                    code = code.toLowerCase();
 
-                parseCode(code);
+                    parseCode(code);
 
-                prevCode = code;
-              }
+                    prevCode = code;
+                }
             }
         });
 
@@ -484,7 +485,7 @@
 
             const commandMap = {
                 '@create': '/api/create',
-                '@describe': '/api/describe',
+                //'@describe': '/api/describe',
                 '@match': '/api/match',
                 '@analysis': '/api/analysis',
                 '@improve': '/api/improve'
@@ -583,14 +584,14 @@
 
         function getDisplayTree(root, parts, index) {
             const children = root.children;
-            let tree = "<div id=\"part-"+root.id+"\" style=\"padding-left: 10px;\">"+index+"&nbsp;" + root.name + "</div>";
+            let tree = "<div id=\"part-" + root.id + "\" style=\"padding-left: 10px;\">" + index + "&nbsp;" + root.name + "</div>";
             if (children.length == 0) {
                 return tree;
             }
 
             tree = tree + "<div style=\"padding-left: 10px;\">";
             for (let i = 0; i < children.length; i++) {
-                tree = tree + getDisplayTree(parts[children[i]], parts, index+(i+1)+".");
+                tree = tree + getDisplayTree(parts[children[i]], parts, index + (i + 1) + ".");
             }
             tree = tree + "</div>";
             return tree;
@@ -703,7 +704,7 @@
             // generate display tree
             var tree = getDisplayTree(parts[0], parts, "");
             document.getElementById('openscad-code2').innerHTML = "<ul id=\"parts-tree\">" + tree + "</ul>";
-            const curPart = document.getElementById('part-'+parts[currentPartIndex].id);
+            const curPart = document.getElementById('part-' + parts[currentPartIndex].id);
             curPart.innerHTML = curPart.innerHTML + " (selected)"
             curPart.style["color"] = "blue";
 
