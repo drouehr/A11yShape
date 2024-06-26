@@ -159,10 +159,41 @@ def upload_image(image_path):
 
 current_process = None
 
+def gen_image(index, view, code, output_dir):
+    file = 'model.scad'
+    f = open(join(output_dir, file), "w")
+    f.write(code)
+    f.close()
+    
+    output_path = f'{output_dir}/{index}.png'
+        
+    current_process = subprocess.Popen(
+        ["openscad", "-o", output_path, "--camera="+view, "--viewall", "--autocenter", "--imgsize=1024,1024", join(output_dir, file)],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    stdout, stderr = current_process.communicate(input=code)
+    if current_process.returncode != 0:
+        print(f"exec error: {stderr}")
+        return None, None
+    print(f"stdout {stdout}")
+    
+    img = Image.open(output_path)
+    fullsize = pil_to_bytes(img)
+    imgsize = 256, 256
+    img.thumbnail(imgsize, Image.Resampling.LANCZOS)
+    thumbnail = pil_to_bytes(img)
+    
+    return fullsize, thumbnail
+
+
 @app.route("/generate-img", methods=["POST"])
 def generate_images():
     global current_process
     code = request.json.get("code")
+    fullCode = request.json.get("fullCode")
     imageIndex = request.json.get("imageIndex")
     if current_process and current_process.poll() is None:
         current_process.terminate()
@@ -171,10 +202,7 @@ def generate_images():
         output_dir = "temp"
         os.makedirs(output_dir, exist_ok=True)
         
-        file = 'model.scad'
-        f = open(join(output_dir, file), "w")
-        f.write(code)
-        f.close()
+        
             
         views = [
             "50,50,50,60,30,210,300",  
@@ -188,34 +216,30 @@ def generate_images():
         
         encoded_imgs = []
         encoded_imgs_sm = []
+        encoded_imgs_full = []
         
         for index, view in enumerate(views):
             if index != imageIndex:
                 continue
-            output_path = f'{output_dir}/{index}.png'
-            current_process = subprocess.Popen(
-                ["openscad", "-o", output_path, "--camera="+view, "--viewall", "--autocenter", "--imgsize=1024,1024", join(output_dir, file)],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-            )
-            stdout, stderr = current_process.communicate(input=code)
-            if current_process.returncode != 0:
-                print(f"exec error: {stderr}")
-                return jsonify(error=f"Failed to generate image {index}"), 500
-            print(f"stdout {stdout}")
             
-            img = Image.open(output_path)
-            encoded_imgs.append(pil_to_bytes(img))
-            imgsize = 256, 256
-            img.thumbnail(imgsize, Image.Resampling.LANCZOS)
-            encoded_imgs_sm.append(pil_to_bytes(img))
+            fullsize, thumbnail = gen_image(index, view, code, output_dir)
+            if fullsize is None:
+                return jsonify(error=f"Failed to generate image {index}"), 500
+            encoded_imgs.append(fullsize)
+            encoded_imgs_sm.append(thumbnail)
+            
+            if len(fullCode) > 0:
+                fullsize, thumbnail = gen_image(index, view, fullCode, output_dir)
+                if fullsize is None:
+                    return jsonify(error=f"Failed to generate image {index}"), 500
+                encoded_imgs_full.append(thumbnail)
+            else:
+                encoded_imgs_full.append("")
         
         #description = describe(request, code, encoded_imgs)
         print('image')
         
-        return jsonify({"message": "Images generated successfully", "image": encoded_imgs[0], "thumbnail": encoded_imgs_sm[0]})
+        return jsonify({"message": "Images generated successfully", "image": encoded_imgs[0], "thumbnail": encoded_imgs_sm[0], "fullImg": encoded_imgs_full[0]})
     except Exception as e:
         print(f"Execution error: {e}")
         return jsonify(error="Failed to generate images."), 500
@@ -227,9 +251,66 @@ def describe():
         text = request.json.get("text")
         code = request.json.get("code")
         image = request.json.get("image")
+        prevCode = request.json.get("prevCode")
+        prevImg = request.json.get("prevImg")
+        fullCode = request.json.get("fullCode")
+        fullImg = request.json.get("fullImg")
         logging.info(f"Received text: {text}")
         
-        def gpt_action(image):
+        if prevCode == code:
+            prevCode = ""
+        if fullCode == code:
+            fullCode = ""
+        
+        def gpt_action(image, code, prevCode, prevImg):
+            if len(fullCode) > 0:
+                content = [
+                            {"type": "text", "text": "Given the part of a 3D model and its OpenSCAD code, describe the shape such that a blind user could understand it. Compare it in relation to the full model."},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{image}",
+                            },
+                            },
+                            {"type": "text", "text": "Part of model: \n"+code},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{fullImg}",
+                            },
+                            },
+                            {"type": "text", "text": "Full model: \n"+fullCode},
+                        ]
+            elif len(prevCode) > 0:
+                content = [
+                            {"type": "text", "text": "Given the 3D model and its OpenSCAD code, describe the changes between the first image and code (referred to as the previous model) and the second image and code (referred to as the current model). Describe the shape such that a blind user could understand it."},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{prevImg}",
+                            },
+                            },
+                            {"type": "text", "text": prevCode},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{image}",
+                            },
+                            },
+                            {"type": "text", "text": code},
+                        ]
+            else:
+                content = [
+                            {"type": "text", "text": "Given the 3D model and its OpenSCAD code, describe the shape such that a blind user could understand it."},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{image}",
+                            },
+                            },
+                            {"type": "text", "text": code},
+                        ]
+        
             try:
                 completion = client.chat.completions.create(
                     model="gpt-4o",
@@ -239,15 +320,7 @@ def describe():
                     messages=[
                         {
                         "role": "user",
-                        "content": [
-                            {"type": "text", "text": "Given the same 3D model viewed from different angles, describe the shape such that a blind user could understand it."},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{image}",
-                            },
-                            },
-                        ],
+                        "content": content,
                         }
                     ],
                 )
@@ -260,7 +333,7 @@ def describe():
                 if str(e) != "'NoneType' object has no attribute 'encode'":
                     yield "Error: " + str(e)
 
-        return Response(gpt_action(image), mimetype="text/event-stream")
+        return Response(gpt_action(image, code, prevCode, prevImg), mimetype="text/event-stream")
 
     except Exception as e:
         logging.error(f"Error processing request: {e}")

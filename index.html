@@ -231,6 +231,7 @@
         let currentImageIndex = 0;
 
         var prevCode = '';
+        var prevImg = '';
         var parts = [];
         let currentPartIndex = 0;
         parts.push({
@@ -246,7 +247,9 @@
 
         async function genImageAndDescribe(index) {
             var code = document.getElementById('openscad-code').value;
+            var fullCode = "";
             if (currentPartIndex != 0) {
+                fullCode = code;
                 code = parts[currentPartIndex].code;
             }
             const text = document.getElementById('gpt-input').value;
@@ -260,7 +263,7 @@
                 const generateResponse = await fetch(serverUrl + '/generate-img', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: code, imageIndex: index })
+                    body: JSON.stringify({ code: code, fullCode: fullCode, imageIndex: index })
                 });
 
                 if (!generateResponse.ok) {
@@ -295,7 +298,9 @@
                     // Wait for the model image to be updated in the DOM
                     setTimeout(() => {
                         var code = document.getElementById('openscad-code').value;
+                        var fullCode = "";
                         if (currentPartIndex != 0) {
+                            fullCode = code;
                             code = parts[currentPartIndex].code;
                         }
                         const text = document.getElementById('gpt-input').value;
@@ -307,7 +312,7 @@
                         fetch(serverUrl + '/api/describe', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ text: text, code: code, image: generateData.thumbnail })
+                            body: JSON.stringify({ text: text, code: code, image: generateData.thumbnail, prevCode: prevCode, prevImg: prevImg, fullCode: fullCode, fullImg: generateData.fullImg})
                         })
                             .then(response => {
 
@@ -331,6 +336,9 @@
                                 console.error('Error:', error);
                                 updateStatusAndSpeak("Please try again.");
                             });
+                            
+                      prevCode = code;
+                      prevImg = generateData.thumbnail;
 
                     }, 1);
 
@@ -365,6 +373,8 @@
             }
 
             if (event.ctrlKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key.toUpperCase() == 'M')) {
+                prevCode = "";
+                prevImg = "";
                 const prevPart = document.getElementById('part-' + parts[currentPartIndex].id);
                 prevPart.innerHTML = prevPart.innerHTML.replace(" (selected)", "");
                 prevPart.style["color"] = "";
@@ -389,8 +399,6 @@
                     code = code.toLowerCase();
 
                     parseCode(code);
-
-                    prevCode = code;
                 }
             }
         });
@@ -716,8 +724,6 @@
             code = code.toLowerCase();
 
             parseCode(code);
-
-            prevCode = code;
 
         });
     </script>
