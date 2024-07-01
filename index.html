@@ -164,7 +164,7 @@
                     style="height: 3/4;">
                     <!-- GPT response content goes here -->
                     <div id="code2fab-response"
-                        aria-label="Response"
+                        aria-label="Code2Fab response"
                         class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0"
                         tabindex="0" data-hover-text="Code2fab's response"><br><br> Code2fab's responses will appear here...<br>
                     </div>
@@ -187,6 +187,12 @@
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = 5;
             //speechSynthesis.speak(utterance);
+        }
+        
+        function narrate(text) {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 5;
+          speechSynthesis.speak(utterance);
         }
 
         const elements = [
@@ -258,6 +264,7 @@
             responseContainer.innerHTML = '<pre></pre>';
             const pre = responseContainer.querySelector('pre');
             console.log("Generating images for code:", code);
+            narrate("Generating description");
 
             try {
                 // Generate images from code
@@ -323,9 +330,11 @@
                                     if (done) {
                                         console.log('Stream completed');
                                         updateStatusAndSpeak("Please check the system reply.");
+                                        narrate("Description generated");
                                         return;
                                     }
                                     const chunk = new TextDecoder().decode(value);
+                                    
                                     pre.textContent += chunk;
 
                                     return reader.read().then(processStream);
@@ -388,6 +397,7 @@
                 }
                 currentPartIndex = ((currentPartIndex % parts.length) + parts.length) % parts.length;
                 const curPart = document.getElementById('part-' + parts[currentPartIndex].id);
+                narrate("selected "+curPart.innerHTML);
                 curPart.innerHTML = curPart.innerHTML + " (selected)"
                 curPart.style["color"] = "blue";
             }
@@ -593,7 +603,7 @@
 
         function getDisplayTree(root, parts, index) {
             const children = root.children;
-            let tree = "<div id=\"part-" + root.id + "\" style=\"padding-left: 10px;\">" + index + "&nbsp;" + root.name + "</div>";
+            let tree = "<div id=\"part-" + root.id + "\" style=\"padding-left: 10px;\">" + index + " " + root.name + "</div>";
             if (children.length == 0) {
                 return tree;
             }
@@ -611,7 +621,7 @@
             currentPartIndex = 0;
             parts.push({
                 id: 0,
-                name: "Model",
+                name: "Full Model",
                 description: "",
                 parents: [],
                 children: [],
