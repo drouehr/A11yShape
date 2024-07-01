@@ -208,13 +208,6 @@
             utterance.rate = 5;
             //speechSynthesis.speak(utterance);
         }
-        
-        function narrate(text) {
-          speechSynthesis.cancel();
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.rate = 5;
-          speechSynthesis.speak(utterance);
-        }
 
         const elements = [
             { id: "save-code", key: "Ctrl+Shift+S", text: "Save the OpenSCAD code." },
@@ -351,7 +344,6 @@
                                     if (done) {
                                         console.log('Stream completed');
                                         updateStatusAndSpeak("Please check the system reply.");
-                                        narrate("Description generated");
                                         var section = document.getElementById('code2fab-response');
                                         section.focus();
                                         return;
@@ -425,9 +417,9 @@
                 }
                 currentPartIndex = ((currentPartIndex % parts.length) + parts.length) % parts.length;
                 const curPart = document.getElementById('part-' + parts[currentPartIndex].id);
-                narrate("selected "+curPart.innerHTML);
                 curPart.innerHTML = curPart.innerHTML + " (selected)"
                 curPart.style["color"] = "blue";
+                curPart.focus();
             }
 
             if (event.altKey && (event.key === '!' || event.key === '@' || event.key === '#')) {
@@ -660,7 +652,7 @@
 
         function getDisplayTree(root, parts, index) {
             const children = root.children;
-            let tree = "<div id=\"part-" + root.id + "\" style=\"padding-left: 10px;\">" + index + " " + root.name + "</div>";
+            let tree = "<div id=\"part-" + root.id + "\" style=\"padding-left: 10px;\" tabindex=\"0\" >" + index + " " + root.name + "</div>";
             if (children.length == 0) {
                 return tree;
             }
