@@ -46,12 +46,12 @@
     <div class="flex w-full h-screen ">
         <!-- Traditional area -->
         <!-- Sidebar for Code -->
-        <div tabindex="0" class="w-1/3 bg-white border border-black ml-1 mt-1 mb-1 flex-col flex flex-col " id="col1" aria-label="Column 1 - Code editing">
+        <div tabindex="0" class="w-1/3 bg-white border border-black ml-1 mt-1 mb-1 flex-col flex flex-col " id="col1" aria-label="Column 1 - Code editing" role="region">
             <div class="flex ">
                 <!-- Code Editor Area 1 -->
                 <div class="h-full w-full ">
                     <!-- Code Editor Toolbar -->
-                    <div aria-label="Code Editor Tool Bar" class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
+                    <div tabindex="0" aria-label="Code Editor Tool Bar" role="form" class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
                         <div class="flex items-center space-x-1">
                             <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
                                 id="upload-file" tabindex="0" aria-label="Upload OpenSCAD file."
@@ -74,14 +74,14 @@
                             </button>
                         </div>
                     </div>
-                    <textarea tabindex="0" aria-label="Code editor" class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
+                    <textarea tabindex="0" aria-label="Code editor" role="form" class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
                         id="openscad-code" placeholder="Enter OpenSCAD code here"
                         style="resize: none; height: calc(92vh - 36px); width: calc(100% - 4px);"
                         data-hover-text="Enter OpenSCAD code here."></textarea>
                 </div>
             </div>
         </div>
-        <div tabindex="0" class="w-1/3 flex-col border border-black m-1" id="col2" aria-label="Column 2 - Rendering">
+        <div tabindex="0" class="w-1/3 flex-col border border-black m-1" id="col2" aria-label="Column 2 - Rendering" role="region">
             <!-- Viewport Header -->
             <!--<div class="flex border-b border-black ">
                 <div class="flex items-center" style="min-height: 40px;">
@@ -93,11 +93,11 @@
             </div>-->
             <!-- Viewport Content -->
             <div class="flex-grow  flex " style="height: calc(50vh - 40px);">
-                <div tabindex="0" aria-label="Rendered model" class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
+                <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
                     <!-- Model viewer goes here -->
-                    <img id="modelImage" src="logo.png" tabindex="0" aria-label="Rendered model" class="max-w-full max-h-full">
+                    <img id="modelImage" src="logo.png" tabindex="0" aria-label="Rendered model" aria-describedby="code2fab-response" class="max-w-full max-h-full">
                     <!-- Initially hide the image -->
-                    <div id="placeholder" tabindex="0" aria-label="Instructions" class="text-left p-2">
+                    <div id="placeholder" tabindex="0" aria-label="Instructions" role="main" class="text-left p-2">
                         <p>Welcome to Code2Fab!<br> 
                         Quick Navigation and Operation Guide using Keyboard
                         Shortcuts:
@@ -147,14 +147,14 @@
             </div>
             <!-- Area for code's structure -->
             <div class="w-full h-1/2 overflow-auto  border-t border-black">
-                <div tabindex="0" aria-label="Model parts" class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive "
+                <div tabindex="0" aria-label="Model parts" role="main" class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive "
                     id="openscad-code2" placeholder="The modular structure of the code will appear here"
                     style="resize: none; height: 1/2; width: calc(100% - 2px);"
                     >The model parts will appear here</div>
             </div>
         </div>
         <!-- AI Area -->
-        <div tabindex="0" aria-label="Column 3 - AI Assistance" class="w-1/3 bg-gray-100 border-2 border-black px-1 pt-3 m-1 flex-col overflow-auto"  id="col3">
+        <div tabindex="0" aria-label="Column 3 - AI Assistance" role="region" class="w-1/3 bg-gray-100 border-2 border-black px-1 pt-3 m-1 flex-col overflow-auto"  id="col3">
             <!-- Prompt Area at the top-->
             <div class="h-1/4 overflow-auto flex flex-col border border-black mx-1">
                 <div class="h-1/4">
@@ -162,7 +162,7 @@
                     <textarea
                         class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive mb-4 bg-gray-50"
                         id="gpt-input" placeholder="Enter your prompt here" style="resize: none; height: 14vh;"
-                        aria-label="Prompt box"></textarea>
+                        aria-label="Prompt box" role="form"></textarea>
                     <!-- Buttons below the prompt textbox -->
                     <button aria-label="Submit prompt"
                         class="flex justify-end items-end mt-1 text-black font-bold py-1 px-4 rounded border border-black m-2"
@@ -184,9 +184,9 @@
                     style="height: 3/4;">
                     <!-- GPT response content goes here -->
                     <div id="code2fab-response"
-                        aria-label="Response text"
+                        aria-label="Model description" role="main"
                         class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0"
-                        tabindex="0" data-hover-text="Code2fab's response"><br><br> Code2fab's responses will appear here...<br>
+                        tabindex="0" data-hover-text="Code2fab's response"><br><br> Code2fab's responses will appear here<br>
                     </div>
                 </div>
             </div>
