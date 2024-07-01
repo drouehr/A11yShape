@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>
-        Code2Fab: OpenSCAD-based BLV user assistance
+        Code2Fab
     </title>
     <script src="https://cdn.tailwindcss.com">
     </script>
@@ -51,7 +51,7 @@
                 <!-- Code Editor Area 1 -->
                 <div class="h-full w-full ">
                     <!-- Code Editor Toolbar -->
-                    <div aria-label="Code Editor's Tool Bar" class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
+                    <div aria-label="Code Editor Tool Bar" class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
                         <div class="flex items-center space-x-1">
                             <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
                                 id="save-code" tabindex="0" aria-label="Save the OpenSCAD code.">
@@ -59,7 +59,7 @@
                             </button>
 
                             <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
-                                id="upload-file" tabindex="0" aria-label="Upload a new OpenSCAD file."
+                                id="upload-file" tabindex="0" aria-label="Upload OpenSCAD file."
                                 aria-controls="file-input">
                                 <i class="fas fa-upload" aria-hidden="true"></i>
                             </button>
@@ -74,7 +74,7 @@
                             </button>
                         </div>
                     </div>
-                    <textarea tabindex="0" aria-label="The entire left side of the interface, this is the code editor" class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
+                    <textarea tabindex="0" aria-label="Code editor" class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
                         id="openscad-code" placeholder="// Enter OpenSCAD code here..."
                         style="resize: none; height: calc(92vh - 36px); width: calc(100% - 4px);"
                         data-hover-text="Enter OpenSCAD code here."></textarea>
@@ -93,11 +93,11 @@
             </div>
             <!-- Viewport Content -->
             <div class="flex-grow  flex " style="height: calc(50vh - 40px);">
-                <div tabindex="0" aria-label="The entire upper middle area of the interface shows the rendered model and an introduction to Code2fab" class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
+                <div tabindex="0" aria-label="Rendered model" class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
                     <!-- Model viewer goes here -->
-                    <img id="modelImage" src="logo.png" tabindex="0" aria-label="Area to present the rendered model" class="max-w-full max-h-full">
+                    <img id="modelImage" src="logo.png" tabindex="0" aria-label="Rendered model" class="max-w-full max-h-full">
                     <!-- Initially hide the image -->
-                    <div id="placeholder" tabindex="0" aria-label="The introduction of Code2Fab" class="text-left p-2">
+                    <div id="placeholder" tabindex="0" aria-label="Instructions" class="text-left p-2">
                         <p>Welcome to Code2Fab!</p><br <p>Quick Navigation and Operation Guide using Keyboard
                         Shortcuts:</p>
                         <ol>
@@ -127,14 +127,14 @@
             </div>
             <!-- Area for code's structure -->
             <div class="w-full h-1/2 overflow-auto  border-t border-black">
-                <div tabindex="0" aria-label="The lower middle area of the entire interface shows the structure of the code" class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive "
+                <div tabindex="0" aria-label="Model parts" class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive "
                     id="openscad-code2" placeholder="// The modular structure of the code will appear here..."
                     style="resize: none; height: 1/2; width: calc(100% - 2px);"
                     ></div>
             </div>
         </div>
         <!-- AI Area -->
-        <div tabindex="0" aria-label="This is the right area of the entire screen, where you will enter your prompt in the upper section and then view the responses in the lower section" class="w-1/3 bg-gray-100 border-2 border-black px-1 pt-3 m-1 flex-col overflow-auto">
+        <div tabindex="0" aria-label="Prompt and response" class="w-1/3 bg-gray-100 border-2 border-black px-1 pt-3 m-1 flex-col overflow-auto">
             <!-- Prompt Area at the top-->
             <div class="h-1/4 overflow-auto flex flex-col border border-black mx-1">
                 <div class="h-1/4">
@@ -142,9 +142,9 @@
                     <textarea
                         class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive mb-4 bg-gray-50"
                         id="gpt-input" placeholder="Enter your prompt here..." style="resize: none; height: 14vh;"
-                        aria-label="Enter prompt here."></textarea>
+                        aria-label="Prompt box"></textarea>
                     <!-- Buttons below the prompt textbox -->
-                    <button aria-label="Enter your prompt here and click to get a response from the AI system."
+                    <button aria-label="Submit prompt"
                         class="flex justify-end items-end mt-1 text-black font-bold py-1 px-4 rounded border border-black m-2"
                         id="callGPT">
                         Enter
@@ -164,6 +164,7 @@
                     style="height: 3/4;">
                     <!-- GPT response content goes here -->
                     <div id="code2fab-response"
+                        aria-label="Response"
                         class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0"
                         tabindex="0" data-hover-text="Code2fab's response"><br><br> Code2fab's responses will appear here...<br>
                     </div>
