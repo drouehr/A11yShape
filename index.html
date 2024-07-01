@@ -46,7 +46,7 @@
     <div class="flex w-full h-screen ">
         <!-- Traditional area -->
         <!-- Sidebar for Code -->
-        <div class="w-1/3 bg-white border border-black ml-1 mt-1 mb-1 flex-col flex flex-col ">
+        <div tabindex="0" class="w-1/3 bg-white border border-black ml-1 mt-1 mb-1 flex-col flex flex-col " id="col1" aria-label="Column 1 - Code editing">
             <div class="flex ">
                 <!-- Code Editor Area 1 -->
                 <div class="h-full w-full ">
@@ -54,14 +54,14 @@
                     <div aria-label="Code Editor Tool Bar" class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
                         <div class="flex items-center space-x-1">
                             <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
-                                id="save-code" tabindex="0" aria-label="Save the OpenSCAD code.">
-                                <i class="fas fa-save" aria-hidden="true"></i>
-                            </button>
-
-                            <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
                                 id="upload-file" tabindex="0" aria-label="Upload OpenSCAD file."
                                 aria-controls="file-input">
                                 <i class="fas fa-upload" aria-hidden="true"></i>
+                            </button>
+                            
+                            <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
+                                id="save-code" tabindex="0" aria-label="Save the OpenSCAD code.">
+                                <i class="fas fa-save" aria-hidden="true"></i>
                             </button>
                             <input type="file" id="file-input" style="display: none;" accept=".scad">
                         </div>
@@ -69,28 +69,28 @@
                         <div class="flex items-center space-x-1  ">
                             <button tabindex="0" aria-label="Generate Model" class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
                                 id="generate-model" tabindex="0">
-                                <i class="fas fa-cube"></i>
+                                <!--<i class="fas fa-cube"></i>-->
                                 Generate Model
                             </button>
                         </div>
                     </div>
                     <textarea tabindex="0" aria-label="Code editor" class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
-                        id="openscad-code" placeholder="// Enter OpenSCAD code here..."
+                        id="openscad-code" placeholder="Enter OpenSCAD code here"
                         style="resize: none; height: calc(92vh - 36px); width: calc(100% - 4px);"
                         data-hover-text="Enter OpenSCAD code here."></textarea>
                 </div>
             </div>
         </div>
-        <div class="w-1/3 flex-col border border-black m-1">
+        <div tabindex="0" class="w-1/3 flex-col border border-black m-1" id="col2" aria-label="Column 2 - Rendering">
             <!-- Viewport Header -->
-            <div class="flex border-b border-black ">
+            <!--<div class="flex border-b border-black ">
                 <div class="flex items-center" style="min-height: 40px;">
                     <div id="statusDisplay" class="px-2 py-1 flex justify-between items-center "
                         style="min-height: 40px; flex-grow: 1;">
                         <i class="fas fa-exclamation-circle"> <span id="statusText">Status Bar</span></i>
                     </div>
                 </div>
-            </div>
+            </div>-->
             <!-- Viewport Content -->
             <div class="flex-grow  flex " style="height: calc(50vh - 40px);">
                 <div tabindex="0" aria-label="Rendered model" class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
@@ -98,17 +98,37 @@
                     <img id="modelImage" src="logo.png" tabindex="0" aria-label="Rendered model" class="max-w-full max-h-full">
                     <!-- Initially hide the image -->
                     <div id="placeholder" tabindex="0" aria-label="Instructions" class="text-left p-2">
-                        <p>Welcome to Code2Fab!</p><br <p>Quick Navigation and Operation Guide using Keyboard
-                        Shortcuts:</p>
-                        <ol>
-                            <li><strong>Code Editing:</strong> <code>&lt;Ctrl+Shift+O&gt;</code> to navigate to the
-                                code editor.</li>
-                            <li><strong>Model Generation:</strong> <code>&lt;Ctrl+Shift+G&gt;</code> to generate a
-                                model after editing.</li>
-                            <li><strong>View Switching:</strong> Hold <code>&lt;Shift&gt;</code> and use
-                                <code>&lt;Left/Right Arrow Keys&gt;</code> to change views.
-                            </li>
-                            <li><strong>Save Code:</strong> <code>&lt;Ctrl+Shift+S&gt;</code> to save your current
+                        <p>Welcome to Code2Fab!<br> 
+                        Quick Navigation and Operation Guide using Keyboard
+                        Shortcuts:
+                        <br>
+                            <!--<li><strong>Code Editing:</strong> <code>&lt;Ctrl+Shift+O&gt;</code> to navigate to the
+                                code editor.</li>-->
+                            Model Generation: &lt;Shift+Alt+G&gt; to render the
+                                model and generate a description.
+                            <br>
+                            View Switching: &lt;Shift+Alt+V&gt; to view the model from a different angle.
+                            <br>
+                            List Model Parts: &lt;Shift+Alt+C&gt; to update the list of model parts.
+                            <br>
+                            Model Part Selection: Hold &lt;Shift+Alt&gt; and use
+                                &lt;Up/Down Arrow Keys&gt; to select model parts.
+                            <br>
+                            Select Full Model: &lt;Shift+Alt+M&gt; to select the full model instead of model parts.
+                            <br>
+                            Save Model: &lt;Shift+Alt+S&gt; to save as a .scad file.
+                            <br>
+                            Open File: &lt;Shift+Alt+O&gt; to load a .scad file.
+                            <br>
+                            Toggle Column: Hold &lt;Shift+Alt&gt; and use the keys &lt;1, 2, 3&gt; to move to a different column.
+                            <br>
+                            Jump to Editor: &lt;Shift+Alt+E&gt; to go to the code editor.
+                            <br>
+                            Jump to Model Description: &lt;Shift+Alt+D&gt; to go to the generated description.
+                            <br>
+                            Help: &lt;Shift+Alt+H&gt; to view this instructions section.
+                            <br>
+                            <!--<li><strong>Save Code:</strong> <code>&lt;Ctrl+Shift+S&gt;</code> to save your current
                                 code.</li>
                             <li><strong>Upload Code:</strong> <code>&lt;Ctrl+Shift+U&gt;</code> to upload existing
                                 code for use.</li>
@@ -118,9 +138,9 @@
                                 of the input field to start specific functions, currently support match, analysis,
                                 improve and create functions. If you enter a command that does not come
                                 with a keyword or the system does not detect a match, the system will provide an
-                                answer based on your input.</li>
-                        </ol><br>
-                        <p>Code2Fab aims to enhance your efficiency from code to creation with powerful, intuitive
+                                answer based on your input.</li>-->
+                        <br>
+                        Code2Fab aims to enhance your efficiency from code to creation with powerful, intuitive
                             tools tailored for designers, engineers, and enthusiasts alike.</p>
                     </div><!-- Placeholder text -->
                 </div>
@@ -128,20 +148,20 @@
             <!-- Area for code's structure -->
             <div class="w-full h-1/2 overflow-auto  border-t border-black">
                 <div tabindex="0" aria-label="Model parts" class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive "
-                    id="openscad-code2" placeholder="// The modular structure of the code will appear here..."
+                    id="openscad-code2" placeholder="The modular structure of the code will appear here"
                     style="resize: none; height: 1/2; width: calc(100% - 2px);"
-                    ></div>
+                    >The model parts will appear here</div>
             </div>
         </div>
         <!-- AI Area -->
-        <div tabindex="0" aria-label="Prompt and response" class="w-1/3 bg-gray-100 border-2 border-black px-1 pt-3 m-1 flex-col overflow-auto">
+        <div tabindex="0" aria-label="Column 3 - AI Assistance" class="w-1/3 bg-gray-100 border-2 border-black px-1 pt-3 m-1 flex-col overflow-auto"  id="col3">
             <!-- Prompt Area at the top-->
             <div class="h-1/4 overflow-auto flex flex-col border border-black mx-1">
                 <div class="h-1/4">
                     <p class="text-sm text-gray-700 m-2">Prompt:</p>
                     <textarea
                         class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive mb-4 bg-gray-50"
-                        id="gpt-input" placeholder="Enter your prompt here..." style="resize: none; height: 14vh;"
+                        id="gpt-input" placeholder="Enter your prompt here" style="resize: none; height: 14vh;"
                         aria-label="Prompt box"></textarea>
                     <!-- Buttons below the prompt textbox -->
                     <button aria-label="Submit prompt"
@@ -156,7 +176,7 @@
             <div class=" mt-2 pt-2 ">
                 <div id="enlarge-icon"
                     class="bg-grey-800 hover:bg-grey-900 text-black font-bold py-1 px-3 rounded interactive flex items-center ">
-                    <i class="fas fa-search-plus mr-2"></i>
+                    <!--<i class="fas fa-search-plus mr-2"></i>-->
                     <p class="text-sm text-gray-700 mb-0">Code2fab Response:</p>
             </div>
 
@@ -164,7 +184,7 @@
                     style="height: 3/4;">
                     <!-- GPT response content goes here -->
                     <div id="code2fab-response"
-                        aria-label="Code2Fab response"
+                        aria-label="Response text"
                         class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0"
                         tabindex="0" data-hover-text="Code2fab's response"><br><br> Code2fab's responses will appear here...<br>
                     </div>
@@ -183,13 +203,14 @@
         const statusDisplay = document.getElementById('statusText');
         function updateStatusAndSpeak(text) {
             //speechSynthesis.cancel();
-            statusDisplay.textContent = text;
+            //statusDisplay.textContent = text;
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = 5;
             //speechSynthesis.speak(utterance);
         }
         
         function narrate(text) {
+          speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(text);
           utterance.rate = 5;
           speechSynthesis.speak(utterance);
@@ -264,7 +285,6 @@
             responseContainer.innerHTML = '<pre></pre>';
             const pre = responseContainer.querySelector('pre');
             console.log("Generating images for code:", code);
-            narrate("Generating description");
 
             try {
                 // Generate images from code
@@ -313,6 +333,7 @@
                         }
                         const text = document.getElementById('gpt-input').value;
                         const responseContainer = document.getElementById('code2fab-response');
+                        responseContainer.ariaLabel = "";
                         responseContainer.innerHTML = '<pre></pre>';
                         const pre = responseContainer.querySelector('pre');
                         updateStatusAndSpeak("The system reply is loading...")
@@ -331,11 +352,16 @@
                                         console.log('Stream completed');
                                         updateStatusAndSpeak("Please check the system reply.");
                                         narrate("Description generated");
+                                        var section = document.getElementById('code2fab-response');
+                                        section.focus();
                                         return;
                                     }
                                     const chunk = new TextDecoder().decode(value);
                                     
                                     pre.textContent += chunk;
+                                    
+                                    const responseContainer = document.getElementById('code2fab-response');
+                                    responseContainer.ariaLabel += chunk;
 
                                     return reader.read().then(processStream);
                                 }
@@ -371,18 +397,20 @@
 
 
         document.addEventListener('keydown', async function (event) {
-            if (event.shiftKey && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) {
-                if (event.key === 'ArrowRight') {
+            if (event.shiftKey && event.key.toUpperCase() === 'V') {
+                //if (event.key === 'ArrowRight') {
                     currentImageIndex = (currentImageIndex + 1) % totalImages; // Increment index and loop back to 0
-                } else if (event.key === 'ArrowLeft') {
+                /*} else if (event.key === 'ArrowLeft') {
                     currentImageIndex = (currentImageIndex - 1 + totalImages) % totalImages; // Decrement index and loop back to 6
-                }
+                }*/
                 //updateImageDisplay(currentImageIndex);
                 await genImageAndDescribe(currentImageIndex);
                 updateStatusAndSpeak(`Viewing image number ${currentImageIndex}.`);
             }
 
-            if (event.ctrlKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key.toUpperCase() == 'M')) {
+            if (event.shiftKey && event.altKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key.toUpperCase() == 'M')) {
+                var section = document.getElementById('openscad-code2');
+                section.focus();
                 prevCode = "";
                 prevImg = "";
                 const prevPart = document.getElementById('part-' + parts[currentPartIndex].id);
@@ -402,7 +430,18 @@
                 curPart.style["color"] = "blue";
             }
 
-            if (event.ctrlKey && event.shiftKey) {
+            if (event.altKey && (event.key === '!' || event.key === '@' || event.key === '#')) {
+              var col = '1';
+              if (event.key === '@') {
+                col = '2';
+              } else if (event.key === '#') {
+                col = '3';
+              }   
+              var column = document.getElementById('col'+col);
+              column.focus();
+            }
+
+            if (event.shiftKey && event.altKey) {
                 if (event.key.toUpperCase() == 'G') {
                     await genImageAndDescribe(currentImageIndex);
                 } else if (event.key.toUpperCase() == 'C') {
@@ -410,6 +449,20 @@
                     code = code.toLowerCase();
 
                     parseCode(code);
+                } else if (event.key.toUpperCase() == 'D') {
+                  var section = document.getElementById('code2fab-response');
+                  section.focus();
+                } else if (event.key.toUpperCase() == 'E') {
+                  var section = document.getElementById('openscad-code');
+                  section.focus();
+                } else if (event.key.toUpperCase() == 'S') {
+                  saveCode();
+                } else if (event.key.toUpperCase() == 'O') {
+                  document.getElementById('file-input').click();
+                } else if (event.key.toUpperCase() == 'H') {
+                  const instructions = document.getElementById('placeholder');
+                  instructions.style["display"] = "block";
+                  instructions.focus();
                 }
             }
         });
@@ -438,9 +491,8 @@
                 placeholder.classList.remove('hidden');
             }
         }
-
-        // Save the code to a file
-        document.getElementById('save-code').addEventListener('click', function () {
+        
+        function saveCode() {
             const code = document.getElementById('openscad-code').value;
             let fileName = prompt("Enter file name (leave blank for automatic naming):");
 
@@ -463,6 +515,11 @@
             link.download = fileName;
             link.click();
             URL.revokeObjectURL(link.href);
+        }
+
+        // Save the code to a file
+        document.getElementById('save-code').addEventListener('click', function () {
+            saveCode();
 
         });
 
@@ -722,7 +779,7 @@
 
             // generate display tree
             var tree = getDisplayTree(parts[0], parts, "");
-            document.getElementById('openscad-code2').innerHTML = "<ul id=\"parts-tree\">" + tree + "</ul>";
+            document.getElementById('openscad-code2').innerHTML = "<div id=\"parts-tree\">" + tree + "</div>";
             const curPart = document.getElementById('part-' + parts[currentPartIndex].id);
             curPart.innerHTML = curPart.innerHTML + " (selected)"
             curPart.style["color"] = "blue";
