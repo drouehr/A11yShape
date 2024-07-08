@@ -139,7 +139,7 @@
                         </div>
                         <div>
                             <h3>Input area of Code Editor</h3>
-                            <textarea tabindex="0" aria-label="Code editor" role="textbox"
+                            <textarea tabindex="0" aria-label="Code editor" role="main"
                             class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
                             id="openscad-code" placeholder="Enter OpenSCAD code here"
                             style="resize: none; height: calc(25vh - 36px); width: calc(100% - 4px);"
@@ -195,6 +195,7 @@
                 <!-- Prompt Area at the top-->
                 <div class="h-1/4 overflow-auto flex flex-col border border-black mx-1">
                     <div class="h-1/4">
+                        <h3>Instructions to the AI</h3>
                         <p class="text-sm text-gray-700 m-2">Prompt:</p>
                         <textarea class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive mb-4"
                             id="gpt-input" placeholder="Enter your prompt here" style="resize: none; height: 14vh;"
@@ -210,6 +211,7 @@
                 </div>
                 <!-- Response Area at the bottom -->
                 <div class=" mt-2 pt-2 ">
+                    <h3>Response from the AI</h3>
                     <div id="enlarge-icon"
                         class="bg-grey-800 hover:bg-grey-900 text-black font-bold py-1 px-3 rounded interactive flex items-center ">
                         <!--<i class="fas fa-search-plus mr-2"></i>-->
