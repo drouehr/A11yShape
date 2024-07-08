@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en-US">
+    
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
@@ -42,48 +42,121 @@
 
 
 <body class="bg-white h-screen ">
-    <!-- Main Content -->
-    <div class="flex w-full h-screen ">
-        <!-- Traditional area -->
-        <!-- Sidebar for Code -->
-        <div tabindex="0" class="w-1/3 bg-white border border-black ml-1 mt-1 mb-1 flex-col flex flex-col " id="col1" aria-label="Column 1 - Code editing" role="region">
-            <div class="flex ">
-                <!-- Code Editor Area 1 -->
-                <div class="h-full w-full ">
-                    <!-- Code Editor Toolbar -->
-                    <div tabindex="0" aria-label="Code Editor Tool Bar" role="form" class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
-                        <div class="flex items-center space-x-1">
-                            <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
-                                id="upload-file" tabindex="0" aria-label="Upload OpenSCAD file."
-                                aria-controls="file-input">
-                                <i class="fas fa-upload" aria-hidden="true"></i>
-                            </button>
-                            
-                            <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
-                                id="save-code" tabindex="0" aria-label="Save the OpenSCAD code.">
-                                <i class="fas fa-save" aria-hidden="true"></i>
-                            </button>
-                            <input type="file" id="file-input" style="display: none;" accept=".scad" aria-label="Open an OpenSCAD file.">
-                        </div>
+    
+    <header>
+        <h1>Code2Fab</h1>
+        <p>Welcome to Code2Fab!</p>
+    </header>
+    <div id="introduction" tabindex="0" aria-label="Instructions" class="text-left p-2 border border-black">
+        <div role="note">
+            <h2 role="heading">Quick Navigation and Operation Guide using Keyboard
+                Shortcuts:</h2>
+                <ul role="group">
+            <br>
+            <!--<li><strong>Code Editing:</strong> <code>&lt;Ctrl+Shift+O&gt;</code> to navigate to the
+                code editor.</li>-->
+            - Model Generation: &lt;Shift+Alt+G&gt; to render the
+            model and generate a description.
+            <br>
+            - View Switching: &lt;Shift+Alt+V&gt; to view the model from a different angle.
+            <br>
+            - List Model Parts: &lt;Shift+Alt+C&gt; to update the list of model parts.
+            <br>
+            - Model Part Selection: Hold &lt;Shift+Alt&gt; and use
+            &lt;Up/Down Arrow Keys&gt; to select model parts.
+            <br>
+            - Select Full Model: &lt;Shift+Alt+M&gt; to select the full model instead of model parts.
+            <br>
+            - Save Model: &lt;Shift+Alt+S&gt; to save as a .scad file.
+            <br>
+            - Open File: &lt;Shift+Alt+O&gt; to load a .scad file.
+            <br>
+            - Toggle Column: Hold &lt;Shift+Alt&gt; and use the keys &lt;1, 2, 3&gt; to move to a
+            different column.
+            <br>
+            - Jump to Editor: &lt;Shift+Alt+E&gt; to go to the code editor.
+            <br>
+            - Jump to Model Description: &lt;Shift+Alt+D&gt; to go to the generated description.
+            <br>
+            - Help: &lt;Shift+Alt+H&gt; to view this instructions section.
+            <br>
+            </ul>
+            <!--<li><strong>Save Code:</strong> <code>&lt;Ctrl+Shift+S&gt;</code> to save your current
+                code.</li>
+            <li><strong>Upload Code:</strong> <code>&lt;Ctrl+Shift+U&gt;</code> to upload existing
+                code for use.</li>
+            <li><strong>AI System:</strong> <code>&lt;Ctrl+Shift+P&gt;</code> to navigate to
+                the inquiry input area. </li><br>
+            <li>To interact with the system, use the default keyword like @describe at the beginning
+                of the input field to start specific functions, currently support match, analysis,
+                improve and create functions. If you enter a command that does not come
+                with a keyword or the system does not detect a match, the system will provide an
+                answer based on your input.</li>-->
+            <br>
+            <p>Code2Fab aims to enhance your efficiency from code to creation with powerful, intuitive
+                tools tailored for designers, engineers, and enthusiasts alike.</p>
+        </div>
 
-                        <div class="flex items-center space-x-1  ">
-                            <button tabindex="0" aria-label="Generate Model" class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
-                                id="generate-model" tabindex="0">
-                                <!--<i class="fas fa-cube"></i>-->
-                                Generate Model
-                            </button>
+    </div>
+    <!-- Main Content -->
+    <div class="w-full h-screen">
+        <!-- Code Editor area -->
+        <div>
+            <h2>Code Area: Area for editing code and start rendering</h2>
+            <!-- Sidebar for Code -->
+            <div tabindex="0" class="bg-white border-2 border-black ml-1 mt-1 mb-1 flex-col flex flex-col " id="CodeEditor"
+                aria-label="Panel 1 - Code editing" role="region">
+                <div class="flex ">
+                    <!-- Code Editor Area 1 -->
+                    <div class="h-full w-full ">
+                        <!-- Code Editor Toolbar -->
+                         <h3>Toolbar of Code Editor</h3>
+                        <div tabindex="0" aria-label="Code Editor Tool Bar" role="toolbar"
+                            class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
+                            <div class="flex items-center space-x-1">
+                                <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
+                                    id="upload-file" tabindex="0" aria-label="Upload OpenSCAD file."
+                                    aria-controls="file-input">
+                                    <i class="fas fa-upload" aria-hidden="true"></i>
+                                </button>
+
+                                <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
+                                    id="save-code" tabindex="0" aria-label="Save the OpenSCAD code.">
+                                    <i class="fas fa-save" aria-hidden="true"></i>
+                                </button>
+                                <input type="file" id="file-input" style="display: none;" accept=".scad"
+                                    aria-label="Open an OpenSCAD file.">
+                            </div>
+
+                            <div class="flex items-center space-x-1  ">
+                                <button tabindex="0" aria-label="Generate Model Button, after the rendering, the model will be displayed in the model area and please check the description by Shortcut key Shift+Alt+D."
+                                    class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
+                                    id="generate-model" tabindex="0">
+                                    <!--<i class="fas fa-cube"></i>-->
+                                    Generate Model
+                                </button>
+                            </div>
                         </div>
+                        <div>
+                            <h3>Input area of Code Editor</h3>
+                            <textarea tabindex="0" aria-label="Code editor" role="textbox"
+                            class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
+                            id="openscad-code" placeholder="Enter OpenSCAD code here"
+                            style="resize: none; height: calc(25vh - 36px); width: calc(100% - 4px);"
+                            data-hover-text="Enter OpenSCAD code here."></textarea>
+                        </div>
+                        
                     </div>
-                    <textarea tabindex="0" aria-label="Code editor" role="form" class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
-                        id="openscad-code" placeholder="Enter OpenSCAD code here"
-                        style="resize: none; height: calc(92vh - 36px); width: calc(100% - 4px);"
-                        data-hover-text="Enter OpenSCAD code here."></textarea>
                 </div>
             </div>
         </div>
-        <div tabindex="0" class="w-1/3 flex-col border border-black m-1" id="col2" aria-label="Column 2 - Rendering" role="region">
-            <!-- Viewport Header -->
-            <!--<div class="flex border-b border-black ">
+        <!-- Rendering Area -->
+        <div>
+            <h2>Model Area: The parts of the model and the model rendered from the code</h2>
+            <div tabindex="0" class="flex-col border border-black m-1" id="col2" aria-label="Panel 2 - Rendering Model"
+                role="region">
+                <!-- Viewport Header -->
+                <!--<div class="flex border-b border-black ">
                 <div class="flex items-center" style="min-height: 40px;">
                     <div id="statusDisplay" class="px-2 py-1 flex justify-between items-center "
                         style="min-height: 40px; flex-grow: 1;">
@@ -91,102 +164,65 @@
                     </div>
                 </div>
             </div>-->
-            <!-- Viewport Content -->
-            <div class="flex-grow  flex " style="height: calc(50vh - 40px);">
-                <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
-                    <!-- Model viewer goes here -->
-                    <img id="modelImage" src="logo.png" tabindex="0" aria-label="Rendered model" aria-describedby="code2fab-response" class="max-w-full max-h-full">
-                    <!-- Initially hide the image -->
-                    <div id="placeholder" tabindex="0" aria-label="Instructions" role="main" class="text-left p-2">
-                        <p>Welcome to Code2Fab!<br> 
-                        Quick Navigation and Operation Guide using Keyboard
-                        Shortcuts:
-                        <br>
-                            <!--<li><strong>Code Editing:</strong> <code>&lt;Ctrl+Shift+O&gt;</code> to navigate to the
-                                code editor.</li>-->
-                            - Model Generation: &lt;Shift+Alt+G&gt; to render the
-                                model and generate a description.
-                            <br>
-                            - View Switching: &lt;Shift+Alt+V&gt; to view the model from a different angle.
-                            <br>
-                            - List Model Parts: &lt;Shift+Alt+C&gt; to update the list of model parts.
-                            <br>
-                            - Model Part Selection: Hold &lt;Shift+Alt&gt; and use
-                                &lt;Up/Down Arrow Keys&gt; to select model parts.
-                            <br>
-                            - Select Full Model: &lt;Shift+Alt+M&gt; to select the full model instead of model parts.
-                            <br>
-                            - Save Model: &lt;Shift+Alt+S&gt; to save as a .scad file.
-                            <br>
-                            - Open File: &lt;Shift+Alt+O&gt; to load a .scad file.
-                            <br>
-                            - Toggle Column: Hold &lt;Shift+Alt&gt; and use the keys &lt;1, 2, 3&gt; to move to a different column.
-                            <br>
-                            - Jump to Editor: &lt;Shift+Alt+E&gt; to go to the code editor.
-                            <br>
-                            - Jump to Model Description: &lt;Shift+Alt+D&gt; to go to the generated description.
-                            <br>
-                            - Help: &lt;Shift+Alt+H&gt; to view this instructions section.
-                            <br>
-                            <!--<li><strong>Save Code:</strong> <code>&lt;Ctrl+Shift+S&gt;</code> to save your current
-                                code.</li>
-                            <li><strong>Upload Code:</strong> <code>&lt;Ctrl+Shift+U&gt;</code> to upload existing
-                                code for use.</li>
-                            <li><strong>AI System:</strong> <code>&lt;Ctrl+Shift+P&gt;</code> to navigate to
-                                the inquiry input area. </li><br>
-                            <li>To interact with the system, use the default keyword like @describe at the beginning
-                                of the input field to start specific functions, currently support match, analysis,
-                                improve and create functions. If you enter a command that does not come
-                                with a keyword or the system does not detect a match, the system will provide an
-                                answer based on your input.</li>-->
-                        <br>
-                        Code2Fab aims to enhance your efficiency from code to creation with powerful, intuitive
-                            tools tailored for designers, engineers, and enthusiasts alike.</p>
-                    </div><!-- Placeholder text -->
+                <!-- Viewport Content -->
+                <div class="flex-grow  flex border border-black" style="height: calc(50vh - 40px);">
+                    <!-- Area for code's structure -->
+                    <div class="w-full overflow-auto  border-t ">
+                        <h3>Parts of model</h3>
+                        <div tabindex="0" aria-label="Model parts" role="main"
+                            class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive "
+                            id="openscad-code2" placeholder="The modular structure of the code will appear here"
+                            style="resize: none; height: 1/2; width: calc(100% - 2px);">
+                            The parts of model will appear here...
+                        </div>
+                    </div>
+                    <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
+                        <h3>The display of rendered model</h3>
+                        <!-- Model viewer goes here -->
+                        <img id="modelImage" src="logo.png" tabindex="0" aria-label="Rendered model"
+                            aria-describedby="code2fab-response" class="max-w-full max-h-full">
+                        <!-- Initially hide the image -->
+
+                    </div>
                 </div>
-            </div>
-            <!-- Area for code's structure -->
-            <div class="w-full h-1/2 overflow-auto  border-t border-black">
-                <div tabindex="0" aria-label="Model parts" role="main" class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive "
-                    id="openscad-code2" placeholder="The modular structure of the code will appear here"
-                    style="resize: none; height: 1/2; width: calc(100% - 2px);"
-                    >The model parts will appear here</div>
             </div>
         </div>
         <!-- AI Area -->
-        <div tabindex="0" aria-label="Column 3 - AI Assistance" role="region" class="w-1/3 border-2 border-black px-1 pt-3 m-1 flex-col overflow-auto"  id="col3">
-            <!-- Prompt Area at the top-->
-            <div class="h-1/4 overflow-auto flex flex-col border border-black mx-1">
-                <div class="h-1/4">
-                    <p class="text-sm text-gray-700 m-2">Prompt:</p>
-                    <textarea
-                        class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive mb-4"
-                        id="gpt-input" placeholder="Enter your prompt here" style="resize: none; height: 14vh;"
-                        aria-label="Prompt box" role="form"></textarea>
-                    <!-- Buttons below the prompt textbox -->
-                    <button aria-label="Submit prompt"
-                        class="flex justify-end items-end mt-1 text-black font-bold py-1 px-4 rounded border border-black m-2"
-                        id="callGPT">
-                        Enter
-                    </button>
+        <div>
+            <h2>AI Area: Area for users to interact with the AI and check the response</h2>
+            <div tabindex="0" aria-label="Panel 3 - AI Assistance" role="region"
+                class="border-2 border-black px-1 pt-3 m-1 flex-col overflow-auto" id="col3">
+                <!-- Prompt Area at the top-->
+                <div class="h-1/4 overflow-auto flex flex-col border border-black mx-1">
+                    <div class="h-1/4">
+                        <p class="text-sm text-gray-700 m-2">Prompt:</p>
+                        <textarea class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive mb-4"
+                            id="gpt-input" placeholder="Enter your prompt here" style="resize: none; height: 14vh;"
+                            aria-label="Prompt box" role="textbox"></textarea>
+                        <!-- Buttons below the prompt textbox -->
+                        <button aria-label="Submit prompt"
+                            class="flex justify-end items-end mt-1 text-black font-bold py-1 px-4 rounded border border-black m-2"
+                            id="callGPT">
+                            Enter
+                        </button>
 
+                    </div>
                 </div>
-            </div>
-            <!-- Response Area at the bottom -->
-            <div class=" mt-2 pt-2 ">
-                <div id="enlarge-icon"
-                    class="bg-grey-800 hover:bg-grey-900 text-black font-bold py-1 px-3 rounded interactive flex items-center ">
-                    <!--<i class="fas fa-search-plus mr-2"></i>-->
-                    <p class="text-sm text-gray-700 mb-0">Code2fab Response:</p>
-            </div>
+                <!-- Response Area at the bottom -->
+                <div class=" mt-2 pt-2 ">
+                    <div id="enlarge-icon"
+                        class="bg-grey-800 hover:bg-grey-900 text-black font-bold py-1 px-3 rounded interactive flex items-center ">
+                        <!--<i class="fas fa-search-plus mr-2"></i>-->
+                        <p class="text-sm text-gray-700 mb-0">Code2fab Response:</p>
+                    </div>
 
-                <div class="code2fab-container w-full text-sm text-gray-700 font-mono flex-col"
-                    style="height: 3/4;">
-                    <!-- GPT response content goes here -->
-                    <div id="code2fab-response"
-                        aria-label="Model description" role="main"
-                        class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0"
-                        tabindex="0" data-hover-text="Code2fab's response"><br><br> Code2fab's responses will appear here<br>
+                    <div class="code2fab-container w-full text-sm text-gray-700 font-mono flex-col"
+                        style="height: 3/4;">
+                        <!-- GPT response content goes here -->
+                        <div id="code2fab-response" aria-label="Model description" role="main"
+                            class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0"
+                            tabindex="0" data-hover-text="Code2fab's response"><br><br> Code2fab's responses will appear here<br>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -334,7 +370,7 @@
                         fetch(serverUrl + '/api/describe', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ text: text, code: code, image: generateData.thumbnail, prevCode: prevCode, prevImg: prevImg, fullCode: fullCode, fullImg: generateData.fullImg})
+                            body: JSON.stringify({ text: text, code: code, image: generateData.thumbnail, prevCode: prevCode, prevImg: prevImg, fullCode: fullCode, fullImg: generateData.fullImg })
                         })
                             .then(response => {
 
@@ -349,9 +385,9 @@
                                         return;
                                     }
                                     const chunk = new TextDecoder().decode(value);
-                                    
+
                                     pre.textContent += chunk;
-                                    
+
                                     const responseContainer = document.getElementById('code2fab-response');
                                     responseContainer.ariaLabel += chunk;
 
@@ -364,9 +400,9 @@
                                 console.error('Error:', error);
                                 updateStatusAndSpeak("Please try again.");
                             });
-                            
-                      prevCode = code;
-                      prevImg = generateData.thumbnail;
+
+                        prevCode = code;
+                        prevImg = generateData.thumbnail;
 
                     }, 1);
 
@@ -391,7 +427,7 @@
         document.addEventListener('keydown', async function (event) {
             if (event.shiftKey && event.key.toUpperCase() === 'V') {
                 //if (event.key === 'ArrowRight') {
-                    currentImageIndex = (currentImageIndex + 1) % totalImages; // Increment index and loop back to 0
+                currentImageIndex = (currentImageIndex + 1) % totalImages; // Increment index and loop back to 0
                 /*} else if (event.key === 'ArrowLeft') {
                     currentImageIndex = (currentImageIndex - 1 + totalImages) % totalImages; // Decrement index and loop back to 6
                 }*/
@@ -423,14 +459,14 @@
             }
 
             if (event.altKey && (event.key === '!' || event.key === '@' || event.key === '#')) {
-              var col = '1';
-              if (event.key === '@') {
-                col = '2';
-              } else if (event.key === '#') {
-                col = '3';
-              }   
-              var column = document.getElementById('col'+col);
-              column.focus();
+                var col = '1';
+                if (event.key === '@') {
+                    col = '2';
+                } else if (event.key === '#') {
+                    col = '3';
+                }
+                var column = document.getElementById('col' + col);
+                column.focus();
             }
 
             if (event.shiftKey && event.altKey) {
@@ -442,22 +478,22 @@
 
                     parseCode(code);
                 } else if (event.key.toUpperCase() == 'D') {
-                  var section = document.getElementById('code2fab-response');
-                  section.focus();
+                    var section = document.getElementById('code2fab-response');
+                    section.focus();
                 } else if (event.key.toUpperCase() == 'E') {
-                  var section = document.getElementById('openscad-code');
-                  section.focus();
+                    var section = document.getElementById('openscad-code');
+                    section.focus();
                 } else if (event.key.toUpperCase() == 'S') {
-                  saveCode();
+                    saveCode();
                 } else if (event.key.toUpperCase() == 'O') {
-                  document.getElementById('file-input').click();
-                  var section = document.getElementById('openscad-code');
-                  section.focus();
-                  prevCode = "";
+                    document.getElementById('file-input').click();
+                    var section = document.getElementById('openscad-code');
+                    section.focus();
+                    prevCode = "";
                 } else if (event.key.toUpperCase() == 'H') {
-                  const instructions = document.getElementById('placeholder');
-                  instructions.style["display"] = "block";
-                  instructions.focus();
+                    const instructions = document.getElementById('placeholder');
+                    instructions.style["display"] = "block";
+                    instructions.focus();
                 }
             }
         });
@@ -486,7 +522,7 @@
                 placeholder.classList.remove('hidden');
             }
         }
-        
+
         function saveCode() {
             const code = document.getElementById('openscad-code').value;
             let fileName = prompt("Enter file name (leave blank for automatic naming):");
