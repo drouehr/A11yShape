@@ -45,66 +45,20 @@
     
     <header>
         <h1>Code2Fab</h1>
-        <p>Welcome to Code2Fab!</p>
     </header>
     <div id="introduction" tabindex="0" aria-label="Instructions" class="text-left p-2 border border-black">
         <div role="note">
             <h2 role="heading">Quick Navigation and Operation Guide using Keyboard
                 Shortcuts:</h2>
-                <ul role="group">
-            <br>
-            <!--<li><strong>Code Editing:</strong> <code>&lt;Ctrl+Shift+O&gt;</code> to navigate to the
-                code editor.</li>-->
-            - Model Generation: &lt;Shift+Alt+G&gt; to render the
-            model and generate a description.
-            <br>
-            - View Switching: &lt;Shift+Alt+V&gt; to view the model from a different angle.
-            <br>
-            - List Model Parts: &lt;Shift+Alt+C&gt; to update the list of model parts.
-            <br>
-            - Model Part Selection: Hold &lt;Shift+Alt&gt; and use
-            &lt;Up/Down Arrow Keys&gt; to select model parts.
-            <br>
-            - Select Full Model: &lt;Shift+Alt+M&gt; to select the full model instead of model parts.
-            <br>
-            - Save Model: &lt;Shift+Alt+S&gt; to save as a .scad file.
-            <br>
-            - Open File: &lt;Shift+Alt+O&gt; to load a .scad file.
-            <br>
-            - Toggle Column: Hold &lt;Shift+Alt&gt; and use the keys &lt;1, 2, 3&gt; to move to a
-            different column.
-            <br>
-            - Jump to Editor: &lt;Shift+Alt+E&gt; to go to the code editor.
-            <br>
-            - Jump to Model Description: &lt;Shift+Alt+D&gt; to go to the generated description.
-            <br>
-            - Help: &lt;Shift+Alt+H&gt; to view this instructions section.
-            <br>
-            </ul>
-            <!--<li><strong>Save Code:</strong> <code>&lt;Ctrl+Shift+S&gt;</code> to save your current
-                code.</li>
-            <li><strong>Upload Code:</strong> <code>&lt;Ctrl+Shift+U&gt;</code> to upload existing
-                code for use.</li>
-            <li><strong>AI System:</strong> <code>&lt;Ctrl+Shift+P&gt;</code> to navigate to
-                the inquiry input area. </li><br>
-            <li>To interact with the system, use the default keyword like @describe at the beginning
-                of the input field to start specific functions, currently support match, analysis,
-                improve and create functions. If you enter a command that does not come
-                with a keyword or the system does not detect a match, the system will provide an
-                answer based on your input.</li>-->
-            <br>
-            <p>Code2Fab aims to enhance your efficiency from code to creation with powerful, intuitive
-                tools tailored for designers, engineers, and enthusiasts alike.</p>
         </div>
-
     </div>
     <!-- Main Content -->
-    <div class="w-full h-screen">
+    <div class="flex w-full h-screen">
         <!-- Code Editor area -->
-        <div>
+        <div class="w-1/3 bg-white border border-black ml-1 mt-1 mb-1 flex-col flex flex-col ">
             <h2>Code Area: Area for editing code and start rendering</h2>
             <!-- Sidebar for Code -->
-            <div tabindex="0" class="bg-white border-2 border-black ml-1 mt-1 mb-1 flex-col flex flex-col " id="CodeEditor"
+            <div tabindex="0" class="bg-white border-2 border-black ml-1 mt-1 mb-1 flex-col flex flex-col h-full" id="CodeEditor"
                 aria-label="Panel 1 - Code editing" role="region">
                 <div class="flex ">
                     <!-- Code Editor Area 1 -->
@@ -142,7 +96,7 @@
                             <textarea tabindex="0" aria-label="Code editor" role="main"
                             class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
                             id="openscad-code" placeholder="Enter OpenSCAD code here"
-                            style="resize: none; height: calc(25vh - 36px); width: calc(100% - 4px);"
+                            style="resize: none; height: calc(82vh - 36px); width: calc(100% - 4px);"
                             data-hover-text="Enter OpenSCAD code here."></textarea>
                         </div>
                         
@@ -151,7 +105,7 @@
             </div>
         </div>
         <!-- Rendering Area -->
-        <div>
+        <div class="w-1/3 flex-col border border-black m-1">
             <h2>Model Area: The parts of the model and the model rendered from the code</h2>
             <div tabindex="0" class="flex-col border border-black m-1" id="col2" aria-label="Panel 2 - Rendering Model"
                 role="region">
@@ -166,16 +120,6 @@
             </div>-->
                 <!-- Viewport Content -->
                 <div class="flex-grow  flex border border-black" style="height: calc(50vh - 40px);">
-                    <!-- Area for code's structure -->
-                    <div class="w-full overflow-auto  border-t ">
-                        <h3>Parts of model</h3>
-                        <div tabindex="0" aria-label="Model parts" role="main"
-                            class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive "
-                            id="openscad-code2" placeholder="The modular structure of the code will appear here"
-                            style="resize: none; height: 1/2; width: calc(100% - 2px);">
-                            The parts of model will appear here...
-                        </div>
-                    </div>
                     <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
                         <h3>The display of rendered model</h3>
                         <!-- Model viewer goes here -->
@@ -185,10 +129,20 @@
 
                     </div>
                 </div>
+                <div class="w-full h-1/2 overflow-auto  border-t border-black">
+                    <!-- Area for code's structure -->
+                    <h3>Parts of model</h3>
+                    <div tabindex="0" aria-label="Model parts" role="main"
+                        class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive "
+                        id="openscad-code2" placeholder="The modular structure of the code will appear here"
+                        style="resize: none; height: 1/2; width: calc(100% - 2px);">
+                        The parts of model will appear here...
+                    </div>
+                </div>
             </div>
         </div>
         <!-- AI Area -->
-        <div>
+        <div class="w-1/3 border-2 border-black px-1 pt-3 m-1 flex-col overflow-auto">
             <h2>AI Area: Area for users to interact with the AI and check the response</h2>
             <div tabindex="0" aria-label="Panel 3 - AI Assistance" role="region"
                 class="border-2 border-black px-1 pt-3 m-1 flex-col overflow-auto" id="col3">
@@ -220,7 +174,7 @@
                     </div>
 
                     <div class="code2fab-container w-full text-sm text-gray-700 font-mono flex-col"
-                        style="height: 3/4;">
+                    style="height: 3/4;">
                         <!-- GPT response content goes here -->
                         <div id="code2fab-response" aria-label="Model description" role="main"
                             class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0"
