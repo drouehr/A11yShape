@@ -46,10 +46,29 @@
     <header>
         <h1>Code2Fab</h1>
     </header>
-    <div id="introduction" tabindex="0" aria-label="Instructions" class="text-left p-2 border border-black">
-        <div role="note">
-            <h2 role="heading">Quick Navigation and Operation Guide using Keyboard
-                Shortcuts:</h2>
+    <div id="introduction" tabindex="0" aria-label="Toolbar" role="toolbar" class="text-left p-2 border border-black">
+        <h2 role="heading">Toolbar</h2>
+        <div class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
+            <div class="flex items-center space-x-1">
+                <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
+                    id="upload-file" tabindex="0" aria-label="Upload OpenSCAD file."
+                    aria-controls="file-input">
+                    <i class="fas fa-upload" aria-hidden="true"></i>
+                </button>
+
+                <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
+                    id="save-code" tabindex="0" aria-label="Save the OpenSCAD code.">
+                    <i class="fas fa-save" aria-hidden="true"></i>
+                </button>
+                <input type="file" id="file-input" style="display: none;" accept=".scad"
+                    aria-label="Open an OpenSCAD file.">
+                <button tabindex="0" aria-label="Generate Model Button, after the rendering, the model will be displayed in the model area and please check the description by Shortcut key Shift+Alt+D."
+                    class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
+                    id="generate-model" tabindex="0">
+                    <!--<i class="fas fa-cube"></i>-->
+                    Generate Model
+                </button>
+            </div>
         </div>
     </div>
     <!-- Main Content -->
@@ -63,34 +82,6 @@
                 <div class="flex ">
                     <!-- Code Editor Area 1 -->
                     <div class="h-full w-full ">
-                        <!-- Code Editor Toolbar -->
-                         <h3>Toolbar of Code Editor</h3>
-                        <div tabindex="0" aria-label="Code Editor Tool Bar" role="toolbar"
-                            class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
-                            <div class="flex items-center space-x-1">
-                                <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
-                                    id="upload-file" tabindex="0" aria-label="Upload OpenSCAD file."
-                                    aria-controls="file-input">
-                                    <i class="fas fa-upload" aria-hidden="true"></i>
-                                </button>
-
-                                <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
-                                    id="save-code" tabindex="0" aria-label="Save the OpenSCAD code.">
-                                    <i class="fas fa-save" aria-hidden="true"></i>
-                                </button>
-                                <input type="file" id="file-input" style="display: none;" accept=".scad"
-                                    aria-label="Open an OpenSCAD file.">
-                            </div>
-
-                            <div class="flex items-center space-x-1  ">
-                                <button tabindex="0" aria-label="Generate Model Button, after the rendering, the model will be displayed in the model area and please check the description by Shortcut key Shift+Alt+D."
-                                    class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
-                                    id="generate-model" tabindex="0">
-                                    <!--<i class="fas fa-cube"></i>-->
-                                    Generate Model
-                                </button>
-                            </div>
-                        </div>
                         <div>
                             <h3>Input area of Code Editor</h3>
                             <textarea tabindex="0" aria-label="Code editor" role="main"
@@ -301,8 +292,8 @@
                     const imageElement = document.getElementById('modelImage');
                     imageElement.src = URL.createObjectURL(new Blob([byteArray], { type: 'image/png' }));
 
-                    const instructions = document.getElementById('placeholder');
-                    instructions.style["display"] = "none";
+                    //const instructions = document.getElementById('placeholder');
+                    //instructions.style["display"] = "none";
 
                     //updateImageDisplay(0); // Reset to the first image
 
