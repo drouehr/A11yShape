@@ -104,6 +104,7 @@
 
                     </div>
                 </div>
+                
                 <div class="w-full h-1/2 overflow-auto" tabindex="0" aria-labelledby="parts-heading">
                     <h2 role="heading" id="parts-heading">Model parts</h2>
                     <div 
@@ -621,17 +622,17 @@
         function getDisplayTree(root, parts, index) {
             const children = root.children;
             
-            let tree = "<li style=\"padding-left: 10px;\" ><label for=\"part-" + root.id + "\" id=\"part-" + root.id + "-label\" tabindex=\"0\" role=\"treeitem\">" +root.name + " </label>"
-            + "<input type=\"checkbox\" id=\"part-" + root.id + "\" name=\"parts\" value=\""+root.id+"\" tabindex=\"0\" aria-labelledby=\"part-" + root.id + "-label\" role=\"checkbox\" onchange=\"modelPartSelected(event)\"></li>";
+            let tree = "<li style=\"padding-left: 10px;\" aria-labelledby=\"part-" + root.id + "-label\" role=\"treeitem\" tabindex=\"0\"><label for=\"part-" + root.id + "\" id=\"part-" + root.id + "-label\" >" +root.name + " </label>"
+            + "<input type=\"checkbox\" id=\"part-" + root.id + "\" name=\"parts\" value=\""+root.id+"\" tabindex=\"0\" aria-labelledby=\"part-" + root.id + "-label\" role=\"checkbox\" onchange=\"modelPartSelected(event)\">";
             if (children.length == 0) {
-                return tree;
+                return tree+"</li>";
             }
 
             tree = tree + "<ul style=\"padding-left: 10px;\" role=\"group\">";
             for (let i = 0; i < children.length; i++) {
                 tree = tree + getDisplayTree(parts[children[i]], parts, index + (i + 1) + ".");
             }
-            tree = tree + "</ul>";
+            tree = tree + "</ul></li>";
             return tree;
         }
 
