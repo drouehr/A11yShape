@@ -262,10 +262,13 @@ def describe():
         if fullCode == code:
             fullCode = ""
         
-        def gpt_action(image, code, prevCode, prevImg):
+        def gpt_action(image, code, text, prevCode, prevImg):
+            if len(text) == 0:
+                text = "describe the shape such that a blind user could understand it"
+            
             if len(fullCode) > 0:
                 content = [
-                            {"type": "text", "text": "Given the part of a 3D model and its OpenSCAD code, describe the shape such that a blind user could understand it. Compare it in relation to the full model."},
+                            {"type": "text", "text": "Given the part of a 3D model and its OpenSCAD code, "+text+". Compare it in relation to the full model."},
                             {
                                 "type": "image_url",
                                 "image_url": {
@@ -301,7 +304,7 @@ def describe():
                         ]
             else:
                 content = [
-                            {"type": "text", "text": "Given the 3D model and its OpenSCAD code, describe the shape such that a blind user could understand it."},
+                            {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+text},
                             {
                                 "type": "image_url",
                                 "image_url": {
@@ -333,7 +336,7 @@ def describe():
                 if str(e) != "'NoneType' object has no attribute 'encode'":
                     yield "Error: " + str(e)
 
-        return Response(gpt_action(image, code, prevCode, prevImg), mimetype="text/event-stream")
+        return Response(gpt_action(image, code, text, prevCode, prevImg), mimetype="text/event-stream")
 
     except Exception as e:
         logging.error(f"Error processing request: {e}")

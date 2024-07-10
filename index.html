@@ -226,7 +226,7 @@
         });
 
 
-        async function genImageAndDescribe(index) {
+        async function genImageAndDescribe(index, text) {
             var code = document.getElementById('openscad-code').value;
             var fullCode = "";
             if (currentPartIndex != 0) {
@@ -238,7 +238,6 @@
                     }
                 }
             }
-            const text = document.getElementById('gpt-input').value;
             const responseContainer = document.getElementById('code2fab-response');
             responseContainer.innerHTML = '<pre></pre>';
             const pre = responseContainer.querySelector('pre');
@@ -294,12 +293,13 @@
                                 }
                             }
                         }
-                        const text = document.getElementById('gpt-input').value;
                         const responseContainer = document.getElementById('code2fab-response');
                         responseContainer.ariaLabel = "";
                         responseContainer.innerHTML = '<pre></pre>';
                         const pre = responseContainer.querySelector('pre');
                         updateStatusAndSpeak("The system reply is loading...")
+                        
+                        console.log(text);
 
                         fetch(serverUrl + '/api/describe', {
                             method: 'POST',
@@ -353,7 +353,15 @@
 
         document.getElementById('generate-model').addEventListener('click', async function () {
 
-            await genImageAndDescribe(currentImageIndex);
+            await genImageAndDescribe(currentImageIndex, "");
+
+        });
+        
+        document.getElementById('callGPT').addEventListener('click', async function () {
+            const textInput = document.getElementById('gpt-input').value.trim();
+            prevCode = "";
+            prevImg = "";
+            await genImageAndDescribe(currentImageIndex, textInput);
 
         });
 
@@ -382,7 +390,7 @@
                     currentImageIndex = (currentImageIndex - 1 + totalImages) % totalImages; // Decrement index and loop back to 6
                 }*/
                 //updateImageDisplay(currentImageIndex);
-                await genImageAndDescribe(currentImageIndex);
+                await genImageAndDescribe(currentImageIndex, "");
                 updateStatusAndSpeak(`Viewing image number ${currentImageIndex}.`);
             }
 
@@ -399,7 +407,7 @@
 
             if (event.shiftKey && event.altKey) {
                 if (event.key.toUpperCase() == 'G') {
-                    await genImageAndDescribe(currentImageIndex);
+                    await genImageAndDescribe(currentImageIndex, "");
                 } else if (event.key.toUpperCase() == 'D') {
                     var section = document.getElementById('code2fab-response');
                     section.focus();
@@ -413,6 +421,7 @@
                     var section = document.getElementById('openscad-code');
                     section.focus();
                     prevCode = "";
+                    prevImg = "";
                 } else if (event.key.toUpperCase() == 'H') {
                     const instructions = document.getElementById('placeholder');
                     instructions.style["display"] = "block";
@@ -501,6 +510,7 @@
             var section = document.getElementById('openscad-code');
             section.focus();
             prevCode = "";
+            prevImg = "";
         });
         document.getElementById('file-input').addEventListener('change', function (event) {
             const file = event.target.files[0];
@@ -509,75 +519,13 @@
                 document.getElementById('openscad-code').value = e.target.result;
                 console.log(`Uploaded file: ${file.name}`);
                 parseCode(e.target.result.toLowerCase());
-                genImageAndDescribe(currentImageIndex);
+                genImageAndDescribe(currentImageIndex, "");
             };
             reader.readAsText(file);
         });
 
 
-        document.getElementById('callGPT').addEventListener('click', function () {
-            const textInput = document.getElementById('gpt-input').value.trim();
-            let apiUrl = '/api/callGPT';
-            let command = '';
-
-            const commandMap = {
-                '@create': '/api/create',
-                //'@describe': '/api/describe',
-                '@match': '/api/match',
-                '@analysis': '/api/analysis',
-                '@improve': '/api/improve'
-            };
-
-            for (let cmd in commandMap) {
-                if (textInput.startsWith(cmd)) {
-                    apiUrl = commandMap[cmd];
-                    command = textInput.slice(cmd.length).trim();
-                    break;
-                }
-            }
-
-            if (command === '') {
-                command = textInput;
-            }
-
-            const code = document.getElementById('openscad-code').value;
-            const responseContainer = document.getElementById('code2fab-response');
-            responseContainer.innerHTML = '<pre></pre>';
-            const pre = responseContainer.querySelector('pre');
-            updateStatusAndSpeak("The system reply is loading...");
-
-            html2canvas(document.getElementById('modelImage')).then(canvas => {
-                canvas.toBlob(blob => {
-                    const formData = new FormData();
-                    formData.append('image', blob, 'temp.jpg');
-                    formData.append('text', command);
-                    formData.append('code', code);
-
-                    fetch(serverUrl + apiUrl, {
-                        method: 'POST',
-                        body: formData
-                    })
-                        .then(response => response.body.getReader())
-                        .then(reader => {
-                            function processStream({ done, value }) {
-                                if (done) {
-                                    console.log('Stream completed');
-                                    updateStatusAndSpeak("Please check the system reply.");
-                                    return;
-                                }
-                                const chunk = new TextDecoder().decode(value);
-                                pre.textContent += chunk;
-                                return reader.read().then(processStream);
-                            }
-                            return reader.read().then(processStream);
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            updateStatusAndSpeak("Please try again.");
-                        });
-                });
-            });
-        });
+        
 
 
         // get primitive parts from list of available primitives
