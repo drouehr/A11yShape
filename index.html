@@ -46,105 +46,84 @@
     <header>
         <h1>Code2Fab</h1>
     </header>
-    <div id="introduction" tabindex="0" aria-label="Toolbar" role="toolbar" class="text-left  m-1 border-2 border-black">
-        <h2 role="heading">Toolbar</h2>
-        <div class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
-            <div class="flex items-center space-x-1">
-                <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
-                    id="upload-file" tabindex="0" aria-label="Upload OpenSCAD file."
-                    aria-controls="file-input">
-                    <i class="fas fa-upload" aria-hidden="true"></i>
-                </button>
-
-                <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
-                    id="save-code" tabindex="0" aria-label="Save the OpenSCAD code.">
-                    <i class="fas fa-save" aria-hidden="true"></i>
-                </button>
-                <input type="file" id="file-input" style="display: none;" accept=".scad"
-                    aria-label="Open an OpenSCAD file.">
-                <button tabindex="0" aria-label="Generate Model Button, after the rendering, the model will be displayed in the model area and please check the description by Shortcut key Shift+Alt+D."
-                    class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
-                    id="generate-model" tabindex="0">
-                    <!--<i class="fas fa-cube"></i>-->
-                    Generate Model
-                </button>
-            </div>
-        </div>
-    </div>
     <!-- Main Content -->
     <div class="flex w-full height:98vh">
         <!-- Code Editor area -->
-        <div class="w-1/3 bg-white border-2 border-black m-1 flex-col flex flex-col ">
-            <h2>Code Area: Area for editing code</h2>
-            <!-- Sidebar for Code -->
-            <div tabindex="0" class="bg-white border border-black m-1 flex-col flex flex-col h-full" id="CodeEditor"
-                aria-label="Panel 1 - Code editing" role="region">
-                <div class="flex ">
-                    <!-- Code Editor Area 1 -->
-                    <div class="h-full w-full ">
-                        <div>
-                            <h3>Input area of Code Editor</h3>
-                            <textarea tabindex="0" aria-label="Code editor" role="main"
-                            class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
-                            id="openscad-code" placeholder="Enter OpenSCAD code here"
-                            style="resize: none; height: calc(82vh - 36px); width: calc(100% - 4px);"
-                            data-hover-text="Enter OpenSCAD code here."></textarea>
-                        </div>
+        <div class="w-1/3 bg-white border-2 border-black m-1 flex-col flex flex-col " tabindex="0" aria-labelledby="editor-heading" role="region">
+            <h1 role="heading" id="editor-heading">Code Editor Panel</h1>
+            
+            <div tabindex="0" aria-labelledby="editor-toolbar-heading" role="toolbar">
+                <h2 role="heading" id="editor-toolbar-heading">Code Editor Toolbar</h2>
+                <div class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
+                <div class="flex items-center space-x-1">
+                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
+                        id="upload-file" tabindex="0" aria-label="Upload OpenSCAD file"
+                        aria-controls="file-input">
+                        <i class="fas fa-upload" aria-hidden="true"></i>
+                    </button>
+
+                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
+                        id="save-code" tabindex="0" aria-label="Save the OpenSCAD code">
+                        <i class="fas fa-save" aria-hidden="true"></i>
+                    </button>
+                    
+                    <input type="file" id="file-input" style="display: none;" accept=".scad"
+                        aria-label="Open an OpenSCAD file.">
                         
-                    </div>
+                    <button tabindex="0" aria-label="Generate Model"
+                        class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
+                        id="generate-model">
+                        <!--<i class="fas fa-cube"></i>-->
+                        Generate Model
+                    </button>
+                </div>
                 </div>
             </div>
+            
+            <h2 role="heading" id="editor-input-heading">Code Editor Input Area</h2>
+            <textarea tabindex="0" aria-labelledby="editor-input-heading" role="textbox"
+            class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
+            id="openscad-code" placeholder="Enter OpenSCAD code here"
+            style="resize: none; height: calc(82vh - 36px); width: calc(100% - 4px);"
+            data-hover-text="Enter OpenSCAD code here."></textarea>
         </div>
         <!-- Rendering Area -->
-        <div class="w-1/3 flex-col border-2 border-black m-1">
-            <h2>Model Area: The model rendered from the code and hierarchy</h2>
-            <div tabindex="0" class="flex-col  m-1" id="col2" aria-label="Panel 2 - Rendering Model"
-                role="region">
-                <!-- Viewport Header -->
-                <!--<div class="flex border-b border-black ">
-                <div class="flex items-center" style="min-height: 40px;">
-                    <div id="statusDisplay" class="px-2 py-1 flex justify-between items-center "
-                        style="min-height: 40px; flex-grow: 1;">
-                        <i class="fas fa-exclamation-circle"> <span id="statusText">Status Bar</span></i>
-                    </div>
-                </div>
-            </div>-->
+        <div class="w-1/3 flex-col border-2 border-black m-1"  tabindex="0" aria-labelledby="model-panel-heading" role="region">
+            <h1 role="heading" id="model-panel-heading">Model Panel</h1>
+            <div class="flex-col  m-1" id="col2">
                 <!-- Viewport Content -->
                 <div class="flex-grow  flex border border-black" style="height: calc(50vh - 40px);">
-                    <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;">
-                        <h3>The display of rendered model</h3>
+                    <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;" tabindex="0" aria-labelledby="rendered-heading"
+                role="region">
+                        <h2 role="heading" id="rendered-heading">Rendered model</h2>
+                        
                         <!-- Model viewer goes here -->
                         <img id="modelImage" src="logo.png" tabindex="0" aria-label="Rendered model"
-                            aria-describedby="code2fab-response" class="max-w-full max-h-full">
+                            aria-describedby="code2fab-response" role="img" class="max-w-full max-h-full">
                         <!-- Initially hide the image -->
 
                     </div>
                 </div>
-                <div class="w-full h-1/2 overflow-auto">
-                    <!-- Area for code's structure -->
-                    <h3>Select the parts of model:</h3>
-                    <div tabindex="0" aria-label="Model parts" role="main"
+                <div class="w-full h-1/2 overflow-auto" tabindex="0" aria-labelledby="parts-heading">
+                    <h2 role="heading" id="parts-heading">Model parts</h2>
+                    <div 
                         class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
                         id="openscad-code2" placeholder="The modular structure of the code will appear here"
                         style="resize: none; height: screen; width: calc(100% - 2px);">
-                        The parts of model will appear here...
+                        <p>The parts of model will appear here...</p>
                     </div>
                 </div>
             </div>
         </div>
         <!-- AI Area -->
-        <div class="w-1/3 border-2 border-black m-1 flex-col overflow-auto">
-            <h2>AI Area: Interact with the AI and check the response</h2>
-            <div tabindex="0" aria-label="Panel 3 - AI Assistance" role="region"
-                class="m-1 flex-col overflow-auto" id="col3">
-            <div class="border border-black">
+        <div class="w-1/3 border-2 border-black m-1 flex-col overflow-auto" tabindex="0" aria-labelledby="ai-panel-heading" role="region">
+            <h1 role="heading" id="ai-panel-heading">AI Assistance Panel</h1>
+            <div class="border border-black" tabindex="0" aria-labelledby="prompt-heading" role="region">
                 <!-- Prompt Area at the top-->
-                <h3>Instructions to the AI</h3>
+                <h2 role="heading" id="prompt-heading">Prompt:</h2>
                 <div class="h-1/4 mb-1 overflow-auto flex flex-col border border-black mx-1">
                     
                     <div class="h-1/4">
-                        
-                        <p class="text-sm text-gray-700 m-2">Prompt:</p>
                         <textarea class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive mb-2 bg-gray-100"
                             id="gpt-input" placeholder="Enter your prompt here" style="resize: none; height: 14vh;"
                             aria-label="Prompt box" role="textbox"></textarea>
@@ -159,24 +138,17 @@
                 </div>
             </div>
                 <!-- Response Area at the bottom -->
-                <div class=" mt-2 pt-2 ">
-                    <h3>Response from the AI</h3>
-                    <div id="enlarge-icon"
-                        class="bg-grey-800 hover:bg-grey-900 text-black font-bold py-1 px-3 rounded interactive flex items-center m-2">
-                        <!--<i class="fas fa-search-plus mr-2"></i>-->
-                        <p class="text-sm text-gray-700">Code2fab Response:</p>
-                    </div>
-
+                <div class=" mt-2 pt-2 " tabindex="0" aria-labelledby="response-heading" role="status" aria-live="polite">
+                    <h2 role="heading" id="response-heading">Code2fab Response:</h2>
                     <div class="code2fab-container w-full text-sm text-gray-700 font-mono flex-col"
                     style="height: 3/4;">
                         <!-- GPT response content goes here -->
-                        <div id="code2fab-response" aria-label="Model description" role="main"
+                        <div id="code2fab-response" 
                             class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0"
-                            tabindex="0" data-hover-text="Code2fab's response"><br><br> Code2fab's responses will appear here<br>
+                            data-hover-text="Code2fab's response"><br><br> Model description not yet generated<br>
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
     </div>
@@ -258,7 +230,12 @@
             var fullCode = "";
             if (currentPartIndex != 0) {
                 fullCode = code;
-                code = parts[currentPartIndex].code;
+                for (let i = 0; i < parts.length; i++) {
+                    if (parts[i].id == currentPartIndex) {
+                        code = parts[i].code;
+                        break;
+                    }
+                }
             }
             const text = document.getElementById('gpt-input').value;
             const responseContainer = document.getElementById('code2fab-response');
@@ -309,7 +286,12 @@
                         var fullCode = "";
                         if (currentPartIndex != 0) {
                             fullCode = code;
-                            code = parts[currentPartIndex].code;
+                            for (let i = 0; i < parts.length; i++) {
+                                if (parts[i].id == currentPartIndex) {
+                                    code = parts[i].code;
+                                    break;
+                                }
+                            }
                         }
                         const text = document.getElementById('gpt-input').value;
                         const responseContainer = document.getElementById('code2fab-response');
@@ -374,6 +356,22 @@
 
         });
 
+        function modelPartSelected(e) {
+            prevCode = "";
+            prevImg = "";
+            
+            var checkbox = e.target;
+            if (checkbox.checked) {
+                const prevPart = document.getElementById('part-' + currentPartIndex);
+                prevPart.checked = false;
+                currentPartIndex = checkbox.value;
+            } else {
+                currentPartIndex = 0;
+                const fullModel = document.getElementById('part-0');
+                fullModel.checked = true;
+            }
+        }
+
 
         document.addEventListener('keydown', async function (event) {
             if (event.shiftKey && event.key.toUpperCase() === 'V') {
@@ -385,28 +383,6 @@
                 //updateImageDisplay(currentImageIndex);
                 await genImageAndDescribe(currentImageIndex);
                 updateStatusAndSpeak(`Viewing image number ${currentImageIndex}.`);
-            }
-
-            if (event.shiftKey && event.altKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key.toUpperCase() == 'M')) {
-                var section = document.getElementById('openscad-code2');
-                section.focus();
-                prevCode = "";
-                prevImg = "";
-                const prevPart = document.getElementById('part-' + parts[currentPartIndex].id);
-                prevPart.innerHTML = prevPart.innerHTML.replace(" (selected)", "");
-                prevPart.style["color"] = "";
-                if (event.key === 'ArrowUp') {
-                    currentPartIndex--;
-                } else if (event.key === 'ArrowDown') {
-                    currentPartIndex++;
-                } else if (event.key.toUpperCase() == 'M') {
-                    currentPartIndex = 0;
-                }
-                currentPartIndex = ((currentPartIndex % parts.length) + parts.length) % parts.length;
-                const curPart = document.getElementById('part-' + parts[currentPartIndex].id);
-                curPart.innerHTML = curPart.innerHTML + " (selected)"
-                curPart.style["color"] = "blue";
-                curPart.focus();
             }
 
             if (event.altKey && (event.key === '!' || event.key === '@' || event.key === '#')) {
@@ -423,11 +399,6 @@
             if (event.shiftKey && event.altKey) {
                 if (event.key.toUpperCase() == 'G') {
                     await genImageAndDescribe(currentImageIndex);
-                } else if (event.key.toUpperCase() == 'C') {
-                    var code = document.getElementById('openscad-code').value;
-                    code = code.toLowerCase();
-
-                    parseCode(code);
                 } else if (event.key.toUpperCase() == 'D') {
                     var section = document.getElementById('code2fab-response');
                     section.focus();
@@ -445,9 +416,13 @@
                     const instructions = document.getElementById('placeholder');
                     instructions.style["display"] = "block";
                     instructions.focus();
+                } else if (event.key.toUpperCase() == 'C') {
+                    var section = document.getElementById('toolbar');
+                    section.focus();
                 }
             }
         });
+        
 
         function updateImageDisplay(index) {
             const imageElement = document.getElementById('modelImage');
@@ -645,16 +620,18 @@
 
         function getDisplayTree(root, parts, index) {
             const children = root.children;
-            let tree = "<div id=\"part-" + root.id + "\" style=\"padding-left: 10px;\" tabindex=\"0\" >" + index + " " + root.name + "</div>";
+            
+            let tree = "<li style=\"padding-left: 10px;\" ><label for=\"part-" + root.id + "\" id=\"part-" + root.id + "-label\" tabindex=\"0\" role=\"treeitem\">" +root.name + " </label>"
+            + "<input type=\"checkbox\" id=\"part-" + root.id + "\" name=\"parts\" value=\""+root.id+"\" tabindex=\"0\" aria-labelledby=\"part-" + root.id + "-label\" role=\"checkbox\" onchange=\"modelPartSelected(event)\"></li>";
             if (children.length == 0) {
                 return tree;
             }
 
-            tree = tree + "<div style=\"padding-left: 10px;\">";
+            tree = tree + "<ul style=\"padding-left: 10px;\" role=\"group\">";
             for (let i = 0; i < children.length; i++) {
                 tree = tree + getDisplayTree(parts[children[i]], parts, index + (i + 1) + ".");
             }
-            tree = tree + "</div>";
+            tree = tree + "</ul>";
             return tree;
         }
 
@@ -764,10 +741,9 @@
 
             // generate display tree
             var tree = getDisplayTree(parts[0], parts, "");
-            document.getElementById('openscad-code2').innerHTML = "<div id=\"parts-tree\">" + tree + "</div>";
-            const curPart = document.getElementById('part-' + parts[currentPartIndex].id);
-            curPart.innerHTML = curPart.innerHTML + " (selected)"
-            curPart.style["color"] = "blue";
+            document.getElementById('openscad-code2').innerHTML = "<ul id=\"parts-tree\" tabindex=\"0\" aria-label=\"Parts of the model\" role=\"tree\">" + tree + "</ul>";
+            const curPart = document.getElementById('part-' + currentPartIndex);
+            curPart.checked = true;
 
         }
 
