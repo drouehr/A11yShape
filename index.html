@@ -299,12 +299,16 @@
                         const pre = responseContainer.querySelector('pre');
                         updateStatusAndSpeak("The system reply is loading...")
                         
-                        console.log(text);
+                        var body = { text: text, code: code, image: generateData.thumbnail, prevCode: prevCode, prevImg: prevImg, fullCode: fullCode, fullImg: generateData.fullImg };
+                        if (text != "") {
+                          body["prevCode"] = "";
+                          body["prevImg"] = "";
+                        }
 
                         fetch(serverUrl + '/api/describe', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ text: text, code: code, image: generateData.thumbnail, prevCode: prevCode, prevImg: prevImg, fullCode: fullCode, fullImg: generateData.fullImg })
+                            body: JSON.stringify(body)
                         })
                             .then(response => {
 
@@ -359,8 +363,6 @@
         
         document.getElementById('callGPT').addEventListener('click', async function () {
             const textInput = document.getElementById('gpt-input').value.trim();
-            prevCode = "";
-            prevImg = "";
             await genImageAndDescribe(currentImageIndex, textInput);
 
         });

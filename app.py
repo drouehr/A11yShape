@@ -245,6 +245,7 @@ def generate_images():
         return jsonify(error="Failed to generate images."), 500
 
 
+
 @app.route("/api/describe", methods=["POST"])
 def describe():
     try:
@@ -313,7 +314,8 @@ def describe():
                             },
                             {"type": "text", "text": code},
                         ]
-        
+            content.append({"type": "text", "text": "Include a summary first"})
+            
             try:
                 completion = client.chat.completions.create(
                     model="gpt-4o",
