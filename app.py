@@ -264,12 +264,13 @@ def describe():
             fullCode = ""
         
         def gpt_action(image, code, text, prevCode, prevImg):
-            if len(text) == 0:
-                text = "describe the shape such that a blind user could understand it"
+            instructions = "describe the shape such that a blind user could understand it"
+            if len(text) > 0:
+                instructions = text
             
             if len(fullCode) > 0:
                 content = [
-                            {"type": "text", "text": "Given the part of a 3D model and its OpenSCAD code, "+text+". Compare it in relation to the full model."},
+                            {"type": "text", "text": "Given the part of a 3D model and its OpenSCAD code, "+instructions+". Compare it in relation to the full model."},
                             {
                                 "type": "image_url",
                                 "image_url": {
@@ -303,9 +304,9 @@ def describe():
                             },
                             {"type": "text", "text": code},
                         ]
-            else:
+            elif len(code) > 0:
                 content = [
-                            {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+text},
+                            {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions},
                             {
                                 "type": "image_url",
                                 "image_url": {
@@ -314,7 +315,13 @@ def describe():
                             },
                             {"type": "text", "text": code},
                         ]
-            content.append({"type": "text", "text": "Include a summary first"})
+            elif len(text) > 0:
+                content = [{"type": "text", "text": text}]
+            else:
+                content = [{"type": "text", "text": "describe how to create a model with openscad"}]
+            
+            if len(code) > 0:
+                content.append({"type": "text", "text": "Give a short answer or summary first, then give as much information as possible such that a blind user could understand it"})
             
             try:
                 completion = client.chat.completions.create(
