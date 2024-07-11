@@ -264,7 +264,7 @@ def describe():
             fullCode = ""
         
         def gpt_action(image, code, text, prevCode, prevImg):
-            instructions = "describe the shape such that a blind user could understand it"
+            instructions = "describe the visual details such that a blind user could understand it. The description should be accurate based on the images of the model"
             if len(text) > 0:
                 instructions = text
             
@@ -288,7 +288,7 @@ def describe():
                         ]
             elif len(prevCode) > 0:
                 content = [
-                            {"type": "text", "text": "Given the 3D model and its OpenSCAD code, describe the changes between the first image and code (referred to as the previous model) and the second image and code (referred to as the current model). Describe the shape such that a blind user could understand it."},
+                            {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions+". Describe the changes between the first image and code (referred to as the previous model) and the second image and code (referred to as the current model)."},
                             {
                                 "type": "image_url",
                                 "image_url": {
@@ -321,7 +321,7 @@ def describe():
                 content = [{"type": "text", "text": "describe how to create a model with openscad"}]
             
             if len(code) > 0:
-                content.append({"type": "text", "text": "Give a short answer or summary first, then give as much information as possible such that a blind user could understand it"})
+                content.append({"type": "text", "text": "Give a short answer or summary first, then give as much information as possible such that a blind user could understand it. The output should not have formatting since it will be read by a screenreader"})
             
             try:
                 completion = client.chat.completions.create(
