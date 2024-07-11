@@ -215,6 +215,7 @@
         var prevImg = '';
         var parts = [];
         let currentPartIndex = 0;
+        let currentPartOffset = 0;
         parts.push({
             id: 0,
             name: "Model",
@@ -230,17 +231,13 @@
             var fullCode = "";
             if (currentPartIndex != 0) {
                 fullCode = code;
-                for (let i = 0; i < parts.length; i++) {
-                    if (parts[i].id == currentPartIndex) {
-                        code = parts[i].code;
-                        break;
-                    }
-                }
+                code = parts[0].code;
+                code = code.slice(0, currentPartOffset) + "!" + code.slice(currentPartOffset);
             }
             const responseContainer = document.getElementById('code2fab-response');
             responseContainer.innerHTML = '<pre></pre>';
             const pre = responseContainer.querySelector('pre');
-            console.log("Generating images for code:", code);
+            //console.log("Generating images for code:", code);
 
             try {
                 // Generate images from code
@@ -375,8 +372,10 @@
                 const prevPart = document.getElementById('part-' + currentPartIndex);
                 prevPart.checked = false;
                 currentPartIndex = checkbox.value;
+                currentPartOffset = checkbox.getAttribute("data-offset");
             } else {
                 currentPartIndex = 0;
+                currentPartOffset = 0;
                 const fullModel = document.getElementById('part-0');
                 fullModel.checked = true;
             }
@@ -527,58 +526,20 @@
 
 
         
-
-
-        // get primitive parts from list of available primitives
-        /*
-        function getPrimitives(code, id, parent) {
-            let parts = [];
-            //console.log(code);
-            primitives.forEach(primitive => {
-                if (code.includes(primitive + "(")) {
-                    parts.push({
-                        id: id,
-                        name: primitive,
-                        description: "",
-                        children: [],
-                        code: "",
-                        isModule: false
-                    });
-                    id++;
-                }
-            });
-            return parts;
-        }
-
-        function getClosingBracket(code, open, close) {
-            var lev = 1;
-            for (let i = 0; i < code.length; i++) {
-                var c = code[i];
-
-                if (c == open) {
-                    lev++;
-                } else if (c == close) {
-                    lev--;
-                }
-                if (lev == 0) {
-                    return i;
-                }
-            }
-            return code.length;
-        }*/
-
-        function getDisplayTree(root, name, index) {
-            const children = root.children;
+        function getDisplayTree(root, child, index) {
             
-            let tree = "<li style=\"padding-left: 10px;\" aria-labelledby=\"part-" + root.id + "-label\" role=\"treeitem\" tabindex=\"0\"><label for=\"part-" + root.id + "\" id=\"part-" + root.id + "-label\" >" +name + " </label>"
-            + "<input type=\"checkbox\" id=\"part-" + root.id + "\" name=\"parts\" value=\""+root.id+"\" tabindex=\"0\" aria-labelledby=\"part-" + root.id + "-label\" role=\"checkbox\" onchange=\"modelPartSelected(event)\">";
-            if (children.length == 0) {
+            
+            let tree = "<li style=\"padding-left: 10px;\" aria-labelledby=\"part-" + root.id + "-label\" role=\"treeitem\" tabindex=\"0\"><label for=\"part-" + root.id + "\" id=\"part-" + root.id + "-label\" >" +child.name + " </label>"
+            + "<input type=\"checkbox\" id=\"part-" + root.id + "\" name=\"parts\" value=\""+root.id+"\" data-offset=\""+child.start+"\" tabindex=\"0\" aria-labelledby=\"part-" + root.id + "-label\" role=\"checkbox\" onchange=\"modelPartSelected(event)\">";
+            
+            if (root.id == -1 || root.children.length == 0) {
                 return tree+"</li>";
             }
+            const children = root.children;
 
             tree = tree + "<ul style=\"padding-left: 10px;\" role=\"group\">";
             for (let i = 0; i < children.length; i++) {
-                tree = tree + getDisplayTree(parts[children[i].id], children[i].description, index + (i + 1) + ".");
+                tree = tree + getDisplayTree(parts[children[i].id], children[i], index + (i + 1) + ".");
             }
             tree = tree + "</ul></li>";
             return tree;
@@ -594,7 +555,7 @@
         }
         
         const primitives = ["circle", "square", "polygon", "text", "import", "projection", "sphere", "cube", "cylinder", "polyhedron", "linear_extrude", "rotate_extrude", "surface"];
-        function getChildren(code, offset) {
+        function getChildren(code, offset, fullcode) {
             let call_regexp = /\b(\w+)\s*\(([^)]*)\)\s*;/g;
             let calls = [...code.matchAll(call_regexp)];
             
@@ -602,27 +563,34 @@
             calls.forEach((match) => {
                 let call = match[1];
                 let moduleId = findModule(call);
-                if (primitives.includes(call)) {
-                
+                let primId = primitives.indexOf(call);
+                if (primId != -1) {
+                  /*children.push({
+                      id: -1,
+                      name: call,
+                      start: offset+match.index,
+                  });*/
                 } else if (moduleId != -1) {
                   if (match[2] != "" && match[2].length < 50) {
                     call += "("+match[2]+")"
                   }
                   children.push({
                       id: parts[moduleId].id,
-                      name: match[1],
-                      description: call,
+                      name: call,
                       start: offset+match.index,
                   });
+                  
                 }
                 
             });
+            
             return children;
         }
 
         function parseCode(code) {
             parts = [];
             currentPartIndex = 0;
+            currentPartOffset = 0;
             parts.push({
                 id: 0,
                 name: "Full Model",
@@ -641,21 +609,20 @@
             var id = 1;
             var prevModuleEnd = 0;
             definitions.forEach((match) => {
-                console.log(match);
-                
                 let offset = code.substring(match.index);
                 let body = XRegExp.matchRecursive(offset, '\\{', '\\}')[0];
-                console.log(body);
-
+                
                 parts.push({
                     id: id,
                     name: match[1],
                     description: "",
                     children: [],
                     code: body,
-                    start: match.index,
+                    start: match.index + match[0].length,
                     isModule: true
                 });
+                
+                
                 
                 globalCode.push({start:prevModuleEnd, code: code.slice(prevModuleEnd, match.index)});
                 
@@ -663,22 +630,20 @@
                 id++;
             });
             
-            console.log(globalCode);
-            
-            globalCode.forEach((code) => {
-                parts[0].children = parts[0].children.concat(getChildren(code.code, code.start));
+            globalCode.forEach((section) => {
+                parts[0].children = parts[0].children.concat(getChildren(section.code, section.start, code));
             });
             
             parts.forEach((part) => {
                 if (part.id != 0) {
-                    part.children = getChildren(part.code, part.start);
+                    part.children = getChildren(part.code, part.start, code);
                 }
             });
             
             console.log(parts);
             
             // generate display tree
-            var tree = getDisplayTree(parts[0], "Full Model", "");
+            var tree = getDisplayTree(parts[0], parts[0], "");
             document.getElementById('openscad-code2').innerHTML = "<ul id=\"parts-tree\" aria-label=\"Parts of the model\" role=\"tree\">" + tree + "</ul>";
             const curPart = document.getElementById('part-' + currentPartIndex);
             curPart.checked = true;
