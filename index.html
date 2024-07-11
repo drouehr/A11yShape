@@ -214,8 +214,7 @@
         var prevCode = '';
         var prevImg = '';
         var parts = [];
-        let currentPartIndex = 0;
-        let currentPartOffset = 0;
+        let currentPart = {index: 0, code: "", offset: 0};
         parts.push({
             id: 0,
             name: "Model",
@@ -229,10 +228,10 @@
         async function genImageAndDescribe(index, text) {
             var code = document.getElementById('openscad-code').value;
             var fullCode = "";
-            if (currentPartIndex != 0) {
+            if (currentPart.index != 0) {
                 fullCode = code;
                 code = parts[0].code;
-                code = code.slice(0, currentPartOffset) + "!" + code.slice(currentPartOffset);
+                code = code.slice(0, currentPart.offset) + "!" + code.slice(currentPart.offset);
             }
             const responseContainer = document.getElementById('code2fab-response');
             responseContainer.innerHTML = '<pre></pre>';
@@ -280,11 +279,11 @@
                     setTimeout(() => {
                         var code = document.getElementById('openscad-code').value;
                         var fullCode = "";
-                        if (currentPartIndex != 0) {
+                        if (currentPart.index != 0) {
                             fullCode = code;
                             for (let i = 0; i < parts.length; i++) {
-                                if (parts[i].id == currentPartIndex) {
-                                    code = parts[i].code;
+                                if (parts[i].id == currentPart.index) {
+                                    code = currentPart.code+";\n"+parts[i].code;
                                     break;
                                 }
                             }
@@ -369,13 +368,13 @@
             
             var checkbox = e.target;
             if (checkbox.checked) {
-                const prevPart = document.getElementById('part-' + currentPartIndex);
+                const prevPart = document.getElementById('part-' + currentPart.index);
                 prevPart.checked = false;
-                currentPartIndex = checkbox.value;
-                currentPartOffset = checkbox.getAttribute("data-offset");
+                currentPart.index = checkbox.value;
+                currentPart.code = checkbox.getAttribute("data-code");
+                currentPart.offset = checkbox.getAttribute("data-offset");
             } else {
-                currentPartIndex = 0;
-                currentPartOffset = 0;
+                currentPart = {index: 0, code: "", offset: 0};
                 const fullModel = document.getElementById('part-0');
                 fullModel.checked = true;
             }
@@ -518,7 +517,7 @@
             reader.onload = function (e) {
                 document.getElementById('openscad-code').value = e.target.result;
                 console.log(`Uploaded file: ${file.name}`);
-                parseCode(e.target.result.toLowerCase());
+                parseCode(e.target.result);
                 genImageAndDescribe(currentImageIndex, "");
             };
             reader.readAsText(file);
@@ -530,7 +529,7 @@
             
             
             let tree = "<li style=\"padding-left: 10px;\" aria-labelledby=\"part-" + root.id + "-label\" role=\"treeitem\" tabindex=\"0\"><label for=\"part-" + root.id + "\" id=\"part-" + root.id + "-label\" >" +child.name + " </label>"
-            + "<input type=\"checkbox\" id=\"part-" + root.id + "\" name=\"parts\" value=\""+root.id+"\" data-offset=\""+child.start+"\" tabindex=\"0\" aria-labelledby=\"part-" + root.id + "-label\" role=\"checkbox\" onchange=\"modelPartSelected(event)\">";
+            + "<input type=\"checkbox\" id=\"part-" + root.id + "\" name=\"parts\" value=\""+root.id+"\" data-offset=\""+child.start+"\" data-code=\""+child.code+"\" tabindex=\"0\" aria-labelledby=\"part-" + root.id + "-label\" role=\"checkbox\" onchange=\"modelPartSelected(event)\">";
             
             if (root.id == -1 || root.children.length == 0) {
                 return tree+"</li>";
@@ -561,42 +560,45 @@
             
             let children = [];
             calls.forEach((match) => {
-                let call = match[1];
-                let moduleId = findModule(call);
-                let primId = primitives.indexOf(call);
-                if (primId != -1) {
-                  /*children.push({
-                      id: -1,
-                      name: call,
-                      start: offset+match.index,
-                  });*/
-                } else if (moduleId != -1) {
-                  if (match[2] != "" && match[2].length < 50) {
-                    call += "("+match[2]+")"
-                  }
+                let call = match[1] + "("+match[2]+")";
+                let moduleId = findModule(match[1]);
+                let primId = primitives.indexOf(match[1]);
+                if (moduleId != -1) {
                   children.push({
                       id: parts[moduleId].id,
-                      name: call,
+                      name: match[1],
+                      code: call,
                       start: offset+match.index,
                   });
-                  
                 }
                 
             });
+            
+            let names = [];
+            for (let i = 0; i < children.length; i++) {
+                names.push(children[i].name);
+            }
+            for (let i = 0; i < children.length; i++) {
+                for (let j = 0; j < names.length; j++) {
+                    if (i!=j && children[i].name == names[j]) {
+                        children[i].name = children[i].code;
+                        break;
+                    }
+                }
+            }
             
             return children;
         }
 
         function parseCode(code) {
             parts = [];
-            currentPartIndex = 0;
-            currentPartOffset = 0;
+            currentPart = {index: 0, code: "", offset: 0};
             parts.push({
                 id: 0,
                 name: "Full Model",
                 description: "",
                 children: [],
-                code: code,
+                code: "",
                 start: 0,
                 isModule: false
             });
@@ -617,8 +619,8 @@
                     name: match[1],
                     description: "",
                     children: [],
-                    code: body,
-                    start: match.index + match[0].length,
+                    code: match[0]+body+"}",
+                    start: match.index,
                     isModule: true
                 });
                 
@@ -645,16 +647,15 @@
             // generate display tree
             var tree = getDisplayTree(parts[0], parts[0], "");
             document.getElementById('openscad-code2').innerHTML = "<ul id=\"parts-tree\" aria-label=\"Parts of the model\" role=\"tree\">" + tree + "</ul>";
-            const curPart = document.getElementById('part-' + currentPartIndex);
+            const curPart = document.getElementById('part-' + currentPart.index);
             curPart.checked = true;
+            parts[0].code = code;
 
         }
 
         // on code change
         document.getElementById('openscad-code').addEventListener('change', function () {
             var code = document.getElementById('openscad-code').value;
-            code = code.toLowerCase();
-
             parseCode(code);
 
         });
