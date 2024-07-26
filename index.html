@@ -53,7 +53,6 @@
             <h1 role="heading" id="editor-heading">Code Editor Panel</h1>
             
             <div tabindex="0" aria-labelledby="editor-toolbar-heading" role="toolbar">
-                <h2 role="heading" id="editor-toolbar-heading">Code Editor Toolbar</h2>
                 <div class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
                 <div class="flex items-center space-x-1">
                     <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
@@ -358,8 +357,15 @@
         
         document.getElementById('callGPT').addEventListener('click', async function () {
             const textInput = document.getElementById('gpt-input').value.trim();
+            document.getElementById("gpt-input").value = "";
             await genImageAndDescribe(currentImageIndex, textInput);
-
+        });
+        
+        document.getElementById("gpt-input").addEventListener("keypress", function(event) {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            document.getElementById("callGPT").click();
+          }
         });
 
         function modelPartSelected(e) {
