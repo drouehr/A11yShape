@@ -36,7 +36,7 @@ import requests
 from autogen.agentchat.contrib.multimodal_conversable_agent import MultimodalConversableAgent
 from PIL import Image
 import io
-import multiprocessing 
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -239,13 +239,6 @@ def generate_images():
         return jsonify(error="Failed to generate images."), 500
 
 
-def worker(procnum, return_dict, view, code, output_dir):
-    """worker function"""
-    print(str(procnum) + " represent!")
-    _, thumbnail = gen_image(procnum, view, code, output_dir)
-    return_dict[procnum] = thumbnail
-    
-
 @app.route("/api/describe", methods=["POST"])
 def describe():
     try:
@@ -275,10 +268,7 @@ def describe():
         views = dict(enumerate(views))
         output_dir = "temp"
         os.makedirs(output_dir, exist_ok=True)
-        
-        manager = multiprocessing.Manager()
-        return_dict = manager.dict()
-        jobs = []
+
         if len(code) > 0:
             _, imgs = gen_image(views, code, output_dir)
     
