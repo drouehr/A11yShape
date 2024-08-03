@@ -262,9 +262,25 @@ def describe():
             prevCode = ""
         if fullCode == code:
             fullCode = ""
+            
+        imgs = []
+        views = [
+            "0,0,0,0,0,0,200",          
+            "0,0,-50,180,0,180,200",     
+            "-50,0,0,90,0,0,200",      
+            "50,0,0,-90,180,0,200",      
+            "0,50,0,90,0,90,200",      
+            "0,-50,0,90,0,-90,200"    
+        ]
+        output_dir = "temp"
+        os.makedirs(output_dir, exist_ok=True)
+        if len(code) > 0:
+            for index, view in enumerate(views):
+                _, thumbnail = gen_image(index, view, code, output_dir)
+                imgs.append(thumbnail)
         
         def gpt_action(image, code, text, prevCode, prevImg):
-            instructions = "describe the visual details such that a blind user could understand it. The description should be accurate based on the images of the model"
+            instructions = "describe the visual details such that a blind user could understand it (eg. position, posture, pictures). The images are of the same model at different angles. Do not describe each angle separately. The description should be based on the images of the model rather than the code"
             if len(text) > 0:
                 instructions = text
             
@@ -319,6 +335,14 @@ def describe():
                 content = [{"type": "text", "text": text}]
             else:
                 content = [{"type": "text", "text": "describe how to create a model with openscad"}]
+            
+            
+            for img in imgs:
+                content.append({
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{img}",
+                            }})
             
             if len(code) > 0:
                 content.append({"type": "text", "text": "Give a short answer or summary first, then give as much information as possible such that a blind user could understand it. The output should not have formatting since it will be read by a screenreader"})
