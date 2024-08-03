@@ -125,6 +125,17 @@
         <div class="w-1/3 flex-col border-2 border-black m-1"  tabindex="0" aria-labelledby="model-panel-heading" role="region">
             <h1 role="heading" id="model-panel-heading">Model Panel</h1>
             <div class="flex-col  m-1" id="col2">
+                
+                <div class="w-full h-1/2 overflow-auto" tabindex="0" aria-labelledby="parts-heading" style="height: calc(50vh - 40px);">
+                    <h2 role="heading" id="parts-heading">Model parts</h2>
+                    <div 
+                        class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
+                        id="openscad-code2" placeholder="The modular structure of the code will appear here"
+                        style="resize: none; height: screen; width: calc(100% - 2px);">
+                        <p>The parts of model will appear here...</p>
+                    </div>
+                </div>
+                
                 <!-- Viewport Content -->
                 <div class="flex-grow  flex border border-black" style="height: calc(50vh - 40px);">
                     <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;" tabindex="0" aria-labelledby="rendered-heading"
@@ -136,16 +147,6 @@
                             aria-describedby="code2fab-response" role="img" class="max-w-full max-h-full">
                         <!-- Initially hide the image -->
 
-                    </div>
-                </div>
-                
-                <div class="w-full h-1/2 overflow-auto" tabindex="0" aria-labelledby="parts-heading">
-                    <h2 role="heading" id="parts-heading">Model parts</h2>
-                    <div 
-                        class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
-                        id="openscad-code2" placeholder="The modular structure of the code will appear here"
-                        style="resize: none; height: screen; width: calc(100% - 2px);">
-                        <p>The parts of model will appear here...</p>
                     </div>
                 </div>
             </div>
