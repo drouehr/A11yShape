@@ -280,7 +280,7 @@ def describe():
                 imgs.append(thumbnail)
         
         def gpt_action(image, code, text, prevCode, prevImg):
-            instructions = "describe the visual details such that a blind user could understand it (eg. position, posture, pictures). The images are of the same model at different angles. Do not describe each angle separately. The description should be based on the images of the model rather than the code"
+            instructions = "describe the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). The images are of the same model at different angles. Do not describe each angle separately. The description should be based on the images of the model rather than the code"
             if len(text) > 0:
                 instructions = text
             
