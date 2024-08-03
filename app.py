@@ -36,6 +36,7 @@ import requests
 from autogen.agentchat.contrib.multimodal_conversable_agent import MultimodalConversableAgent
 from PIL import Image
 import io
+import multiprocessing 
 
 logging.basicConfig(level=logging.INFO)
 
@@ -159,34 +160,47 @@ def upload_image(image_path):
 
 current_process = None
 
-def gen_image(index, view, code, output_dir):
+def gen_image(views, code, output_dir):
     file = 'model.scad'
     f = open(join(output_dir, file), "w")
     f.write(code)
     f.close()
     
-    output_path = f'{output_dir}/{index}.png'
+    encoded_imgs = []
+    encoded_imgs_sm = []
+    
+    processes = []
+    for index in views:
+        view = views[index]
+        output_path = f'{output_dir}/{index}.png'
         
-    current_process = subprocess.Popen(
-        ["openscad", "-o", output_path, "--camera="+view, "--viewall", "--autocenter", "--imgsize=1024,1024", join(output_dir, file)],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
-    stdout, stderr = current_process.communicate(input=code)
-    if current_process.returncode != 0:
-        print(f"exec error: {stderr}")
-        return None, None
-    print(f"stdout {stdout}")
+        current_process = subprocess.Popen(
+            ["openscad", "-o", output_path, "--camera="+view, "--viewall", "--autocenter", "--imgsize=1024,1024", join(output_dir, file)],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        processes.append(current_process)
+        #print(index)
+        
+    for p in processes:
+        p.wait()
+        
+    for index in views:
+        view = views[index]
+        output_path = f'{output_dir}/{index}.png'
+        
+        img = Image.open(output_path)
+        fullsize = pil_to_bytes(img)
+        imgsize = 256, 256
+        img.thumbnail(imgsize, Image.Resampling.LANCZOS)
+        thumbnail = pil_to_bytes(img)
+        
+        encoded_imgs.append(fullsize)
+        encoded_imgs_sm.append(thumbnail)
     
-    img = Image.open(output_path)
-    fullsize = pil_to_bytes(img)
-    imgsize = 256, 256
-    img.thumbnail(imgsize, Image.Resampling.LANCZOS)
-    thumbnail = pil_to_bytes(img)
-    
-    return fullsize, thumbnail
+    return encoded_imgs, encoded_imgs_sm
 
 
 @app.route("/generate-img", methods=["POST"])
@@ -204,40 +218,20 @@ def generate_images():
         
         
             
-        views = [
-            "50,50,50,60,30,210,300",  
-            "0,0,50,0,0,0,200",        
-            "0,0,-50,180,0,0,200",     
-            "-50,0,0,90,0,0,200",      
-            "50,0,0,-90,0,0,200",      
-            "0,50,0,90,90,0,200",      
-            "0,-50,0,-90,-90,0,200"    
-        ]
+        views = {
+            "display": "50,50,50,60,30,210,300",   
+        }
+
+        encoded_imgs, encoded_imgs_sm = gen_image(views, code, output_dir)
+        if encoded_imgs is None:
+            return jsonify(error=f"Failed to generate image {index}"), 500
         
-        encoded_imgs = []
-        encoded_imgs_sm = []
-        encoded_imgs_full = []
         
-        for index, view in enumerate(views):
-            if index != imageIndex:
-                continue
-            
-            fullsize, thumbnail = gen_image(index, view, code, output_dir)
-            if fullsize is None:
-                return jsonify(error=f"Failed to generate image {index}"), 500
-            encoded_imgs.append(fullsize)
-            encoded_imgs_sm.append(thumbnail)
-            
-            if len(fullCode) > 0:
-                fullsize, thumbnail = gen_image(index, view, fullCode, output_dir)
-                if fullsize is None:
-                    return jsonify(error=f"Failed to generate image {index}"), 500
-                encoded_imgs_full.append(thumbnail)
-            else:
-                encoded_imgs_full.append("")
+        if len(fullCode) > 0:
+            _, encoded_imgs_full = gen_image(views, fullCode, output_dir)
+        else:
+            encoded_imgs_full = [""]
         
-        #description = describe(request, code, encoded_imgs)
-        print('image')
         
         return jsonify({"message": "Images generated successfully", "image": encoded_imgs[0], "thumbnail": encoded_imgs_sm[0], "fullImg": encoded_imgs_full[0]})
     except Exception as e:
@@ -245,6 +239,12 @@ def generate_images():
         return jsonify(error="Failed to generate images."), 500
 
 
+def worker(procnum, return_dict, view, code, output_dir):
+    """worker function"""
+    print(str(procnum) + " represent!")
+    _, thumbnail = gen_image(procnum, view, code, output_dir)
+    return_dict[procnum] = thumbnail
+    
 
 @app.route("/api/describe", methods=["POST"])
 def describe():
@@ -272,12 +272,16 @@ def describe():
             "0,50,0,90,0,90,200",      
             "0,-50,0,90,0,-90,200"    
         ]
+        views = dict(enumerate(views))
         output_dir = "temp"
         os.makedirs(output_dir, exist_ok=True)
+        
+        manager = multiprocessing.Manager()
+        return_dict = manager.dict()
+        jobs = []
         if len(code) > 0:
-            for index, view in enumerate(views):
-                _, thumbnail = gen_image(index, view, code, output_dir)
-                imgs.append(thumbnail)
+            _, imgs = gen_image(views, code, output_dir)
+    
         
         def gpt_action(image, code, text, prevCode, prevImg):
             instructions = "describe the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). The images are of the same model at different angles. Do not describe each angle separately. The description should be based on the images of the model rather than the code"
