@@ -75,6 +75,12 @@
                         <!--<i class="fas fa-cube"></i>-->
                         Generate Model
                     </button>
+                    <button tabindex="0" aria-label="Revert to previous code"
+                        class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
+                        id="revert-code">
+                        <!--<i class="fas fa-cube"></i>-->
+                        Undo
+                    </button>
                 </div>
                 </div>
             </div>
@@ -215,6 +221,7 @@
         var prevCode = '';
         var prevImg = '';
         var parts = [];
+		var codeHistory = [];
         let currentPart = {index: 0, code: "", offset: 0};
         parts.push({
             id: 0,
@@ -322,10 +329,10 @@
                                         var section = document.getElementById('code2fab-response');
                                         section.focus();
 										
-										if (mode == "modify" && text != "") {
-											document.getElementById('openscad-code').value = newCode;
-											document.getElementById('generate-model').click();
-										}
+                                        if (mode == "modify" && text != "") {
+                                          document.getElementById('openscad-code').value = newCode;
+                                          document.getElementById('generate-model').click();
+                                        }
                                         return;
                                     }
                                     const chunk = new TextDecoder().decode(value);
@@ -350,8 +357,11 @@
                                 console.error('Error:', error);
                                 updateStatusAndSpeak("Please try again.");
                             });
-
-                        prevCode = code;
+						
+						if (prevCode != code) {
+							codeHistory.push({"code": code, "img": generateData.thumbnail});
+						}
+						prevCode = code;
                         prevImg = generateData.thumbnail;
 						
 						
@@ -370,9 +380,23 @@
         }
 
         document.getElementById('generate-model').addEventListener('click', async function () {
-			console.log("gen");
-
             await genImageAndDescribe(currentImageIndex, "");
+
+        });
+        
+        document.getElementById('revert-code').addEventListener('click', async function () {
+			if (codeHistory.length > 1) {
+				var cur = codeHistory.pop();
+				var prev = codeHistory.pop();
+				
+				document.getElementById('openscad-code').value = prev.code;
+				prevCode = cur.code;
+				prevImg = cur.img;
+				
+				await genImageAndDescribe(currentImageIndex, "");
+			} else {
+				console.log("nothing to undo");
+			}
 
         });
         
