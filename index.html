@@ -104,7 +104,7 @@
                     <div class="h-1/4">
                         <textarea
                             class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive mb-2 bg-gray-100"
-                            id="gpt-input" placeholder="Enter your prompt here" style="resize: none; height: 14vh;"
+                            id="gpt-input" placeholder="Enter your prompt here" style="resize: none; height: 10vh;"
                             aria-label="Prompt box" role="textbox"></textarea>
                         <!-- Buttons below the prompt textbox -->
                         <button aria-label="Submit prompt"
@@ -123,13 +123,13 @@
                     <!-- GPT response content goes here -->
                     <div id="code2fab-response"
                         class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0"
-                        data-hover-text="Code2fab's response"><br><br> Model description not yet generated<br>
+                        data-hover-text="Code2fab's response" style="height: 40vh; overflow-y: auto;"><br><br> Model description not yet generated<br>
                     </div>
                 </div>
                 <div id="history-responses-area" class="mt-4 pt-4 border-t border-gray-300 overflow-y: scroll"
-                    role="region" aria-label="History Responses" tabindex="0">
-                    <h2>History Responses:</h2>
-                    <div id="history-responses"></div>
+                    role="region" aria-label="History" tabindex="0">
+                    <h2>History:</h2>
+                    <div id="history-responses" style="height: 23vh; overflow-y: auto;"></div>
                 </div>
             </div>
         </div>
