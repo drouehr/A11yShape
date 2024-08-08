@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en-US">
-    
+
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
@@ -42,66 +42,62 @@
 
 
 <body class="bg-white h-screen ">
-    
+
     <header>
         <h1>Code2Fab</h1>
     </header>
     <!-- Main Content -->
     <div class="flex w-full height:98vh">
         <!-- Code Editor area -->
-        <div class="w-1/3 bg-white border-2 border-black m-1 flex-col flex flex-col " tabindex="0" aria-labelledby="editor-heading" role="region">
+        <div class="w-1/3 bg-white border-2 border-black m-1 flex-col flex flex-col " tabindex="0"
+            aria-labelledby="editor-heading" role="region">
             <h1 role="heading" id="editor-heading">Code Editor Panel</h1>
-            
+
             <div tabindex="0" aria-labelledby="editor-toolbar-heading" role="toolbar">
                 <div class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
-                <div class="flex items-center space-x-1">
-                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
-                        id="upload-file" tabindex="0" aria-label="Upload OpenSCAD file"
-                        aria-controls="file-input">
-                        <i class="fas fa-upload" aria-hidden="true"></i>
-                    </button>
+                    <div class="flex items-center space-x-1">
+                        <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black" id="upload-file"
+                            tabindex="0" aria-label="Upload OpenSCAD file" aria-controls="file-input">
+                            <i class="fas fa-upload" aria-hidden="true"></i>
+                        </button>
 
-                    <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black"
-                        id="save-code" tabindex="0" aria-label="Save the OpenSCAD code">
-                        <i class="fas fa-save" aria-hidden="true"></i>
-                    </button>
-                    
-                    <input type="file" id="file-input" style="display: none;" accept=".scad"
-                        aria-label="Open an OpenSCAD file.">
-                        
-                    <button tabindex="0" aria-label="Generate Model"
-                        class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
-                        id="generate-model">
-                        <!--<i class="fas fa-cube"></i>-->
-                        Generate Model
-                    </button>
-                    <button tabindex="0" aria-label="Revert to previous code"
-                        class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
-                        id="revert-code">
-                        <!--<i class="fas fa-cube"></i>-->
-                        Undo
-                    </button>
-                </div>
+                        <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black" id="save-code"
+                            tabindex="0" aria-label="Save the OpenSCAD code">
+                            <i class="fas fa-save" aria-hidden="true"></i>
+                        </button>
+
+                        <input type="file" id="file-input" style="display: none;" accept=".scad"
+                            aria-label="Open an OpenSCAD file.">
+
+                        <button tabindex="0" aria-label="Generate Model"
+                            class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
+                            id="generate-model">
+                            <!--<i class="fas fa-cube"></i>-->
+                            Generate Model
+                        </button>
+                    </div>
                 </div>
             </div>
-            
+
             <h2 role="heading" id="editor-input-heading">Code Editor Input Area</h2>
             <textarea tabindex="0" aria-labelledby="editor-input-heading" role="textbox"
-            class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
-            id="openscad-code" placeholder="Enter OpenSCAD code here"
-            style="resize: none; height: calc(82vh - 36px); width: calc(100% - 4px);"
-            data-hover-text="Enter OpenSCAD code here."></textarea>
+                class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive" id="openscad-code"
+                placeholder="Enter OpenSCAD code here"
+                style="resize: none; height: calc(82vh - 36px); width: calc(100% - 4px);"
+                data-hover-text="Enter OpenSCAD code here."></textarea>
         </div>
         <!-- AI Area -->
-        <div class="w-1/3 border-2 border-black m-1 flex-col overflow-auto" tabindex="0" aria-labelledby="ai-panel-heading" role="region">
+        <div class="w-1/3 border-2 border-black m-1 flex-col overflow-auto" tabindex="0"
+            aria-labelledby="ai-panel-heading" role="region">
             <h1 role="heading" id="ai-panel-heading">AI Assistance Panel</h1>
             <div class="border border-black" tabindex="0" aria-labelledby="prompt-heading" role="region">
                 <!-- Prompt Area at the top-->
                 <h2 role="heading" id="prompt-heading">Prompt:</h2>
                 <div class="h-1/4 mb-1 overflow-auto flex flex-col border border-black mx-1">
-                    
+
                     <div class="h-1/4">
-                        <textarea class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive mb-2 bg-gray-100"
+                        <textarea
+                            class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive mb-2 bg-gray-100"
                             id="gpt-input" placeholder="Enter your prompt here" style="resize: none; height: 14vh;"
                             aria-label="Prompt box" role="textbox"></textarea>
                         <!-- Buttons below the prompt textbox -->
@@ -114,40 +110,45 @@
                     </div>
                 </div>
             </div>
-                <!-- Response Area at the bottom -->
-                <div class=" mt-2 pt-2 " tabindex="0" aria-labelledby="response-heading" role="status" aria-live="polite">
-                    <h2 role="heading" id="response-heading">Code2fab Response:</h2>
-                    <div class="code2fab-container w-full text-sm text-gray-700 font-mono flex-col"
-                    style="height: 3/4;">
-                        <!-- GPT response content goes here -->
-                        <div id="code2fab-response" 
-                            class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0"
-                            data-hover-text="Code2fab's response"><br><br> Model description not yet generated<br>
-                        </div>
+            <!-- Response Area at the bottom -->
+            <div class=" mt-2 pt-2 " tabindex="0" aria-labelledby="response-heading" role="status" aria-live="polite">
+                <h2 role="heading" id="response-heading">Code2fab Response:</h2>
+                <div class="code2fab-container w-full text-sm text-gray-700 font-mono flex-col" style="height: 3/4;">
+                    <!-- GPT response content goes here -->
+                    <div id="code2fab-response"
+                        class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0"
+                        data-hover-text="Code2fab's response"><br><br> Model description not yet generated<br>
                     </div>
                 </div>
+                <div id="history-responses-area" class="mt-4 pt-4 border-t border-gray-300 overflow-y: scroll"
+                    role="region" aria-label="History Responses" tabindex="0">
+                    <h2>History Responses:</h2>
+                    <div id="history-responses"></div>
+                </div>
+            </div>
         </div>
         <!-- Rendering Area -->
-        <div class="w-1/3 flex-col border-2 border-black m-1"  tabindex="0" aria-labelledby="model-panel-heading" role="region">
+        <div class="w-1/3 flex-col border-2 border-black m-1" tabindex="0" aria-labelledby="model-panel-heading"
+            role="region">
             <h1 role="heading" id="model-panel-heading">Model Panel</h1>
             <div class="flex-col  m-1" id="col2">
-                
-                <div class="w-full h-1/2 overflow-auto" tabindex="0" aria-labelledby="parts-heading" style="height: calc(50vh - 40px);">
+
+                <div class="w-full h-1/2 overflow-auto" tabindex="0" aria-labelledby="parts-heading"
+                    style="height: calc(50vh - 40px);">
                     <h2 role="heading" id="parts-heading">Model parts</h2>
-                    <div 
-                        class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
+                    <div class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
                         id="openscad-code2" placeholder="The modular structure of the code will appear here"
                         style="resize: none; height: screen; width: calc(100% - 2px);">
                         <p>The parts of model will appear here...</p>
                     </div>
                 </div>
-                
+
                 <!-- Viewport Content -->
                 <div class="flex-grow  flex border border-black" style="height: calc(50vh - 40px);">
-                    <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;" tabindex="0" aria-labelledby="rendered-heading"
-                role="region">
+                    <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;"
+                        tabindex="0" aria-labelledby="rendered-heading" role="region">
                         <h2 role="heading" id="rendered-heading">Rendered model</h2>
-                        
+
                         <!-- Model viewer goes here -->
                         <img id="modelImage" src="logo.png" tabindex="0" aria-label="Rendered model"
                             aria-describedby="code2fab-response" role="img" class="max-w-full max-h-full">
@@ -157,7 +158,7 @@
                 </div>
             </div>
         </div>
-        
+
     </div>
     </div>
     </div>
@@ -221,8 +222,7 @@
         var prevCode = '';
         var prevImg = '';
         var parts = [];
-		var codeHistory = [];
-        let currentPart = {index: 0, code: "", offset: 0};
+        let currentPart = { index: 0, code: "", offset: 0 };
         parts.push({
             id: 0,
             name: "Model",
@@ -232,10 +232,69 @@
             isModule: false
         });
 
+        let historyResponses = [];
+
+        /**function storeAndDisplayHistoryResponse(newResponse) {
+            historyResponses.unshift(newResponse); 
+            const historyContainer = document.getElementById('history-responses'); 
+            const responseElement = document.createElement('pre');
+            responseElement.textContent = newResponse;
+            responseElement.classList.add('mb-2', 'p-2', 'border', 'rounded-md', 'bg-gray-100', 'text-gray-500');
+            responseElement.setAttribute('role', 'history response');  
+            responseElement.setAttribute('tabindex', '0'); 
+            historyContainer.prepend(responseElement);
+        }**/
+
+        async function storeAndDisplayHistoryResponse(newResponse) {
+            const historyContainer = document.getElementById('history-responses');
+            const responseElement = document.createElement('pre');
+            responseElement.classList.add('mb-2', 'p-2', 'border', 'rounded-md', 'bg-gray-100', 'text-gray-500');
+            responseElement.setAttribute('role', 'history response');
+            responseElement.setAttribute('tabindex', '0');
+            historyContainer.prepend(responseElement);
+
+            const formData = new FormData();
+            formData.append('text', newResponse);
+
+            try {
+                const response = await fetch(serverUrl + apiUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const reader = response.body.getReader();
+
+                    const processStream = ({ done, value }) => {
+                        if (done) {
+                            return;
+                        }
+
+                        const chunk = new TextDecoder().decode(value);
+                        try {
+                            const parsedChunk = JSON.parse(chunk);
+                            const summary = parsedChunk.choices[0].text;
+                            responseElement.textContent = `Summary: ${summary}\n\n${newResponse}`;
+                        } catch (error) {
+                            responseElement.textContent += chunk;
+                        }
+                        return reader.read().then(processStream);
+                    };
+
+                    reader.read().then(processStream);
+                } else {
+                    console.error('Failed to get summary from backend:', response.status);
+                    responseElement.textContent = newResponse;
+                }
+            } catch (error) {
+                console.error('Error fetching summary:', error);
+                responseElement.textContent = newResponse;
+            }
+        }
 
         async function genImageAndDescribe(index, text) {
             var code = document.getElementById('openscad-code').value;
-			console.log(code);
+            console.log(code);
             var fullCode = "";
             if (currentPart.index != 0) {
                 fullCode = code;
@@ -265,8 +324,8 @@
 
                 if (generateData.message && generateData.message === "Images generated successfully") {
                     updateStatusAndSpeak("Images have been successfully generated.");
-					
-					const mode = generateData.mode;
+
+                    const mode = generateData.mode;
 
                     const byteCharacters = atob(generateData.image);
                     const byteNumbers = new Array(byteCharacters.length);
@@ -294,23 +353,23 @@
                             fullCode = code;
                             for (let i = 0; i < parts.length; i++) {
                                 if (parts[i].id == currentPart.index) {
-                                    code = currentPart.code+";\n"+parts[i].code;
+                                    code = currentPart.code + ";\n" + parts[i].code;
                                     break;
                                 }
                             }
                         }
                         const responseContainer = document.getElementById('code2fab-response');
+                        const responsePre = document.createElement('pre');
+                        responseContainer.appendChild(responsePre);
                         responseContainer.ariaLabel = "";
-                        responseContainer.innerHTML = '<pre></pre>';
-                        const pre = responseContainer.querySelector('pre');
                         updateStatusAndSpeak("The system reply is loading...")
-						
-						var newCode = "";
-                        
+
+                        var newCode = "";
+
                         var body = { text: text, code: code, image: generateData.thumbnail, mode: mode, prevCode: prevCode, prevImg: prevImg, fullCode: fullCode, fullImg: generateData.fullImg };
                         if (text != "") {
-                          body["prevCode"] = "";
-                          body["prevImg"] = "";
+                            body["prevCode"] = "";
+                            body["prevImg"] = "";
                         }
 
                         fetch(serverUrl + '/api/describe', {
@@ -328,43 +387,41 @@
                                         updateStatusAndSpeak("Please check the system reply.");
                                         var section = document.getElementById('code2fab-response');
                                         section.focus();
-										
+                                        storeAndDisplayHistoryResponse(responsePre.textContent);
+
                                         if (mode == "modify" && text != "") {
-                                          document.getElementById('openscad-code').value = newCode;
-                                          document.getElementById('generate-model').click();
+                                            document.getElementById('openscad-code').value = newCode;
+                                            document.getElementById('generate-model').click();
                                         }
                                         return;
                                     }
                                     const chunk = new TextDecoder().decode(value);
 
                                     if (mode == "modify") {
-										newCode += chunk;
-									} else {
-										pre.textContent += chunk;
+                                        newCode += chunk;
+                                    } else {
+                                        responsePre.textContent += chunk;
 
-										const responseContainer = document.getElementById('code2fab-response');
-										responseContainer.ariaLabel += chunk;
-									}
+                                        const responseContainer = document.getElementById('code2fab-response');
+                                        responseContainer.ariaLabel += chunk;
+                                    }
 
                                     return reader.read().then(processStream);
                                 }
                                 reader.read().then(processStream);
                                 updateStatusAndSpeak("Please try again.");
-								
-								
+
+
                             })
                             .catch(error => {
                                 console.error('Error:', error);
                                 updateStatusAndSpeak("Please try again.");
                             });
-						
-						if (prevCode != code) {
-							codeHistory.push({"code": code, "img": generateData.thumbnail});
-						}
-						prevCode = code;
+
+                        prevCode = code;
                         prevImg = generateData.thumbnail;
-						
-						
+
+
 
                     }, 1);
 
@@ -380,43 +437,29 @@
         }
 
         document.getElementById('generate-model').addEventListener('click', async function () {
+            console.log("gen");
+
             await genImageAndDescribe(currentImageIndex, "");
 
         });
-        
-        document.getElementById('revert-code').addEventListener('click', async function () {
-			if (codeHistory.length > 1) {
-				var cur = codeHistory.pop();
-				var prev = codeHistory.pop();
-				
-				document.getElementById('openscad-code').value = prev.code;
-				prevCode = cur.code;
-				prevImg = cur.img;
-				
-				await genImageAndDescribe(currentImageIndex, "");
-			} else {
-				console.log("nothing to undo");
-			}
 
-        });
-        
         document.getElementById('callGPT').addEventListener('click', async function () {
             const textInput = document.getElementById('gpt-input').value.trim();
             document.getElementById("gpt-input").value = "";
             await genImageAndDescribe(currentImageIndex, textInput);
         });
-        
-        document.getElementById("gpt-input").addEventListener("keypress", function(event) {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            document.getElementById("callGPT").click();
-          }
+
+        document.getElementById("gpt-input").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                document.getElementById("callGPT").click();
+            }
         });
 
         function modelPartSelected(e) {
             prevCode = "";
             prevImg = "";
-            
+
             var checkbox = e.target;
             if (checkbox.checked) {
                 const prevPart = document.getElementById('part-' + currentPart.index);
@@ -425,7 +468,7 @@
                 currentPart.code = checkbox.getAttribute("data-code");
                 currentPart.offset = checkbox.getAttribute("data-offset");
             } else {
-                currentPart = {index: 0, code: "", offset: 0};
+                currentPart = { index: 0, code: "", offset: 0 };
                 const fullModel = document.getElementById('part-0');
                 fullModel.checked = true;
             }
@@ -482,7 +525,7 @@
                 }
             }
         });
-        
+
 
         function updateImageDisplay(index) {
             const imageElement = document.getElementById('modelImage');
@@ -575,15 +618,15 @@
         });
 
 
-        
+
         function getDisplayTree(root, child, index) {
-            
-            
-            let tree = "<li style=\"padding-left: 10px;\" aria-labelledby=\"part-" + root.id + "-label\" role=\"treeitem\" tabindex=\"0\"><label for=\"part-" + root.id + "\" id=\"part-" + root.id + "-label\" >" +child.name + " </label>"
-            + "<input type=\"checkbox\" id=\"part-" + root.id + "\" name=\"parts\" value=\""+root.id+"\" data-offset=\""+child.start+"\" data-code=\""+child.code+"\" tabindex=\"0\" aria-labelledby=\"part-" + root.id + "-label\" role=\"checkbox\" onchange=\"modelPartSelected(event)\">";
-            
+
+
+            let tree = "<li style=\"padding-left: 10px;\" aria-labelledby=\"part-" + root.id + "-label\" role=\"treeitem\" tabindex=\"0\"><label for=\"part-" + root.id + "\" id=\"part-" + root.id + "-label\" >" + child.name + " </label>"
+                + "<input type=\"checkbox\" id=\"part-" + root.id + "\" name=\"parts\" value=\"" + root.id + "\" data-offset=\"" + child.start + "\" data-code=\"" + child.code + "\" tabindex=\"0\" aria-labelledby=\"part-" + root.id + "-label\" role=\"checkbox\" onchange=\"modelPartSelected(event)\">";
+
             if (root.id == -1 || root.children.length == 0) {
-                return tree+"</li>";
+                return tree + "</li>";
             }
             const children = root.children;
 
@@ -594,56 +637,56 @@
             tree = tree + "</ul></li>";
             return tree;
         }
-        
+
         function findModule(name) {
-          for (let i = 0; i < parts.length; i++) {
-              if (parts[i].name == name) {
-                return i;
-              }
-          }
-          return -1;
+            for (let i = 0; i < parts.length; i++) {
+                if (parts[i].name == name) {
+                    return i;
+                }
+            }
+            return -1;
         }
-        
+
         const primitives = ["circle", "square", "polygon", "text", "import", "projection", "sphere", "cube", "cylinder", "polyhedron", "linear_extrude", "rotate_extrude", "surface"];
         function getChildren(code, offset, fullcode) {
             let call_regexp = /\b(\w+)\s*\(([^)]*)\)\s*;/g;
             let calls = [...code.matchAll(call_regexp)];
-            
+
             let children = [];
             calls.forEach((match) => {
-                let call = match[1] + "("+match[2]+")";
+                let call = match[1] + "(" + match[2] + ")";
                 let moduleId = findModule(match[1]);
                 let primId = primitives.indexOf(match[1]);
                 if (moduleId != -1) {
-                  children.push({
-                      id: parts[moduleId].id,
-                      name: match[1],
-                      code: call,
-                      start: offset+match.index,
-                  });
+                    children.push({
+                        id: parts[moduleId].id,
+                        name: match[1],
+                        code: call,
+                        start: offset + match.index,
+                    });
                 }
-                
+
             });
-            
+
             let names = [];
             for (let i = 0; i < children.length; i++) {
                 names.push(children[i].name);
             }
             for (let i = 0; i < children.length; i++) {
                 for (let j = 0; j < names.length; j++) {
-                    if (i!=j && children[i].name == names[j]) {
+                    if (i != j && children[i].name == names[j]) {
                         children[i].name = children[i].code;
                         break;
                     }
                 }
             }
-            
+
             return children;
         }
 
         function parseCode(code) {
             parts = [];
-            currentPart = {index: 0, code: "", offset: 0};
+            currentPart = { index: 0, code: "", offset: 0 };
             parts.push({
                 id: 0,
                 name: "Full Model",
@@ -653,48 +696,48 @@
                 start: 0,
                 isModule: false
             });
-            
+
             var globalCode = [];
-            
+
             let def_regexp = /\bmodule\s+(\w+)\s*\(([^)]*)\)\s*{/g;
             let definitions = [...code.matchAll(def_regexp)];
-            
+
             var id = 1;
             var prevModuleEnd = 0;
             definitions.forEach((match) => {
                 let offset = code.substring(match.index);
                 let body = XRegExp.matchRecursive(offset, '\\{', '\\}')[0];
-                
+
                 parts.push({
                     id: id,
                     name: match[1],
                     description: "",
                     children: [],
-                    code: match[0]+body+"}",
+                    code: match[0] + body + "}",
                     start: match.index,
                     isModule: true
                 });
-                
-                
-                
-                globalCode.push({start:prevModuleEnd, code: code.slice(prevModuleEnd, match.index)});
-                
-                prevModuleEnd = match.index+match[0].length+body.length+1;
+
+
+
+                globalCode.push({ start: prevModuleEnd, code: code.slice(prevModuleEnd, match.index) });
+
+                prevModuleEnd = match.index + match[0].length + body.length + 1;
                 id++;
             });
-            
+
             globalCode.forEach((section) => {
                 parts[0].children = parts[0].children.concat(getChildren(section.code, section.start, code));
             });
-            
+
             parts.forEach((part) => {
                 if (part.id != 0) {
                     part.children = getChildren(part.code, part.start, code);
                 }
             });
-            
+
             console.log(parts);
-            
+
             // generate display tree
             var tree = getDisplayTree(parts[0], parts[0], "");
             document.getElementById('openscad-code2').innerHTML = "<ul id=\"parts-tree\" aria-label=\"Parts of the model\" role=\"tree\">" + tree + "</ul>";

@@ -330,7 +330,44 @@ def getModificationPrompts(image, code, text, imgs):
 
     return content
 
+@app.route("/api/summarize", methods=["POST"])
+def summarize():
+    try:
+        text = request.form["text"]
+        logging.info(f"Received text: {text}")
 
+        template = """
+        As a summarizer, here is a paragraph for the blind person to read, but it will take a lot of time for the screen reader to read this paragraph. Please use a simple sentence to restate the main points of the speech so that the blind person can get the most important information in a short time.
+{text}
+"""
+        def gpt_action(text):
+            try:
+                completion = client.chat.completions.create(
+                    model="gpt-4o",
+                    temperature=0.0,
+                    timeout=10,
+                    stream=True,
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": template.format(text=text),
+                        },
+                    ],
+                )
+                for chunk in completion:
+                    if chunk.choices[0].delta:
+                        yield chunk.choices[0].delta.content.encode("utf-8")
+                    else:
+                        yield b"Processing...\n"
+            except (AttributeError, TypeError) as e:
+                if str(e) != "'NoneType' object has no attribute 'encode'":
+                    yield "Error: " + str(e)
+
+        return Response(gpt_action(text), mimetype="text/event-stream")
+
+    except Exception as e:
+        logging.error(f"Error processing request: {e}")
+        return jsonify({"error": "Internal server error"}), 500
 
 @app.route("/generate-img", methods=["POST"])
 def generate_images():
