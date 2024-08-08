@@ -228,6 +228,7 @@
 
         async function genImageAndDescribe(index, text) {
             var code = document.getElementById('openscad-code').value;
+			console.log(code);
             var fullCode = "";
             if (currentPart.index != 0) {
                 fullCode = code;
@@ -244,7 +245,7 @@
                 const generateResponse = await fetch(serverUrl + '/generate-img', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: code, fullCode: fullCode, imageIndex: index })
+                    body: JSON.stringify({ code: code, fullCode: fullCode, imageIndex: index, text: text })
                 });
 
                 if (!generateResponse.ok) {
@@ -257,6 +258,8 @@
 
                 if (generateData.message && generateData.message === "Images generated successfully") {
                     updateStatusAndSpeak("Images have been successfully generated.");
+					
+					const mode = generateData.mode;
 
                     const byteCharacters = atob(generateData.image);
                     const byteNumbers = new Array(byteCharacters.length);
@@ -294,8 +297,10 @@
                         responseContainer.innerHTML = '<pre></pre>';
                         const pre = responseContainer.querySelector('pre');
                         updateStatusAndSpeak("The system reply is loading...")
+						
+						var newCode = "";
                         
-                        var body = { text: text, code: code, image: generateData.thumbnail, prevCode: prevCode, prevImg: prevImg, fullCode: fullCode, fullImg: generateData.fullImg };
+                        var body = { text: text, code: code, image: generateData.thumbnail, mode: mode, prevCode: prevCode, prevImg: prevImg, fullCode: fullCode, fullImg: generateData.fullImg };
                         if (text != "") {
                           body["prevCode"] = "";
                           body["prevImg"] = "";
@@ -316,19 +321,30 @@
                                         updateStatusAndSpeak("Please check the system reply.");
                                         var section = document.getElementById('code2fab-response');
                                         section.focus();
+										
+										if (mode == "modify" && text != "") {
+											document.getElementById('openscad-code').value = newCode;
+											document.getElementById('generate-model').click();
+										}
                                         return;
                                     }
                                     const chunk = new TextDecoder().decode(value);
 
-                                    pre.textContent += chunk;
+                                    if (mode == "modify") {
+										newCode += chunk;
+									} else {
+										pre.textContent += chunk;
 
-                                    const responseContainer = document.getElementById('code2fab-response');
-                                    responseContainer.ariaLabel += chunk;
+										const responseContainer = document.getElementById('code2fab-response');
+										responseContainer.ariaLabel += chunk;
+									}
 
                                     return reader.read().then(processStream);
                                 }
-                                return reader.read().then(processStream);
+                                reader.read().then(processStream);
                                 updateStatusAndSpeak("Please try again.");
+								
+								
                             })
                             .catch(error => {
                                 console.error('Error:', error);
@@ -337,6 +353,8 @@
 
                         prevCode = code;
                         prevImg = generateData.thumbnail;
+						
+						
 
                     }, 1);
 
@@ -352,6 +370,7 @@
         }
 
         document.getElementById('generate-model').addEventListener('click', async function () {
+			console.log("gen");
 
             await genImageAndDescribe(currentImageIndex, "");
 

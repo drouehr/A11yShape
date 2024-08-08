@@ -36,6 +36,7 @@ import requests
 from autogen.agentchat.contrib.multimodal_conversable_agent import MultimodalConversableAgent
 from PIL import Image
 import io
+import json
 
 
 logging.basicConfig(level=logging.INFO)
@@ -202,6 +203,134 @@ def gen_image(views, code, output_dir):
     
     return encoded_imgs, encoded_imgs_sm
 
+availableFunctions = [
+    {
+      "name": "describe",
+      "description": "Function to generate descriptions of the model or answer questions about the details",
+      "parameters": {
+          "type": "object",
+          "properties": {
+              "question": {
+                  "type": "string",
+                  "description": "The question the user is asking",
+              },
+          },
+          "required": ["question"],
+      },
+  },
+  {
+    "name": "modify",
+    "description": "Function to make changes to the model based on the user prompt",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "change": {
+                "type": "string",
+                "description": "The description of the changes the user wants to make",
+            },
+        },
+        "required": ["change"],
+    },
+  }          
+]
+
+def getDescriptionPrompts(image, code, text, prevCode, prevImg, fullImg, fullCode, imgs):
+    instructions = "describe the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). The images are of the same model at different angles. Do not describe each angle separately. The description should be based on the images of the model rather than the code"
+    if len(text) > 0:
+        instructions = text
+    
+    if len(fullCode) > 0:
+        content = [
+                    {"type": "text", "text": "Given the part of a 3D model and its OpenSCAD code, "+instructions+". Compare it in relation to the full model."},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{image}",
+                    },
+                    },
+                    {"type": "text", "text": "Part of model: \n"+code},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{fullImg}",
+                    },
+                    },
+                    {"type": "text", "text": "Full model: \n"+fullCode},
+                ]
+    elif len(prevCode) > 0:
+        content = [
+                    {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions+". Describe the changes between the first image and code (referred to as the previous model) and the second image and code (referred to as the current model)."},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{prevImg}",
+                    },
+                    },
+                    {"type": "text", "text": prevCode},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{image}",
+                    },
+                    },
+                    {"type": "text", "text": code},
+                ]
+    elif len(code) > 0:
+        content = [
+                    {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{image}",
+                    },
+                    },
+                    {"type": "text", "text": code},
+                ]
+    elif len(text) > 0:
+        content = [{"type": "text", "text": text}]
+    else:
+        content = [{"type": "text", "text": "describe how to create a model with openscad"}]
+    
+    
+    for img in imgs:
+        content.append({
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{img}",
+                    }})
+    
+    if len(code) > 0:
+        content.append({"type": "text", "text": "Give a short answer or summary first, then give as much information as possible such that a blind user could understand it. The output should not have formatting since it will be read by a screenreader"})
+    
+    return content
+
+
+def getModificationPrompts(image, code, text, imgs):
+    if len(code) > 0:
+        content = [
+            {"type": "text", "text": "Given the OpenScad code, modify the code to "+text+". Output only the modified OpenScad code and nothing else"},
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/jpeg;base64,{image}",
+            },
+            },
+            {"type": "text", "text": code},
+        ]
+        for img in imgs:
+            content.append({
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{img}",
+                        }})
+    else:
+        content = [
+            {"type": "text", "text": "Generate the OpenScad code to "+text+". Output only the OpenScad code and nothing else"},
+        ]
+
+    return content
+
+
 
 @app.route("/generate-img", methods=["POST"])
 def generate_images():
@@ -209,6 +338,7 @@ def generate_images():
     code = request.json.get("code")
     fullCode = request.json.get("fullCode")
     imageIndex = request.json.get("imageIndex")
+    text = request.json.get("text")
     if current_process and current_process.poll() is None:
         current_process.terminate()
 
@@ -216,7 +346,18 @@ def generate_images():
         output_dir = "temp"
         os.makedirs(output_dir, exist_ok=True)
         
-        
+        if text == "":
+            mode = "describe"
+        else:
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                {"role": "user", "content": text}
+                ],
+                functions=availableFunctions,
+                function_call="auto"
+            )
+            mode = response.choices[0].message.function_call.name
             
         views = {
             "display": "50,50,50,60,30,210,300",   
@@ -233,11 +374,10 @@ def generate_images():
             encoded_imgs_full = [""]
         
         
-        return jsonify({"message": "Images generated successfully", "image": encoded_imgs[0], "thumbnail": encoded_imgs_sm[0], "fullImg": encoded_imgs_full[0]})
+        return jsonify({"message": "Images generated successfully", "mode": mode, "image": encoded_imgs[0], "thumbnail": encoded_imgs_sm[0], "fullImg": encoded_imgs_full[0]})
     except Exception as e:
         print(f"Execution error: {e}")
         return jsonify(error="Failed to generate images."), 500
-
 
 @app.route("/api/describe", methods=["POST"])
 def describe():
@@ -245,6 +385,7 @@ def describe():
         text = request.json.get("text")
         code = request.json.get("code")
         image = request.json.get("image")
+        mode = request.json.get("mode")
         prevCode = request.json.get("prevCode")
         prevImg = request.json.get("prevImg")
         fullCode = request.json.get("fullCode")
@@ -271,76 +412,18 @@ def describe():
 
         if len(code) > 0:
             _, imgs = gen_image(views, code, output_dir)
-    
-        
-        def gpt_action(image, code, text, prevCode, prevImg):
-            instructions = "describe the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). The images are of the same model at different angles. Do not describe each angle separately. The description should be based on the images of the model rather than the code"
-            if len(text) > 0:
-                instructions = text
-            
-            if len(fullCode) > 0:
-                content = [
-                            {"type": "text", "text": "Given the part of a 3D model and its OpenSCAD code, "+instructions+". Compare it in relation to the full model."},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{image}",
-                            },
-                            },
-                            {"type": "text", "text": "Part of model: \n"+code},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{fullImg}",
-                            },
-                            },
-                            {"type": "text", "text": "Full model: \n"+fullCode},
-                        ]
-            elif len(prevCode) > 0:
-                content = [
-                            {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions+". Describe the changes between the first image and code (referred to as the previous model) and the second image and code (referred to as the current model)."},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{prevImg}",
-                            },
-                            },
-                            {"type": "text", "text": prevCode},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{image}",
-                            },
-                            },
-                            {"type": "text", "text": code},
-                        ]
-            elif len(code) > 0:
-                content = [
-                            {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{image}",
-                            },
-                            },
-                            {"type": "text", "text": code},
-                        ]
-            elif len(text) > 0:
-                content = [{"type": "text", "text": text}]
+
+        if text == "":
+            content = getDescriptionPrompts(image, code, text, prevCode, prevImg, fullImg, fullCode, imgs)
+        else:
+            if mode == "modify":
+                if len(fullCode) > 0:
+                    code = fullCode
+                content = getModificationPrompts(image, code, text, imgs)
             else:
-                content = [{"type": "text", "text": "describe how to create a model with openscad"}]
-            
-            
-            for img in imgs:
-                content.append({
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{img}",
-                            }})
-            
-            if len(code) > 0:
-                content.append({"type": "text", "text": "Give a short answer or summary first, then give as much information as possible such that a blind user could understand it. The output should not have formatting since it will be read by a screenreader"})
-            
+                content = getDescriptionPrompts(image, code, text, prevCode, prevImg, fullImg, fullCode, imgs)
+        
+        def gpt_action(content, mode):
             try:
                 completion = client.chat.completions.create(
                     model="gpt-4o",
@@ -361,9 +444,9 @@ def describe():
                         yield b"Processing...\n"
             except (AttributeError, TypeError) as e:
                 if str(e) != "'NoneType' object has no attribute 'encode'":
-                    yield "Error: " + str(e)
+                    yield "Error: " + str(e) 
 
-        return Response(gpt_action(image, code, text, prevCode, prevImg), mimetype="text/event-stream")
+        return Response(gpt_action(content, mode), mimetype="text/event-stream")
 
     except Exception as e:
         logging.error(f"Error processing request: {e}")
