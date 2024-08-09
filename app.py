@@ -226,7 +226,7 @@ availableFunctions = [
         "properties": {
             "change": {
                 "type": "string",
-                "description": "The description of the changes the user wants to make",
+                "description": "The description of the changes the user wants to make or the model to generate",
             },
         },
         "required": ["change"],
@@ -234,7 +234,7 @@ availableFunctions = [
   }          
 ]
 
-def getDescriptionPrompts(image, code, text, prevCode, prevImg, fullImg, fullCode, imgs):
+def getDescriptionPrompts(image, code, text, prevCode, prevImg, fullImg, fullCode, imgs, prevImgs):
     instructions = "describe the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). The images are of the same model at different angles. Do not describe each angle separately. The description should be based on the images of the model rather than the code"
     if len(text) > 0:
         instructions = text
@@ -259,22 +259,30 @@ def getDescriptionPrompts(image, code, text, prevCode, prevImg, fullImg, fullCod
                 ]
     elif len(prevCode) > 0:
         content = [
-                    {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions+". Describe the changes between the first image and code (referred to as the previous model) and the second image and code (referred to as the current model)."},
+                    {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions+". Describe the changes between the first "+str(len(prevImgs)+1)+" images and code (referred to as the previous model) and the last "+str(len(imgs)+1)+" images and code (referred to as the current model)."},
+                    {"type": "text", "text": prevCode},
                     {
                         "type": "image_url",
                         "image_url": {
                             "url": f"data:image/jpeg;base64,{prevImg}",
                     },
                     },
-                    {"type": "text", "text": prevCode},
+                ]
+        for img in prevImgs:
+            content.append({
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{img}",
+                        }})
+        content.extend([
+                    {"type": "text", "text": code},
                     {
                         "type": "image_url",
                         "image_url": {
                             "url": f"data:image/jpeg;base64,{image}",
                     },
                     },
-                    {"type": "text", "text": code},
-                ]
+                ])
     elif len(code) > 0:
         content = [
                     {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions},
@@ -386,18 +394,22 @@ def generate_images():
         if text == "":
             mode = "describe"
         else:
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                {"role": "user", "content": text}
-                ],
-                functions=availableFunctions,
-                function_call="auto"
-            )
-            mode = response.choices[0].message.function_call.name
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                    {"role": "user", "content": text}
+                    ],
+                    functions=availableFunctions,
+                    function_call="auto"
+                )
+                print(response)
+                mode = response.choices[0].message.function_call.name
+            except:
+                return jsonify(error=response.choices[0].message.content), 500
             
         views = {
-            "display": "50,50,50,60,30,210,300",   
+            "display": "50,50,50,60,30,-210,300",   
         }
 
         encoded_imgs, encoded_imgs_sm = gen_image(views, code, output_dir)
@@ -435,6 +447,7 @@ def describe():
             fullCode = ""
             
         imgs = []
+        prevImgs = []
         views = [
             "0,0,0,0,0,0,200",          
             "0,0,-50,180,0,180,200",     
@@ -449,16 +462,18 @@ def describe():
 
         if len(code) > 0:
             _, imgs = gen_image(views, code, output_dir)
+        if len(prevCode) > 0:
+            _, prevImgs = gen_image(views, prevCode, output_dir)
 
         if text == "":
-            content = getDescriptionPrompts(image, code, text, prevCode, prevImg, fullImg, fullCode, imgs)
+            content = getDescriptionPrompts(image, code, text, prevCode, prevImg, fullImg, fullCode, imgs, prevImgs)
         else:
             if mode == "modify":
                 if len(fullCode) > 0:
                     code = fullCode
                 content = getModificationPrompts(image, code, text, imgs)
             else:
-                content = getDescriptionPrompts(image, code, text, prevCode, prevImg, fullImg, fullCode, imgs)
+                content = getDescriptionPrompts(image, code, text, prevCode, prevImg, fullImg, fullCode, imgs, prevImgs)
         
         def gpt_action(content, mode):
             try:

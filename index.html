@@ -126,11 +126,11 @@
                         data-hover-text="Code2fab's response" style="height: 40vh; overflow-y: auto;"><br><br> Model description not yet generated<br>
                     </div>
                 </div>
-                <div id="history-responses-area" class="mt-4 pt-4 border-t border-gray-300 overflow-y: scroll"
-                    role="region" aria-label="History" tabindex="0">
-                    <h2>History:</h2>
-                    <div id="history-responses" style="height: 23vh; overflow-y: auto;"></div>
-                </div>
+            </div>
+            <div id="history-responses-area" class="mt-4 pt-4 border-t border-gray-300 overflow-y: scroll"
+                role="region" aria-label="History" tabindex="0">
+                <h2 role="heading" id="history-heading">History:</h2>
+                <div id="history-responses" style="height: 23vh; overflow-y: auto;"></div>
             </div>
         </div>
         <!-- Rendering Area -->
@@ -305,8 +305,8 @@
             var fullCode = "";
             if (currentPart.index != 0) {
                 fullCode = code;
-                code = parts[0].code;
                 code = code.slice(0, currentPart.offset) + "!" + code.slice(currentPart.offset);
+                console.log(code);
             }
             const responseContainer = document.getElementById('code2fab-response');
             responseContainer.innerHTML = '<pre></pre>';
@@ -372,6 +372,7 @@
                         updateStatusAndSpeak("The system reply is loading...")
 
                         var newCode = "";
+                        var newResponse = "";
 
                         var body = { text: text, code: code, image: generateData.thumbnail, mode: mode, prevCode: prevCode, prevImg: prevImg, fullCode: fullCode, fullImg: generateData.fullImg };
                         if (text != "") {
@@ -394,12 +395,19 @@
                                         updateStatusAndSpeak("Please check the system reply.");
                                         var section = document.getElementById('code2fab-response');
                                         section.focus();
-                                        storeAndDisplayHistoryResponse(responsePre.textContent);
-
+                                        
                                         if (mode == "modify" && text != "") {
+											newCode = newCode.replace("```openscad", "").replace("```", "").trim();
                                             document.getElementById('openscad-code').value = newCode;
+                                            parseCode(newCode);
                                             document.getElementById('generate-model').click();
+                                        } else {
+                                          responsePre.textContent = newResponse;
+                                          const responseContainer = document.getElementById('code2fab-response');
+                                          responseContainer.ariaLabel = newResponse;
+                                          storeAndDisplayHistoryResponse(responsePre.textContent);
                                         }
+                                        
                                         return;
                                     }
                                     const chunk = new TextDecoder().decode(value);
@@ -407,10 +415,7 @@
                                     if (mode == "modify") {
                                         newCode += chunk;
                                     } else {
-                                        responsePre.textContent += chunk;
-
-                                        const responseContainer = document.getElementById('code2fab-response');
-                                        responseContainer.ariaLabel += chunk;
+                                        newResponse += chunk;
                                     }
 
                                     return reader.read().then(processStream);
@@ -485,19 +490,30 @@
         function modelPartSelected(e) {
             prevCode = "";
             prevImg = "";
+            
+            var selected = e.target;
+            
+            const prevPart = document.getElementById('part-' + currentPart.index);
+            prevPart.style.color = "black";
+            
+            console.log(currentPart);
 
-            var checkbox = e.target;
-            if (checkbox.checked) {
-                const prevPart = document.getElementById('part-' + currentPart.index);
-                prevPart.checked = false;
-                currentPart.index = checkbox.value;
-                currentPart.code = checkbox.getAttribute("data-code");
-                currentPart.offset = checkbox.getAttribute("data-offset");
-            } else {
-                currentPart = { index: 0, code: "", offset: 0 };
-                const fullModel = document.getElementById('part-0');
-                fullModel.checked = true;
+            selected.style.color = "blue";
+            
+            if (currentPart.index != selected.getAttribute("data-id")) {
+              currentPart.index = selected.getAttribute("data-id");
+              currentPart.code = selected.getAttribute("data-code");
+              currentPart.offset = selected.getAttribute("data-offset");
+              
+              setTimeout(() => {
+                if (selected.style.color == "blue") {
+                  document.getElementById('generate-model').click();
+                  document.getElementById('openscad-code').focus();
+                  document.getElementById('openscad-code').setSelectionRange(currentPart.offset, parseInt(currentPart.offset)+currentPart.code.length);
+                }
+              }, 10000);
             }
+            console.log(currentPart);
         }
 
 
@@ -637,7 +653,7 @@
             reader.onload = function (e) {
                 document.getElementById('openscad-code').value = e.target.result;
                 console.log(`Uploaded file: ${file.name}`);
-                parseCode(e.target.result);
+                parseCode(document.getElementById('openscad-code').value);
                 genImageAndDescribe(currentImageIndex, "");
             };
             reader.readAsText(file);
@@ -645,20 +661,21 @@
 
 
 
-        function getDisplayTree(root, child, index) {
+        function getDisplayTree(root, child, index, level) {
 
 
-            let tree = "<li style=\"padding-left: 10px;\" aria-labelledby=\"part-" + root.id + "-label\" role=\"treeitem\" tabindex=\"0\"><label for=\"part-" + root.id + "\" id=\"part-" + root.id + "-label\" >" + child.name + " </label>"
-                + "<input type=\"checkbox\" id=\"part-" + root.id + "\" name=\"parts\" value=\"" + root.id + "\" data-offset=\"" + child.start + "\" data-code=\"" + child.code + "\" tabindex=\"0\" aria-labelledby=\"part-" + root.id + "-label\" role=\"checkbox\" onchange=\"modelPartSelected(event)\">";
+            let tree = "<li style=\"padding-left: 10px;\" aria-labelledby=\"part-" + root.id + "\"  >"
+                /*+ "<input type=\"checkbox\" id=\"part-" + root.id + "\" name=\"parts\" value=\"" + root.id + "\" data-offset=\"" + child.start + "\" data-code=\"" + child.code + "\"  aria-labelledby=\"part-" + root.id + "-label\" role=\"checkbox\" tabindex=\"-1\" onchange=\"modelPartSelected(event)\">"*/
+                + "<label for=\"part-" + root.id + "\" id=\"part-" + root.id + "\" onfocus=\"modelPartSelected(event)\" tabindex=\"0\" data-id=\"" + root.id + "\" data-offset=\"" + child.start + "\" data-code=\"" + child.code + "\" aria-label=\"level "+level+" "+child.name+"\" aria-level=\""+level+"\" role=\"listitem\" > Level "+level+". " + child.name + " </label>";
 
             if (root.id == -1 || root.children.length == 0) {
                 return tree + "</li>";
             }
             const children = root.children;
 
-            tree = tree + "<ul style=\"padding-left: 10px;\" role=\"group\">";
+            tree = tree + "<ul style=\"padding-left: 10px;\" role=\"list\">";
             for (let i = 0; i < children.length; i++) {
-                tree = tree + getDisplayTree(parts[children[i].id], children[i], index + (i + 1) + ".");
+                tree = tree + getDisplayTree(parts[children[i].id], children[i], index + (i + 1) + ".", level+1);
             }
             tree = tree + "</ul></li>";
             return tree;
@@ -751,6 +768,8 @@
                 prevModuleEnd = match.index + match[0].length + body.length + 1;
                 id++;
             });
+            
+            globalCode.push({ start: prevModuleEnd, code: code.slice(prevModuleEnd) });
 
             globalCode.forEach((section) => {
                 parts[0].children = parts[0].children.concat(getChildren(section.code, section.start, code));
@@ -765,8 +784,8 @@
             console.log(parts);
 
             // generate display tree
-            var tree = getDisplayTree(parts[0], parts[0], "");
-            document.getElementById('openscad-code2').innerHTML = "<ul id=\"parts-tree\" aria-label=\"Parts of the model\" role=\"tree\">" + tree + "</ul>";
+            var tree = getDisplayTree(parts[0], parts[0], "", 1);
+            document.getElementById('openscad-code2').innerHTML = "<ul id=\"parts-tree\" aria-label=\"Parts of the model\" role=\"list\">" + tree + "</ul>";
             const curPart = document.getElementById('part-' + currentPart.index);
             curPart.checked = true;
             parts[0].code = code;
