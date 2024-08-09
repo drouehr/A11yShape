@@ -397,7 +397,8 @@
                                         section.focus();
                                         
                                         if (mode == "modify" && text != "") {
-											newCode = newCode.replace("```openscad", "").replace("```", "").trim();
+                                            prevCode = document.getElementById('openscad-code').value;
+                                            newCode = newCode.replace("```openscad", "").replace("```", "").trim();
                                             document.getElementById('openscad-code').value = newCode;
                                             parseCode(newCode);
                                             document.getElementById('generate-model').click();
@@ -430,6 +431,9 @@
                                 updateStatusAndSpeak("Please try again.");
                             });
 
+                        if (fullCode != "") {
+                          code = fullCode;
+                        }
                         if (prevCode != code) {
                           codeHistory.push({"code": code, "img": generateData.thumbnail});
                         }
