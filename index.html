@@ -68,12 +68,14 @@
 
                         <input type="file" id="file-input" style="display: none;" accept=".scad"
                             aria-label="Open an OpenSCAD file.">
-
-                        <button tabindex="0" aria-label="Revert to previous code"
-                            class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
-                            id="revert-code">
-                            <!--<i class="fas fa-cube"></i>-->
+                            
+                        <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black" id="undo-code"
+                            tabindex="0" aria-label="Undo code changes" disabled>
                             Undo
+                        </button>
+                        <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black" id="redo-code"
+                            tabindex="0" aria-label="Redo code changes" disabled>
+                            Redo
                         </button>
                         <button tabindex="0" aria-label="Generate Model"
                             class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
@@ -130,7 +132,7 @@
             </div>
             <div id="history-responses-area" class="mt-4 pt-4 border-t border-gray-300 overflow-y: scroll"
                 role="region" aria-label="History" tabindex="0">
-                <h2 role="heading" id="history-heading">History:</h2>
+                <h2 role="heading" id="history-heading">Response History:</h2>
                 <div id="history-responses" style="height: 22vh; overflow-y: auto;"></div>
             </div>
         </div>
@@ -227,7 +229,6 @@
         let currentImageIndex = 0;
 
         var prevCode = '';
-        var prevImg = '';
         var parts = [];
         let currentPart = { index: 0, code: "", offset: 0 };
         parts.push({
@@ -240,7 +241,8 @@
         });
 
         let historyResponses = [];
-        var codeHistory = [];
+        var codeHistory = [""];
+        var historyIndex = 0;
 
         /**function storeAndDisplayHistoryResponse(newResponse) {
             historyResponses.unshift(newResponse); 
@@ -302,6 +304,12 @@
 
         async function genImageAndDescribe(index, text) {
             var code = document.getElementById('openscad-code').value;
+            if (prevCode != code && code != codeHistory[historyIndex]) {
+              codeHistory.length = historyIndex+1;
+              codeHistory.push(code);
+              historyIndex++;
+            }
+                        
             console.log(code);
             var fullCode = "";
             if (currentPart.index != 0) {
@@ -375,10 +383,9 @@
                         var newCode = "";
                         var newResponse = "";
 
-                        var body = { text: text, code: code, image: generateData.thumbnail, mode: mode, prevCode: prevCode, prevImg: prevImg, fullCode: fullCode, fullImg: generateData.fullImg };
+                        var body = { text: text, code: code, image: generateData.thumbnail, mode: mode, prevCode: prevCode, fullCode: fullCode, fullImg: generateData.fullImg };
                         if (text != "") {
                             body["prevCode"] = "";
-                            body["prevImg"] = "";
                         }
 
                         fetch(serverUrl + '/api/describe', {
@@ -436,14 +443,7 @@
                                 updateStatusAndSpeak("Please try again.");
                             });
 
-                        if (fullCode != "") {
-                          code = fullCode;
-                        }
-                        if (prevCode != code) {
-                          codeHistory.push({"code": code, "img": generateData.thumbnail});
-                        }
                         prevCode = code;
-                        prevImg = generateData.thumbnail;
 
 
 
@@ -467,20 +467,40 @@
 
         });
         
-        document.getElementById('revert-code').addEventListener('click', async function () {
-          if (codeHistory.length > 1) {
-            var cur = codeHistory.pop();
-            var prev = codeHistory.pop();
-            
-            document.getElementById('openscad-code').value = prev.code;
-            prevCode = cur.code;
-            prevImg = cur.img;
-            
-            await genImageAndDescribe(currentImageIndex, "");
+        document.getElementById('undo-code').addEventListener('click', async function () {
+          console.log(codeHistory);
+          console.log(historyIndex);
+        
+          var code = document.getElementById('openscad-code').value;
+          if (code != codeHistory[historyIndex]) {
+            codeHistory.push(code);
           } else {
-            console.log("nothing to undo");
+            historyIndex--;
           }
-
+          
+          if (historyIndex == 0) {
+            document.getElementById('undo-code').disabled = true;
+          }
+          document.getElementById('redo-code').disabled = false;
+          
+          document.getElementById('openscad-code').value = codeHistory[historyIndex];
+          prevCode = code;
+          await genImageAndDescribe(currentImageIndex, "");
+        });
+        
+        document.getElementById('redo-code').addEventListener('click', async function () {
+          var code = document.getElementById('openscad-code').value;
+          historyIndex++;
+          var newCode = codeHistory[historyIndex];
+          
+          if (historyIndex == codeHistory.length-1) {
+            document.getElementById('redo-code').disabled = true;
+          }
+          document.getElementById('undo-code').disabled = false;
+          
+          document.getElementById('openscad-code').value = newCode;
+          prevCode = code;
+          await genImageAndDescribe(currentImageIndex, "");
         });
 
         document.getElementById('callGPT').addEventListener('click', async function () {
@@ -498,7 +518,6 @@
 
         function modelPartSelected(e) {
             prevCode = "";
-            prevImg = "";
             
             var selected = e.target;
             
@@ -565,7 +584,6 @@
                     var section = document.getElementById('openscad-code');
                     section.focus();
                     prevCode = "";
-                    prevImg = "";
                 } else if (event.key.toUpperCase() == 'H') {
                     const instructions = document.getElementById('placeholder');
                     instructions.style["display"] = "block";
@@ -654,7 +672,6 @@
             var section = document.getElementById('openscad-code');
             section.focus();
             prevCode = "";
-            prevImg = "";
         });
         document.getElementById('file-input').addEventListener('change', function (event) {
             const file = event.target.files[0];
@@ -805,6 +822,9 @@
         document.getElementById('openscad-code').addEventListener('change', function () {
             var code = document.getElementById('openscad-code').value;
             parseCode(code);
+            
+            document.getElementById('undo-code').disabled = false;
+            document.getElementById('redo-code').disabled = true;
 
         });
     </script>

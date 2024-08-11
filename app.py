@@ -234,7 +234,7 @@ availableFunctions = [
   }          
 ]
 
-def getDescriptionPrompts(image, code, text, prevCode, prevImg, fullImg, fullCode, imgs, prevImgs):
+def getDescriptionPrompts(image, code, text, prevCode, fullImg, fullCode, imgs, prevImgs):
     instructions = "describe the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). The images are of the same model at different angles. Do not describe each angle separately. The description should be based on the images of the model rather than the code"
     if len(text) > 0:
         instructions = text
@@ -259,14 +259,8 @@ def getDescriptionPrompts(image, code, text, prevCode, prevImg, fullImg, fullCod
                 ]
     elif len(prevCode) > 0:
         content = [
-                    {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions+". Describe the changes between the first "+str(len(prevImgs)+1)+" images and code (referred to as the previous model) and the last "+str(len(imgs)+1)+" images and code (referred to as the current model)."},
+                    {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions+". Describe the changes between the first "+str(len(prevImgs))+" images and code (referred to as the previous model) and the last "+str(len(imgs)+1)+" images and code (referred to as the current model)."},
                     {"type": "text", "text": prevCode},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{prevImg}",
-                    },
-                    },
                 ]
         for img in prevImgs:
             content.append({
@@ -436,7 +430,6 @@ def describe():
         image = request.json.get("image")
         mode = request.json.get("mode")
         prevCode = request.json.get("prevCode")
-        prevImg = request.json.get("prevImg")
         fullCode = request.json.get("fullCode")
         fullImg = request.json.get("fullImg")
         logging.info(f"Received text: {text}")
@@ -449,6 +442,7 @@ def describe():
         imgs = []
         prevImgs = []
         views = [
+            "50,50,50,60,30,-210,300", 
             "0,0,0,0,0,0,200",          
             "0,0,-50,180,0,180,200",     
             "-50,0,0,90,0,0,200",      
@@ -456,24 +450,23 @@ def describe():
             "0,50,0,90,0,90,200",      
             "0,-50,0,90,0,-90,200"    
         ]
-        views = dict(enumerate(views))
         output_dir = "temp"
         os.makedirs(output_dir, exist_ok=True)
 
         if len(code) > 0:
-            _, imgs = gen_image(views, code, output_dir)
+            _, imgs = gen_image(dict(enumerate(views[1:])), code, output_dir)
         if len(prevCode) > 0:
-            _, prevImgs = gen_image(views, prevCode, output_dir)
+            _, prevImgs = gen_image(dict(enumerate(views)), prevCode, output_dir)
 
         if text == "":
-            content = getDescriptionPrompts(image, code, text, prevCode, prevImg, fullImg, fullCode, imgs, prevImgs)
+            content = getDescriptionPrompts(image, code, text, prevCode, fullImg, fullCode, imgs, prevImgs)
         else:
             if mode == "modify":
                 if len(fullCode) > 0:
                     code = fullCode
                 content = getModificationPrompts(image, code, text, imgs)
             else:
-                content = getDescriptionPrompts(image, code, text, prevCode, prevImg, fullImg, fullCode, imgs, prevImgs)
+                content = getDescriptionPrompts(image, code, text, prevCode, fullImg, fullCode, imgs, prevImgs)
         
         def gpt_action(content, mode):
             try:
