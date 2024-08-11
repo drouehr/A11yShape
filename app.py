@@ -234,32 +234,30 @@ availableFunctions = [
   }          
 ]
 
-def getDescriptionPrompts(image, code, text, prevCode, fullImg, fullCode, imgs, prevImgs):
-    instructions = "describe the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). The images are of the same model at different angles. Do not describe each angle separately. The description should be based on the images of the model rather than the code"
+def getDescriptionPrompts(image, code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs):
+    instructions = "describe the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). The images are of the same model at different angles"
     if len(text) > 0:
         instructions = text
     
     if len(fullCode) > 0:
+        instructions = "compare this part of the model in relation to the full model such that a blind user could understand it (eg. spatial position, distance, intersection, size, angle, orientation, side in relation to other parts of the model). Describe how this part affects the model's shape. Only if applicable, mention what operation the part is used in and if it's invisible"
+        if len(text) > 0:
+            instructions = text
         content = [
-                    {"type": "text", "text": "Given the part of a 3D model and its OpenSCAD code, "+instructions+". Compare it in relation to the full model."},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{image}",
-                    },
-                    },
-                    {"type": "text", "text": "Part of model: \n"+code},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{fullImg}",
-                    },
-                    },
-                    {"type": "text", "text": "Full model: \n"+fullCode},
+                    {"type": "text", "text": "Given the part of a 3D model and its OpenSCAD code, "+instructions+". The part of the model in the code is marked with the comment \"part of the model -->\". Do not mention it was marked with the comment. The first "+str(len(fullImgs))+" images are the full model in different angles with the part of the model highlighted in red and the last "+str(len(imgs))+" images are the part of the model in different angles."},
+                    {"type": "text", "text": partCode},
                 ]
+        
+        for img in fullImgs:
+            content.append({
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{img}",
+                        }})
+        
     elif len(prevCode) > 0:
         content = [
-                    {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions+". Describe the changes between the first "+str(len(prevImgs))+" images and code (referred to as the previous model) and the last "+str(len(imgs)+1)+" images and code (referred to as the current model)."},
+                    {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions+". Describe the changes between the first "+str(len(prevImgs))+" images and code (referred to as the previous model) and the last "+str(len(imgs))+" images and code (referred to as the current model). List which lines of the code were added, removed, or changed."},
                     {"type": "text", "text": prevCode},
                 ]
         for img in prevImgs:
@@ -268,24 +266,10 @@ def getDescriptionPrompts(image, code, text, prevCode, fullImg, fullCode, imgs, 
                             "image_url": {
                                 "url": f"data:image/jpeg;base64,{img}",
                         }})
-        content.extend([
-                    {"type": "text", "text": code},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{image}",
-                    },
-                    },
-                ])
+        content.append({"type": "text", "text": code})
     elif len(code) > 0:
         content = [
                     {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{image}",
-                    },
-                    },
                     {"type": "text", "text": code},
                 ]
     elif len(text) > 0:
@@ -302,7 +286,7 @@ def getDescriptionPrompts(image, code, text, prevCode, fullImg, fullCode, imgs, 
                     }})
     
     if len(code) > 0:
-        content.append({"type": "text", "text": "Give a short answer or summary first, then give as much information as possible such that a blind user could understand it. The output should not have formatting since it will be read by a screenreader"})
+        content.append({"type": "text", "text": "Give a short answer or summary first such that a blind user could understand it. The output should not have formatting since it will be read by a screenreader. Do not mention blind users. Do not mention that there are multiple images. Do not describe each angle separately. The description should be based on the images of the model rather than the code."})
     
     return content
 
@@ -431,7 +415,7 @@ def describe():
         mode = request.json.get("mode")
         prevCode = request.json.get("prevCode")
         fullCode = request.json.get("fullCode")
-        fullImg = request.json.get("fullImg")
+        partCode = request.json.get("partCode")
         logging.info(f"Received text: {text}")
         
         if prevCode == code:
@@ -441,6 +425,7 @@ def describe():
             
         imgs = []
         prevImgs = []
+        fullImgs = []
         views = [
             "50,50,50,60,30,-210,300", 
             "0,0,0,0,0,0,200",          
@@ -450,23 +435,26 @@ def describe():
             "0,50,0,90,0,90,200",      
             "0,-50,0,90,0,-90,200"    
         ]
+        views = dict(enumerate(views))
         output_dir = "temp"
         os.makedirs(output_dir, exist_ok=True)
 
         if len(code) > 0:
-            _, imgs = gen_image(dict(enumerate(views[1:])), code, output_dir)
+            _, imgs = gen_image(views, code, output_dir)
+        if len(fullCode) > 0:
+            _, fullImgs = gen_image(views, fullCode, output_dir)
         if len(prevCode) > 0:
-            _, prevImgs = gen_image(dict(enumerate(views)), prevCode, output_dir)
+            _, prevImgs = gen_image(views, prevCode, output_dir)
 
         if text == "":
-            content = getDescriptionPrompts(image, code, text, prevCode, fullImg, fullCode, imgs, prevImgs)
+            content = getDescriptionPrompts(image, code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs)
         else:
             if mode == "modify":
                 if len(fullCode) > 0:
                     code = fullCode
                 content = getModificationPrompts(image, code, text, imgs)
             else:
-                content = getDescriptionPrompts(image, code, text, prevCode, fullImg, fullCode, imgs, prevImgs)
+                content = getDescriptionPrompts(image, code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs)
         
         def gpt_action(content, mode):
             try:

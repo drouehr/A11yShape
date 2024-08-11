@@ -243,6 +243,7 @@
         let historyResponses = [];
         var codeHistory = [""];
         var historyIndex = 0;
+        var prevPrompt = "";
 
         /**function storeAndDisplayHistoryResponse(newResponse) {
             historyResponses.unshift(newResponse); 
@@ -265,7 +266,8 @@
 
             const formData = new FormData();
             formData.append('text', newResponse);
-
+            responseElement.textContent = newResponse;
+            /*
             try {
                 const response = await fetch(serverUrl + apiUrl, {
                     method: 'POST',
@@ -300,6 +302,7 @@
                 console.error('Error fetching summary:', error);
                 responseElement.textContent = newResponse;
             }
+            */
         }
 
         async function genImageAndDescribe(index, text) {
@@ -314,7 +317,7 @@
             var fullCode = "";
             if (currentPart.index != 0) {
                 fullCode = code;
-                code = code.slice(0, currentPart.offset) + "!" + code.slice(currentPart.offset);
+                code = code.slice(0, currentPart.offset) + "#" + code.slice(currentPart.offset);
                 console.log(code);
             }
             const responseContainer = document.getElementById('code2fab-response');
@@ -342,6 +345,9 @@
                     updateStatusAndSpeak("Images have been successfully generated.");
 
                     const mode = generateData.mode;
+                    if (mode == "modify" && text != "") {
+                      currentPart = { index: 0, code: "", offset: 0 };
+                    }
 
                     const byteCharacters = atob(generateData.image);
                     const byteNumbers = new Array(byteCharacters.length);
@@ -365,14 +371,17 @@
                     setTimeout(() => {
                         var code = document.getElementById('openscad-code').value;
                         var fullCode = "";
+                        var partCode = "";
                         if (currentPart.index != 0) {
-                            fullCode = code;
-                            for (let i = 0; i < parts.length; i++) {
+                            fullCode = code.slice(0, currentPart.offset) + "#" + code.slice(currentPart.offset);;
+                            /*for (let i = 0; i < parts.length; i++) {
                                 if (parts[i].id == currentPart.index) {
-                                    code = currentPart.code + ";\n" + parts[i].code;
+                                    partCode = currentPart.code + ";\n" + parts[i].code;
                                     break;
                                 }
-                            }
+                            }*/
+                            code = code.slice(0, currentPart.offset) + "!" + code.slice(currentPart.offset);
+                            partCode = code.slice(0, currentPart.offset) + "/* part of the model --> */" + code.slice(currentPart.offset);
                         }
                         const responseContainer = document.getElementById('code2fab-response');
                         const responsePre = document.createElement('pre');
@@ -383,7 +392,7 @@
                         var newCode = "";
                         var newResponse = "";
 
-                        var body = { text: text, code: code, image: generateData.thumbnail, mode: mode, prevCode: prevCode, fullCode: fullCode, fullImg: generateData.fullImg };
+                        var body = { text: text, code: code, image: generateData.thumbnail, mode: mode, prevCode: prevCode, fullCode: fullCode, partCode: partCode };
                         if (text != "") {
                             body["prevCode"] = "";
                         }
@@ -409,6 +418,7 @@
                                             newCode = newCode.replace("```openscad", "").replace("```", "").trim();
                                             document.getElementById('openscad-code').value = newCode;
                                             parseCode(newCode);
+                                            prevPrompt = text;
                                             document.getElementById('generate-model').click();
                                         } else {
                                           responsePre.textContent = newResponse;
@@ -417,6 +427,9 @@
                                           var history = newResponse;
                                           if (text != "") {
                                             history = "Prompt: "+text+"\n\n"+history;
+                                          } else if (prevPrompt != "") {
+                                            history = "Prompt: "+prevPrompt+"\n\n"+history;
+                                            prevPrompt = "";
                                           }
                                           storeAndDisplayHistoryResponse(history);
                                         }
@@ -485,6 +498,7 @@
           
           document.getElementById('openscad-code').value = codeHistory[historyIndex];
           prevCode = code;
+          parseCode(codeHistory[historyIndex]);
           await genImageAndDescribe(currentImageIndex, "");
         });
         
@@ -500,6 +514,7 @@
           
           document.getElementById('openscad-code').value = newCode;
           prevCode = code;
+          parseCode(newCode);
           await genImageAndDescribe(currentImageIndex, "");
         });
 
@@ -672,6 +687,8 @@
             var section = document.getElementById('openscad-code');
             section.focus();
             prevCode = "";
+            document.getElementById('undo-code').disabled = false;
+            document.getElementById('redo-code').disabled = true;
         });
         document.getElementById('file-input').addEventListener('change', function (event) {
             const file = event.target.files[0];
@@ -796,6 +813,20 @@
             });
             
             globalCode.push({ start: prevModuleEnd, code: code.slice(prevModuleEnd) });
+            
+            
+            for (let i = 0; i < primitives.length; i++) {
+                parts.push({
+                    id: parts.length,
+                    name: primitives[i],
+                    description: "",
+                    children: [],
+                    code: "",
+                    start: -1,
+                    isModule: false
+                });
+            }
+            
 
             globalCode.forEach((section) => {
                 parts[0].children = parts[0].children.concat(getChildren(section.code, section.start, code));
