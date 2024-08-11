@@ -37,6 +37,7 @@ from autogen.agentchat.contrib.multimodal_conversable_agent import MultimodalCon
 from PIL import Image
 import io
 import json
+import time
 
 
 logging.basicConfig(level=logging.INFO)
@@ -358,14 +359,15 @@ def summarize():
 @app.route("/generate-img", methods=["POST"])
 def generate_images():
     global current_process
-    code = request.json.get("code")
-    fullCode = request.json.get("fullCode")
-    imageIndex = request.json.get("imageIndex")
-    text = request.json.get("text")
-    if current_process and current_process.poll() is None:
-        current_process.terminate()
-
     try:
+        code = request.json.get("code")
+        fullCode = request.json.get("fullCode")
+        imageIndex = request.json.get("imageIndex")
+        text = request.json.get("text")
+        #if current_process and current_process.poll() is None:
+        #    current_process.terminate()
+
+    
         output_dir = "temp"
         os.makedirs(output_dir, exist_ok=True)
         
@@ -409,6 +411,8 @@ def generate_images():
 @app.route("/api/describe", methods=["POST"])
 def describe():
     try:
+        sessionId = request.json.get("sessionId")
+        callId = request.json.get("callId")
         text = request.json.get("text")
         code = request.json.get("code")
         image = request.json.get("image")
@@ -417,6 +421,9 @@ def describe():
         fullCode = request.json.get("fullCode")
         partCode = request.json.get("partCode")
         logging.info(f"Received text: {text}")
+        
+        logData = {"sessionId": sessionId, "callId": callId, "prompt": text, "mode": mode, "code": code, "timestamps": {"start": time.time()}}
+        
         
         if prevCode == code:
             prevCode = ""
@@ -445,6 +452,8 @@ def describe():
             _, fullImgs = gen_image(views, fullCode, output_dir)
         if len(prevCode) > 0:
             _, prevImgs = gen_image(views, prevCode, output_dir)
+            
+        logData["timestamps"]["genViews"] = time.time()
 
         if text == "":
             content = getDescriptionPrompts(image, code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs)
@@ -462,7 +471,7 @@ def describe():
                     model="gpt-4o",
                     temperature=0.0,
                     timeout=10,
-                    stream=True,
+                    #stream=True,
                     messages=[
                         {
                         "role": "user",
@@ -470,19 +479,33 @@ def describe():
                         }
                     ],
                 )
+                return completion.choices[0].message.content
+                
+                """
                 for chunk in completion:
                     if chunk.choices[0].delta:
                         yield chunk.choices[0].delta.content.encode("utf-8")
                     else:
                         yield b"Processing...\n"
+                """
             except (AttributeError, TypeError) as e:
                 if str(e) != "'NoneType' object has no attribute 'encode'":
-                    yield "Error: " + str(e) 
-
-        return Response(gpt_action(content, mode), mimetype="text/event-stream")
+                    return "Error: " + str(e) 
+        
+        response = gpt_action(content, mode) 
+        
+        logData["response"] = response
+        logData["timestamps"]["genDesc"] = time.time()
+        with open('log.txt', 'a') as f:
+            f.write(json.dumps(logData)+'\n')
+            
+        return Response(response, mimetype="text/event-stream")
 
     except Exception as e:
         logging.error(f"Error processing request: {e}")
+        logData["error"] = e
+        with open('log.txt', 'a') as f:
+            f.write(json.dumps(logData)+'\n')
         return jsonify({"error": "Internal server error"}), 500
 
 

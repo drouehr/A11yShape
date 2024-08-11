@@ -223,6 +223,8 @@
                 });
             }
         });
+        
+        var session_id = new Date().getTime();
 
         const imageBasePath = '/static/img/model/';
         const totalImages = 7; // Assuming images are named from 0.jpg to 6.jpg
@@ -306,6 +308,7 @@
         }
 
         async function genImageAndDescribe(index, text) {
+            var callId = new Date().getTime();
             var code = document.getElementById('openscad-code').value;
             if (prevCode != code && code != codeHistory[historyIndex]) {
               codeHistory.length = historyIndex+1;
@@ -392,7 +395,7 @@
                         var newCode = "";
                         var newResponse = "";
 
-                        var body = { text: text, code: code, image: generateData.thumbnail, mode: mode, prevCode: prevCode, fullCode: fullCode, partCode: partCode };
+                        var body = { sessionId: session_id, callId: callId, text: text, code: code, image: generateData.thumbnail, mode: mode, prevCode: prevCode, fullCode: fullCode, partCode: partCode };
                         if (text != "") {
                             body["prevCode"] = "";
                         }
