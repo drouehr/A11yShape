@@ -92,8 +92,13 @@
             <textarea tabindex="0" aria-labelledby="editor-input-heading" role="textbox"
                 class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive" id="openscad-code"
                 placeholder="Enter OpenSCAD code here"
-                style="resize: none; height: calc(89vh - 40px); width: calc(100% - 4px);"
+                style="resize: none; height: calc(75vh - 40px); width: calc(100% - 4px);"
                 data-hover-text="Enter OpenSCAD code here."></textarea>
+                
+            <h2 role="heading" id="changes-heading">Code Changes</h2>
+            <div class="w-full h-1/2 overflow-auto"
+                id="code-changes" aria-labelledby="changes-heading" style="height: 12vh;">
+            </div>
         </div>
         <!-- AI Area -->
         <div class="w-1/3 border-2 border-black m-1 flex-col overflow-auto" tabindex="0"
@@ -269,47 +274,48 @@
             const formData = new FormData();
             formData.append('text', newResponse);
             responseElement.textContent = newResponse;
-            /*
-            try {
-                const response = await fetch(serverUrl + apiUrl, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    const reader = response.body.getReader();
-
-                    const processStream = ({ done, value }) => {
-                        if (done) {
-                            return;
-                        }
-
-                        const chunk = new TextDecoder().decode(value);
-                        try {
-                            const parsedChunk = JSON.parse(chunk);
-                            const summary = parsedChunk.choices[0].text;
-                            responseElement.textContent = `Summary: ${summary}\n\n${newResponse}`;
-                        } catch (error) {
-                            responseElement.textContent += chunk;
-                        }
-                        return reader.read().then(processStream);
-                    };
-
-                    reader.read().then(processStream);
-                } else {
-                    console.error('Failed to get summary from backend:', response.status);
-                    responseElement.textContent = newResponse;
-                }
-            } catch (error) {
-                console.error('Error fetching summary:', error);
-                responseElement.textContent = newResponse;
+        }
+        
+        function codeChangeSelected(e) {
+            
+            var selected = e.target;
+            if (selected.getAttribute("data-start") == -1) {
+              return;
             }
-            */
+            document.getElementById('openscad-code').focus();
+            document.getElementById('openscad-code').setSelectionRange(parseInt(selected.getAttribute("data-start")), parseInt(selected.getAttribute("data-end")));
+        }
+        
+        function displayChanges(code, changes) {
+          var lineIndex = [0];
+          for(var i=0; i<code.length-1; i++) {
+              if (code[i] === "\n") lineIndex.push(i+1);
+          }
+          lineIndex.push(code.length);
+          
+          var output = "<ul>";
+          
+          for(var i=0; i<changes.length; i++) {
+              var lines = "Lines "+changes[i].startLine+" - " + changes[i].endLine + ": ";
+              if (changes[i].startLine == -1) {
+                lines = "";
+              } else if (changes[i].startLine == changes[i].endLine) {
+                lines = "Line "+changes[i].startLine + ": ";
+              }
+              
+              output += "<li aria-labelledby=\"change-" + i + "\"  >"
+                + "<button id=\"change-" + i + "\" onclick=\"codeChangeSelected(event)\" tabindex=\"0\" data-start=\"" + lineIndex[changes[i].startLine] + "\" data-end=\"" + lineIndex[changes[i].endLine+1] + "\" aria-label=\""+changes[i].description+"\" role=\"listitem\" >"+lines + changes[i].description + " </button></li>";
+          }
+                    
+          output += "</ul>";
+          
+          document.getElementById('code-changes').innerHTML = output;
         }
 
         async function genImageAndDescribe(index, text) {
             var callId = new Date().getTime();
             var code = document.getElementById('openscad-code').value;
+            console.log(codeHistory);
             if (prevCode != code && code != codeHistory[historyIndex]) {
               codeHistory.length = historyIndex+1;
               codeHistory.push(code);
@@ -333,7 +339,7 @@
                 const generateResponse = await fetch(serverUrl + '/generate-img', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: code, fullCode: fullCode, imageIndex: index, text: text })
+                    body: JSON.stringify({ sessionId: session_id, callId: callId, code: code, prevCode: prevCode, fullCode: fullCode, imageIndex: index, text: text })
                 });
 
                 if (!generateResponse.ok) {
@@ -351,6 +357,11 @@
                     if (mode == "modify" && text != "") {
                       currentPart = { index: 0, code: "", offset: 0 };
                     }
+					
+                    if (generateData.changes != '') {
+						displayChanges(code, JSON.parse(generateData.changes));
+					}
+                    
 
                     const byteCharacters = atob(generateData.image);
                     const byteNumbers = new Array(byteCharacters.length);
@@ -395,7 +406,7 @@
                         var newCode = "";
                         var newResponse = "";
 
-                        var body = { sessionId: session_id, callId: callId, text: text, code: code, image: generateData.thumbnail, mode: mode, prevCode: prevCode, fullCode: fullCode, partCode: partCode };
+                        var body = { sessionId: session_id, callId: callId, text: text, code: code, mode: mode, prevCode: prevCode, fullCode: fullCode, partCode: partCode };
                         if (text != "") {
                             body["prevCode"] = "";
                         }
@@ -421,6 +432,8 @@
                                             newCode = newCode.replace("```openscad", "").replace("```", "").trim();
                                             document.getElementById('openscad-code').value = newCode;
                                             parseCode(newCode);
+                                            document.getElementById('undo-code').disabled = false;
+                                            document.getElementById('redo-code').disabled = true;
                                             prevPrompt = text;
                                             document.getElementById('generate-model').click();
                                         } else {
@@ -551,13 +564,9 @@
               currentPart.code = selected.getAttribute("data-code");
               currentPart.offset = selected.getAttribute("data-offset");
               
-              setTimeout(() => {
-                if (selected.style.color == "blue") {
-                  document.getElementById('generate-model').click();
-                  document.getElementById('openscad-code').focus();
-                  document.getElementById('openscad-code').setSelectionRange(currentPart.offset, parseInt(currentPart.offset)+currentPart.code.length);
-                }
-              }, 10000);
+              document.getElementById('openscad-code').focus();
+              document.getElementById('openscad-code').setSelectionRange(currentPart.offset, parseInt(currentPart.offset)+currentPart.code.length);
+              document.getElementById('generate-model').click();
             }
             console.log(currentPart);
         }
@@ -700,6 +709,8 @@
                 document.getElementById('openscad-code').value = e.target.result;
                 console.log(`Uploaded file: ${file.name}`);
                 parseCode(document.getElementById('openscad-code').value);
+                document.getElementById('undo-code').disabled = false;
+                document.getElementById('redo-code').disabled = true;
                 genImageAndDescribe(currentImageIndex, "");
             };
             reader.readAsText(file);
@@ -712,7 +723,7 @@
 
             let tree = "<li style=\"padding-left: 10px;\" aria-labelledby=\"part-" + root.id + "\"  >"
                 /*+ "<input type=\"checkbox\" id=\"part-" + root.id + "\" name=\"parts\" value=\"" + root.id + "\" data-offset=\"" + child.start + "\" data-code=\"" + child.code + "\"  aria-labelledby=\"part-" + root.id + "-label\" role=\"checkbox\" tabindex=\"-1\" onchange=\"modelPartSelected(event)\">"*/
-                + "<label for=\"part-" + root.id + "\" id=\"part-" + root.id + "\" onfocus=\"modelPartSelected(event)\" tabindex=\"0\" data-id=\"" + root.id + "\" data-offset=\"" + child.start + "\" data-code=\"" + child.code + "\" aria-label=\"level "+level+" "+child.name+"\" aria-level=\""+level+"\" role=\"listitem\" > Level "+level+". " + child.name + " </label>";
+                + "<button id=\"part-" + root.id + "\" onclick=\"modelPartSelected(event)\" tabindex=\"0\" data-id=\"" + root.id + "\" data-offset=\"" + child.start + "\" data-code=\"" + child.code + "\" aria-label=\"level "+level+" "+child.name+"\" aria-level=\""+level+"\" role=\"listitem\" > Level "+level+" " + child.name + " </button>";
 
             if (root.id == -1 || root.children.length == 0) {
                 return tree + "</li>";

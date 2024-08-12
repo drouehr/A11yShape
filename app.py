@@ -235,7 +235,7 @@ availableFunctions = [
   }          
 ]
 
-def getDescriptionPrompts(image, code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs):
+def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs):
     instructions = "describe the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). The images are of the same model at different angles"
     if len(text) > 0:
         instructions = text
@@ -292,16 +292,10 @@ def getDescriptionPrompts(image, code, text, prevCode, fullCode, partCode, imgs,
     return content
 
 
-def getModificationPrompts(image, code, text, imgs):
+def getModificationPrompts(code, text, imgs):
     if len(code) > 0:
         content = [
             {"type": "text", "text": "Given the OpenScad code, modify the code to "+text+". Output only the modified OpenScad code and nothing else"},
-            {
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/jpeg;base64,{image}",
-            },
-            },
             {"type": "text", "text": code},
         ]
         for img in imgs:
@@ -356,16 +350,30 @@ def summarize():
         logging.error(f"Error processing request: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
+
+def addLineNum(code):
+    lines = code.split('\n')
+    code = ""
+    for ln, line in enumerate(lines):
+        code = code + "Line " + str(ln) + ": "+line+"\n"
+    return code
+
+
 @app.route("/generate-img", methods=["POST"])
 def generate_images():
     global current_process
     try:
+        sessionId = request.json.get("sessionId")
+        callId = request.json.get("callId")
         code = request.json.get("code")
+        prevCode = request.json.get("prevCode")
         fullCode = request.json.get("fullCode")
         imageIndex = request.json.get("imageIndex")
         text = request.json.get("text")
         #if current_process and current_process.poll() is None:
         #    current_process.terminate()
+        
+        logData = {"sessionId": sessionId, "callId": callId, "function": "generate_images", "timestamps": {"start": time.time()}}
 
     
         output_dir = "temp"
@@ -386,8 +394,35 @@ def generate_images():
                 print(response)
                 mode = response.choices[0].message.function_call.name
             except:
-                return jsonify(error=response.choices[0].message.content), 500
-            
+                pass
+        logData["timestamps"]["getMode"] = time.time()
+        
+        changes = ""
+        if prevCode != "" and prevCode != code:
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    temperature=0.0,
+                    timeout=10,
+                    #stream=True,
+                    messages=[
+                        {
+                        "role": "user",
+                        "content": [
+                                {"type": "text", "text": 'Given the previous OpenSCAD code followed by the current OpenSCAD code, output the list of chunks of code that were added, deleted or changed in the format [{"startLine": <the first line number of the chunk in the current code, or -1>, "endLine": <the last line number of the chunk>, "description": <description of what changed>}]. Output only JSON and nothing else'},
+                                {"type": "text", "text": "Previous code:\n\n"+addLineNum(prevCode)},
+                                {"type": "text", "text": "Current code:\n\n"+addLineNum(code)},
+                            ],
+                        }
+                    ],
+                )
+                changes = response.choices[0].message.content.replace('```json', '').replace('```', '')
+                #print(changes)
+            except:
+                pass
+        logData["timestamps"]["getChanges"] = time.time()
+        
+        
         views = {
             "display": "50,50,50,60,30,-210,300",   
         }
@@ -401,11 +436,18 @@ def generate_images():
             _, encoded_imgs_full = gen_image(views, fullCode, output_dir)
         else:
             encoded_imgs_full = [""]
+            
+        logData["timestamps"]["getImg"] = time.time()
+        with open('log.txt', 'a') as f:
+            f.write(json.dumps(logData)+'\n')
         
         
-        return jsonify({"message": "Images generated successfully", "mode": mode, "image": encoded_imgs[0], "thumbnail": encoded_imgs_sm[0], "fullImg": encoded_imgs_full[0]})
+        return jsonify({"message": "Images generated successfully", "mode": mode, "changes": changes, "image": encoded_imgs[0], "thumbnail": encoded_imgs_sm[0], "fullImg": encoded_imgs_full[0]})
     except Exception as e:
         print(f"Execution error: {e}")
+        logData["error"] = e
+        with open('log.txt', 'a') as f:
+            f.write(json.dumps(logData)+'\n')
         return jsonify(error="Failed to generate images."), 500
 
 @app.route("/api/describe", methods=["POST"])
@@ -415,14 +457,13 @@ def describe():
         callId = request.json.get("callId")
         text = request.json.get("text")
         code = request.json.get("code")
-        image = request.json.get("image")
         mode = request.json.get("mode")
         prevCode = request.json.get("prevCode")
         fullCode = request.json.get("fullCode")
         partCode = request.json.get("partCode")
         logging.info(f"Received text: {text}")
         
-        logData = {"sessionId": sessionId, "callId": callId, "prompt": text, "mode": mode, "code": code, "timestamps": {"start": time.time()}}
+        logData = {"sessionId": sessionId, "callId": callId, "function": "describe", "prompt": text, "mode": mode, "code": code, "timestamps": {"start": time.time()}}
         
         
         if prevCode == code:
@@ -456,14 +497,14 @@ def describe():
         logData["timestamps"]["genViews"] = time.time()
 
         if text == "":
-            content = getDescriptionPrompts(image, code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs)
+            content = getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs)
         else:
             if mode == "modify":
                 if len(fullCode) > 0:
                     code = fullCode
-                content = getModificationPrompts(image, code, text, imgs)
+                content = getModificationPrompts(code, text, imgs)
             else:
-                content = getDescriptionPrompts(image, code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs)
+                content = getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs)
         
         def gpt_action(content, mode):
             try:
