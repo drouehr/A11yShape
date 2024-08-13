@@ -417,6 +417,7 @@ def generate_images():
                     ],
                 )
                 changes = response.choices[0].message.content.replace('```json', '').replace('```', '')
+                json.loads(changes)
                 #print(changes)
             except:
                 pass
