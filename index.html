@@ -96,9 +96,9 @@
                 data-hover-text="Enter OpenSCAD code here."></textarea>
                 
             <h2 role="heading" id="changes-heading">Code Changes</h2>
-            <div class="w-full h-1/2 overflow-auto"
-                id="code-changes" aria-labelledby="changes-heading" style="height: 12vh;">
-            </div>
+            <ul tabindex="0" class="w-full h-1/2 overflow-auto"
+                id="code-changes" aria-labelledby="changes-heading" role="list" style="height: 12vh;">
+            </ul>
         </div>
         <!-- AI Area -->
         <div class="w-1/3 border-2 border-black m-1 flex-col overflow-auto" tabindex="0"
@@ -293,7 +293,7 @@
           }
           lineIndex.push(code.length);
           
-          var output = "<ul>";
+          var output = "";
           
           for(var i=0; i<changes.length; i++) {
               var lines = "Lines "+changes[i].startLine+" - " + changes[i].endLine + ": ";
@@ -306,8 +306,7 @@
               output += "<li aria-labelledby=\"change-" + i + "\"  >"
                 + "<button id=\"change-" + i + "\" onclick=\"codeChangeSelected(event)\" tabindex=\"0\" data-start=\"" + lineIndex[changes[i].startLine] + "\" data-end=\"" + lineIndex[changes[i].endLine+1] + "\" aria-label=\""+changes[i].description+"\" role=\"listitem\" >"+lines + changes[i].description + " </button></li>";
           }
-                    
-          output += "</ul>";
+          
           
           document.getElementById('code-changes').innerHTML = output;
         }
@@ -701,6 +700,7 @@
             prevCode = "";
             document.getElementById('undo-code').disabled = false;
             document.getElementById('redo-code').disabled = true;
+            document.getElementById('code-changes').innerHTML = "";
         });
         document.getElementById('file-input').addEventListener('change', function (event) {
             const file = event.target.files[0];

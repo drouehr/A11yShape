@@ -278,6 +278,7 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
     else:
         content = [{"type": "text", "text": "describe how to create a model with openscad"}]
     
+    #print(content)
     
     for img in imgs:
         content.append({
@@ -376,7 +377,7 @@ def generate_images():
         logData = {"sessionId": sessionId, "callId": callId, "function": "generate_images", "timestamps": {"start": time.time()}}
 
     
-        output_dir = "temp"
+        output_dir = "temp/"+str(sessionId)
         os.makedirs(output_dir, exist_ok=True)
         
         if text == "":
@@ -391,7 +392,7 @@ def generate_images():
                     functions=availableFunctions,
                     function_call="auto"
                 )
-                print(response)
+                #print(response)
                 mode = response.choices[0].message.function_call.name
             except:
                 pass
@@ -484,16 +485,18 @@ def describe():
             "0,50,0,90,0,90,200",      
             "0,-50,0,90,0,-90,200"    
         ]
+        #if mode == "modify":
+        #    views = ["50,50,50,60,30,-210,300"]
         views = dict(enumerate(views))
-        output_dir = "temp"
+        output_dir = "temp/"+str(sessionId)
         os.makedirs(output_dir, exist_ok=True)
 
-        if len(code) > 0:
-            _, imgs = gen_image(views, code, output_dir)
         if len(fullCode) > 0:
             _, fullImgs = gen_image(views, fullCode, output_dir)
         if len(prevCode) > 0:
             _, prevImgs = gen_image(views, prevCode, output_dir)
+        if len(code) > 0:
+            _, imgs = gen_image(views, code, output_dir)
             
         logData["timestamps"]["genViews"] = time.time()
 
