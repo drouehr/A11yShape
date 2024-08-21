@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>
+        Code2Fab
+    </title>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+        integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+
+    <style>
+        .code2fab-container {
+            overflow-x: hidden;
+        }
+
+        .code2fab-content {
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .text-left {
+            text-align: left;
+        }
+
+        pre {
+            white-space: pre-wrap;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+
+
+<body class="bg-white h-screen ">
+
+    <header>
+        <h1>Code2Fab</h1>
+    </header>
+    <!-- Main Content -->
+    <div class="flex w-full height:98vh">
+        <!-- Code Editor area -->
+        <div class="w-1/3 bg-white border-2 border-black m-1 flex-col flex flex-col " tabindex="0"
+            aria-labelledby="editor-heading" role="region">
+            <h1 role="heading" id="editor-heading">代码编辑器</h1>
+
+            <div tabindex="0" aria-label="editor-toolbar" role="toolbar">
+                <div class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
+                    <div class="flex items-center space-x-1">
+                        <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black" id="upload-file"
+                            tabindex="0" aria-label="上传一个OpenSCAD文件" aria-controls="file-input">
+                            <i class="fas fa-upload" aria-hidden="true"></i>
+                        </button>
+
+                        <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black" id="save-code"
+                            tabindex="0" aria-label="保存OpenSCAD代码">
+                            <i class="fas fa-save" aria-hidden="true"></i>
+                        </button>
+
+                        <input type="file" id="file-input" style="display: none;" accept=".scad"
+                            aria-label="打开一个OpenSCAD文件">
+                            
+                        <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black" id="undo-code"
+                            tabindex="0" aria-label="撤销代码修改" disabled>
+                            撤销
+                        </button>
+                        <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black" id="redo-code"
+                            tabindex="0" aria-label="恢复代码修改" disabled>
+                            恢复
+                        </button>
+                        <button tabindex="0" aria-label="渲染3D模型"
+                            class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
+                            id="generate-model">
+                            <!--<i class="fas fa-cube"></i>-->
+                            渲染3D模型
+                        </button>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <h2 role="heading" id="editor-input-heading">代码编辑输入区</h2>
+            <textarea tabindex="0" aria-labelledby="editor-input-heading" role="textbox"
+                class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive" id="openscad-code"
+                placeholder="请在此处输入OpenSCAD代码..."
+                style="resize: none; height: calc(75vh - 40px); width: calc(100% - 4px);"
+                data-hover-text="请在此处输入OpenSCAD代码..."></textarea>
+                
+            <h2 role="heading" id="changes-heading">代码更改</h2>
+            <ul tabindex="0" class="w-full h-1/2 overflow-auto"
+                id="code-changes" aria-labelledby="changes-heading" role="list" style="height: 12vh;">
+            </ul>
+        </div>
+        <!-- AI Area -->
+        <div class="w-1/3 border-2 border-black m-1 flex-col overflow-auto" tabindex="0"
+            aria-labelledby="ai-panel-heading" role="region">
+            <h1 role="heading" id="ai-panel-heading">AI辅助区域</h1>
+            <div class="border border-black" tabindex="0" aria-labelledby="prompt-heading" role="region">
+                <!-- Prompt Area at the top-->
+                <h2 role="heading" id="prompt-heading">提示词:</h2>
+                <div class="h-1/4 mb-1 overflow-auto flex flex-col border border-black mx-1">
+
+                    <div class="h-1/4">
+                        <textarea
+                            class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive bg-gray-100"
+                            id="gpt-input" placeholder="请在此输入提示词..." style="resize: none; height: 6vh;"
+                            aria-label="提示词文字框" role="textbox"></textarea>
+                        <!-- Buttons below the prompt textbox -->
+                        <button aria-label="提交提示词"
+                            class="flex justify-end items-end text-black font-bold py-1 px-4 rounded border border-black m-2"
+                            id="callGPT">
+                            Enter
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+            <!-- Response Area at the bottom -->
+            <div class=" mt-2 pt-2 " tabindex="0" aria-labelledby="response-heading" role="status" aria-live="polite">
+                <h2 role="heading" id="response-heading">Code2fab回复:</h2>
+                <div class="code2fab-container w-full text-sm text-gray-700 font-mono flex-col" style="height: 3/4;">
+                    <!-- GPT response content goes here -->
+                    <div id="code2fab-response"
+                        class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0"
+                        data-hover-text="Code2fab的回复" style="height: 40vh; overflow-y: auto;"><br><br> 模型正在渲染中，请等待...<br>
+                    </div>
+                </div>
+            </div>
+            <div id="history-responses-area" class="mt-4 pt-4 border-t border-gray-300 overflow-y: scroll"
+                role="region" aria-label="历史" tabindex="0">
+                <h2 role="heading" id="history-heading">历史记录:</h2>
+                <div id="history-responses" style="height: 22vh; overflow-y: auto;"></div>
+            </div>
+        </div>
+        <!-- Rendering Area -->
+        <div class="w-1/3 flex-col border-2 border-black m-1" tabindex="0" aria-labelledby="model-panel-heading"
+            role="region">
+            <h1 role="heading" id="model-panel-heading">模型区域</h1>
+            <div class="flex-col  m-1" id="col2">
+
+                <div class="w-full h-1/2 overflow-auto" tabindex="0" aria-labelledby="parts-heading"
+                    style="height: calc(50vh - 40px);">
+                    <h2 role="heading" id="parts-heading">模型组成列表</h2>
+                    <div class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
+                        id="openscad-code2" placeholder="The modular structure of the code will appear here"
+                        style="resize: none; height: 92%; width: calc(100% - 2px);">
+                        <p>模型的各个组件将会在此出现...</p>
+                    </div>
+                </div>
+
+                <!-- Viewport Content -->
+                <div class="flex-grow  flex border border-black" style="height: calc(50vh - 40px);">
+                    <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;"
+                        tabindex="0" aria-labelledby="rendered-heading" role="region">
+                        <h2 role="heading" id="rendered-heading">模型渲染结果</h2>
+
+                        <!-- Model viewer goes here -->
+                        <img id="modelImage" src="logo.png" tabindex="0" aria-label="被渲染的模型"
+                            aria-describedby="code2fab-response" role="img" class="max-w-full" style="max-height: 90%;">
+                        <!-- Initially hide the image -->
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    </div>
+    </div>
+
+    <script src="https://unpkg.com/xregexp/xregexp-all.js"></script>
+    <script>
+        const serverUrl = 'http://128.46.81.235:3000'
+
+        // Display and update the status
+        const statusDisplay = document.getElementById('statusText');
+        function updateStatusAndSpeak(text) {
+            //speechSynthesis.cancel();
+            //statusDisplay.textContent = text;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 5;
+            //speechSynthesis.speak(utterance);
+        }
+
+        const elements = [
+            { id: "save-code", key: "Ctrl+Shift+S", text: "Save the OpenSCAD code." },
+            //{ id: "refresh-files", key: "Ctrl+Shift+R", text: "Clear the file list." },
+            { id: "upload-file", key: "Ctrl+Shift+U", text: "Upload a new OpenSCAD file." },
+            //{ id: "file-list", key: "Ctrl+Shift+L", text: "Open the version list." },
+            { id: "generate-model", key: "Ctrl+Shift+G", text: "Generate a 3D model from the code." },
+            { id: "openscad-code", key: "Ctrl+Shift+O", text: "Enter OpenSCAD code here." },
+            { id: "gpt-input", key: "Ctrl+Shift+P", text: "Enter your input here." },
+        ];
+
+
+        document.addEventListener('keydown', function (event) {
+            //console.log(event.key, event.ctrlKey, event.shiftKey); 
+            if (event.ctrlKey && event.shiftKey) {
+                elements.forEach(item => {
+                    if (event.key.toUpperCase() === item.key.split('+').pop()) {
+                        const element = document.getElementById(item.id);
+                        if (element) {
+                            element.focus();
+                            updateStatusAndSpeak(item.text);
+                        }
+                    }
+                });
+            }
+        });
+
+        elements.forEach(item => {
+            const element = document.getElementById(item.id);
+            if (element) {
+                element.addEventListener('focus', function () {
+                    updateStatusAndSpeak(item.text);
+                });
+                element.addEventListener('mouseenter', function () {
+                    updateStatusAndSpeak(item.text);
+                });
+            }
+        });
+        
+        var session_id = new Date().getTime();
+
+        const imageBasePath = '/static/img/model/';
+        const totalImages = 7; // Assuming images are named from 0.jpg to 6.jpg
+        let currentImageIndex = 0;
+
+        var prevCode = '';
+        var parts = [];
+        let currentPart = { index: 0, code: "", offset: 0 };
+        parts.push({
+            id: 0,
+            name: "Model",
+            description: "",
+            children: [],
+            code: "",
+            isModule: false
+        });
+
+        let historyResponses = [];
+        var codeHistory = [""];
+        var historyIndex = 0;
+        var prevPrompt = "";
+
+        /**function storeAndDisplayHistoryResponse(newResponse) {
+            historyResponses.unshift(newResponse); 
+            const historyContainer = document.getElementById('history-responses'); 
+            const responseElement = document.createElement('pre');
+            responseElement.textContent = newResponse;
+            responseElement.classList.add('mb-2', 'p-2', 'border', 'rounded-md', 'bg-gray-100', 'text-gray-500');
+            responseElement.setAttribute('role', 'history response');  
+            responseElement.setAttribute('tabindex', '0'); 
+            historyContainer.prepend(responseElement);
+        }**/
+
+        async function storeAndDisplayHistoryResponse(newResponse) {
+            const historyContainer = document.getElementById('history-responses');
+            const responseElement = document.createElement('pre');
+            responseElement.classList.add('mb-2', 'p-2', 'border', 'rounded-md', 'bg-gray-100', 'text-gray-500');
+            responseElement.setAttribute('role', 'history response');
+            responseElement.setAttribute('tabindex', '0');
+            historyContainer.prepend(responseElement);
+
+            const formData = new FormData();
+            formData.append('text', newResponse);
+            responseElement.textContent = newResponse;
+        }
+        
+        function codeChangeSelected(e) {
+            
+            var selected = e.target;
+            if (selected.getAttribute("data-start") == -1) {
+              return;
+            }
+            document.getElementById('openscad-code').focus();
+            document.getElementById('openscad-code').setSelectionRange(parseInt(selected.getAttribute("data-start")), parseInt(selected.getAttribute("data-end")));
+        }
+        
+        function displayChanges(code, changes) {
+          var lineIndex = [0];
+          for(var i=0; i<code.length-1; i++) {
+              if (code[i] === "\n") lineIndex.push(i+1);
+          }
+          lineIndex.push(code.length);
+          
+          var output = "";
+          
+          for(var i=0; i<changes.length; i++) {
+              var lines = "Lines "+changes[i].startLine+" - " + changes[i].endLine + ": ";
+              if (changes[i].startLine == -1) {
+                lines = "";
+              } else if (changes[i].startLine == changes[i].endLine) {
+                lines = "Line "+changes[i].startLine + ": ";
+              }
+              
+              output += "<li aria-labelledby=\"change-" + i + "\"  >"
+                + "<button id=\"change-" + i + "\" onclick=\"codeChangeSelected(event)\" tabindex=\"0\" data-start=\"" + lineIndex[changes[i].startLine] + "\" data-end=\"" + lineIndex[changes[i].endLine+1] + "\" aria-label=\""+changes[i].description+"\" role=\"listitem\" >"+lines + changes[i].description + " </button></li>";
+          }
+          
+          
+          document.getElementById('code-changes').innerHTML = output;
+        }
+
+        async function genImageAndDescribe(index, text) {
+            var callId = new Date().getTime();
+            var code = document.getElementById('openscad-code').value;
+            console.log(codeHistory);
+            if (prevCode != code && code != codeHistory[historyIndex]) {
+              codeHistory.length = historyIndex+1;
+              codeHistory.push(code);
+              historyIndex++;
+            }
+                        
+            console.log(code);
+            var fullCode = "";
+            if (currentPart.index != 0) {
+                fullCode = code;
+                code = code.slice(0, currentPart.offset) + "#" + code.slice(currentPart.offset);
+                console.log(code);
+            }
+            const responseContainer = document.getElementById('code2fab-response');
+            responseContainer.innerHTML = '<pre></pre>';
+            const pre = responseContainer.querySelector('pre');
+            //console.log("Generating images for code:", code);
+
+            try {
+                // Generate images from code
+                const generateResponse = await fetch(serverUrl + '/generate-img', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: session_id, callId: callId, code: code, prevCode: prevCode, fullCode: fullCode, imageIndex: index, text: text })
+                });
+
+                if (!generateResponse.ok) {
+                    throw new Error(`HTTP error! Status: ${generateResponse.status}`);
+                }
+
+                const generateData = await generateResponse.json();
+
+                console.log(generateData);
+
+                if (generateData.message && generateData.message === "Images generated successfully") {
+                    updateStatusAndSpeak("Images have been successfully generated.");
+
+                    const mode = generateData.mode;
+                    if (mode == "modify" && text != "") {
+                      currentPart = { index: 0, code: "", offset: 0 };
+                    }
+					
+                    if (generateData.changes != '') {
+						displayChanges(code, JSON.parse(generateData.changes));
+					}
+                    
+
+                    const byteCharacters = atob(generateData.image);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+
+                    const imageElement = document.getElementById('modelImage');
+                    imageElement.src = URL.createObjectURL(new Blob([byteArray], { type: 'image/png' }));
+
+                    //const instructions = document.getElementById('placeholder');
+                    //instructions.style["display"] = "none";
+
+                    //updateImageDisplay(0); // Reset to the first image
+
+                    // Now process the model image and send it along with the text and code
+                    updateStatusAndSpeak("The system reply is loading...");
+
+                    // Wait for the model image to be updated in the DOM
+                    setTimeout(() => {
+                        var code = document.getElementById('openscad-code').value;
+                        var fullCode = "";
+                        var partCode = "";
+                        if (currentPart.index != 0) {
+                            fullCode = code.slice(0, currentPart.offset) + "#" + code.slice(currentPart.offset);;
+                            /*for (let i = 0; i < parts.length; i++) {
+                                if (parts[i].id == currentPart.index) {
+                                    partCode = currentPart.code + ";\n" + parts[i].code;
+                                    break;
+                                }
+                            }*/
+                            code = code.slice(0, currentPart.offset) + "!" + code.slice(currentPart.offset);
+                            partCode = code.slice(0, currentPart.offset) + "/* part of the model --> */" + code.slice(currentPart.offset);
+                        }
+                        const responseContainer = document.getElementById('code2fab-response');
+                        const responsePre = document.createElement('pre');
+                        responseContainer.appendChild(responsePre);
+                        responseContainer.ariaLabel = "";
+                        updateStatusAndSpeak("The system reply is loading...")
+
+                        var newCode = "";
+                        var newResponse = "";
+
+                        var body = { sessionId: session_id, callId: callId, text: text, code: code, mode: mode, prevCode: prevCode, fullCode: fullCode, partCode: partCode };
+                        if (text != "") {
+                            body["prevCode"] = "";
+                        }
+
+                        fetch(serverUrl + '/api/describe', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(body)
+                        })
+                            .then(response => {
+
+                                console.log(response);
+                                const reader = response.body.getReader();
+                                function processStream({ done, value }) {
+                                    if (done) {
+                                        console.log('Stream completed');
+                                        updateStatusAndSpeak("Please check the system reply.");
+                                        var section = document.getElementById('code2fab-response');
+                                        section.focus();
+                                        
+                                        if (mode == "modify" && text != "") {
+                                            prevCode = document.getElementById('openscad-code').value;
+                                            newCode = newCode.replace("```openscad", "").replace("```", "").trim();
+                                            document.getElementById('openscad-code').value = newCode;
+                                            parseCode(newCode);
+                                            document.getElementById('undo-code').disabled = false;
+                                            document.getElementById('redo-code').disabled = true;
+                                            prevPrompt = text;
+                                            document.getElementById('generate-model').click();
+                                        } else {
+                                          responsePre.textContent = newResponse;
+                                          const responseContainer = document.getElementById('code2fab-response');
+                                          responseContainer.ariaLabel = newResponse;
+                                          var history = newResponse;
+                                          if (text != "") {
+                                            history = "Prompt: "+text+"\n\n"+history;
+                                          } else if (prevPrompt != "") {
+                                            history = "Prompt: "+prevPrompt+"\n\n"+history;
+                                            prevPrompt = "";
+                                          }
+                                          storeAndDisplayHistoryResponse(history);
+                                        }
+                                        
+                                        return;
+                                    }
+                                    const chunk = new TextDecoder().decode(value);
+
+                                    if (mode == "modify") {
+                                        newCode += chunk;
+                                    } else {
+                                        newResponse += chunk;
+                                    }
+
+                                    return reader.read().then(processStream);
+                                }
+                                reader.read().then(processStream);
+                                updateStatusAndSpeak("Please try again.");
+
+
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                updateStatusAndSpeak("Please try again.");
+                            });
+
+                        prevCode = code;
+
+
+
+                    }, 1);
+
+                } else {
+                    console.error("Failed to generate or retrieve images.");
+                    updateStatusAndSpeak("Failed to generate images.");
+                }
+            } catch (error) {
+                console.error('Error during generation or loading:', error);
+                updateStatusAndSpeak("An error occurred during image generation.");
+            }
+
+        }
+
+        document.getElementById('generate-model').addEventListener('click', async function () {
+            console.log("gen");
+
+            await genImageAndDescribe(currentImageIndex, "");
+
+        });
+        
+        document.getElementById('undo-code').addEventListener('click', async function () {
+          console.log(codeHistory);
+          console.log(historyIndex);
+        
+          var code = document.getElementById('openscad-code').value;
+          if (code != codeHistory[historyIndex]) {
+            codeHistory.push(code);
+          } else {
+            historyIndex--;
+          }
+          
+          if (historyIndex == 0) {
+            document.getElementById('undo-code').disabled = true;
+          }
+          document.getElementById('redo-code').disabled = false;
+          
+          document.getElementById('openscad-code').value = codeHistory[historyIndex];
+          prevCode = code;
+          parseCode(codeHistory[historyIndex]);
+          await genImageAndDescribe(currentImageIndex, "");
+        });
+        
+        document.getElementById('redo-code').addEventListener('click', async function () {
+          var code = document.getElementById('openscad-code').value;
+          historyIndex++;
+          var newCode = codeHistory[historyIndex];
+          
+          if (historyIndex == codeHistory.length-1) {
+            document.getElementById('redo-code').disabled = true;
+          }
+          document.getElementById('undo-code').disabled = false;
+          
+          document.getElementById('openscad-code').value = newCode;
+          prevCode = code;
+          parseCode(newCode);
+          await genImageAndDescribe(currentImageIndex, "");
+        });
+
+        document.getElementById('callGPT').addEventListener('click', async function () {
+            const textInput = document.getElementById('gpt-input').value.trim();
+            document.getElementById("gpt-input").value = "";
+            await genImageAndDescribe(currentImageIndex, textInput);
+        });
+
+        document.getElementById("gpt-input").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                document.getElementById("callGPT").click();
+            }
+        });
+
+        function modelPartSelected(e) {
+            prevCode = "";
+            
+            var selected = e.target;
+            
+            const prevPart = document.getElementById('part-' + currentPart.index);
+            prevPart.style.color = "black";
+            
+            console.log(currentPart);
+
+            selected.style.color = "blue";
+            
+            if (currentPart.index != selected.getAttribute("data-id")) {
+              currentPart.index = selected.getAttribute("data-id");
+              currentPart.code = selected.getAttribute("data-code");
+              currentPart.offset = selected.getAttribute("data-offset");
+              
+              document.getElementById('openscad-code').focus();
+              document.getElementById('openscad-code').setSelectionRange(currentPart.offset, parseInt(currentPart.offset)+currentPart.code.length);
+              document.getElementById('generate-model').click();
+            }
+            console.log(currentPart);
+        }
+
+
+        document.addEventListener('keydown', async function (event) {
+            if (event.shiftKey && event.key.toUpperCase() === 'V') {
+                //if (event.key === 'ArrowRight') {
+                currentImageIndex = (currentImageIndex + 1) % totalImages; // Increment index and loop back to 0
+                /*} else if (event.key === 'ArrowLeft') {
+                    currentImageIndex = (currentImageIndex - 1 + totalImages) % totalImages; // Decrement index and loop back to 6
+                }*/
+                //updateImageDisplay(currentImageIndex);
+                await genImageAndDescribe(currentImageIndex, "");
+                updateStatusAndSpeak(`Viewing image number ${currentImageIndex}.`);
+            }
+
+            if (event.altKey && (event.key === '!' || event.key === '@' || event.key === '#')) {
+                var col = '1';
+                if (event.key === '@') {
+                    col = '2';
+                } else if (event.key === '#') {
+                    col = '3';
+                }
+                var column = document.getElementById('col' + col);
+                column.focus();
+            }
+
+            if (event.shiftKey && event.altKey) {
+                if (event.key.toUpperCase() == 'G') {
+                    await genImageAndDescribe(currentImageIndex, "");
+                } else if (event.key.toUpperCase() == 'D') {
+                    var section = document.getElementById('code2fab-response');
+                    section.focus();
+                } else if (event.key.toUpperCase() == 'E') {
+                    var section = document.getElementById('openscad-code');
+                    section.focus();
+                } else if (event.key.toUpperCase() == 'S') {
+                    saveCode();
+                } else if (event.key.toUpperCase() == 'O') {
+                    document.getElementById('file-input').click();
+                    var section = document.getElementById('openscad-code');
+                    section.focus();
+                    prevCode = "";
+                } else if (event.key.toUpperCase() == 'H') {
+                    const instructions = document.getElementById('placeholder');
+                    instructions.style["display"] = "block";
+                    instructions.focus();
+                } else if (event.key.toUpperCase() == 'C') {
+                    var section = document.getElementById('toolbar');
+                    section.focus();
+                }
+            }
+        });
+
+
+        function updateImageDisplay(index) {
+            const imageElement = document.getElementById('modelImage');
+            const placeholder = document.getElementById('placeholder');
+
+            // Check if the index is within the valid range
+            if (index >= 0 && index <= 6) {
+                const imagePath = `${imageBasePath}${index}.png`;
+                imageElement.src = imagePath;
+                imageElement.onerror = function () {
+                    // If the image fails to load, hide the image and show the placeholder
+                    imageElement.classList.add('hidden');
+                    placeholder.classList.remove('hidden');
+                };
+                imageElement.onload = function () {
+                    // If the image loads successfully, show the image and hide the placeholder
+                    imageElement.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                };
+            } else {
+                // If the index is out of the valid range, hide the image and show the placeholder
+                imageElement.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+        }
+
+        function saveCode() {
+            const code = document.getElementById('openscad-code').value;
+            let fileName = prompt("Enter file name (leave blank for automatic naming):");
+
+            if (fileName === null) {
+                return;
+            }
+
+            if (fileName.trim() === '') {
+                fileName = undefined;
+            } else {
+                if (!fileName.endsWith('.scad')) {
+                    fileName += '.scad';
+                }
+            }
+
+            const link = document.createElement("a");
+            const content = code;
+            const file = new Blob([content], { type: 'text/plain' });
+            link.href = URL.createObjectURL(file);
+            link.download = fileName;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        // Save the code to a file
+        document.getElementById('save-code').addEventListener('click', function () {
+            saveCode();
+
+        });
+
+        // Load code from a file
+        function loadCode(fileName) {
+            fetch(serverUrl + `/load-code/${fileName}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('openscad-code').value = data.code;
+                    console.log(`Loaded code from file: ${fileName}`);
+                })
+                .catch(error => {
+                    console.error('Error loading code:', error);
+                    console.error('Error loading file.');
+                });
+        }
+
+        // Upload a file
+        document.getElementById('upload-file').addEventListener('click', function () {
+            document.getElementById('file-input').click();
+            var section = document.getElementById('openscad-code');
+            section.focus();
+            prevCode = "";
+            document.getElementById('undo-code').disabled = false;
+            document.getElementById('redo-code').disabled = true;
+            document.getElementById('code-changes').innerHTML = "";
+        });
+        document.getElementById('file-input').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('openscad-code').value = e.target.result;
+                console.log(`Uploaded file: ${file.name}`);
+                parseCode(document.getElementById('openscad-code').value);
+                document.getElementById('undo-code').disabled = false;
+                document.getElementById('redo-code').disabled = true;
+                genImageAndDescribe(currentImageIndex, "");
+            };
+            reader.readAsText(file);
+        });
+
+
+
+        function getDisplayTree(root, child, index, level) {
+
+
+            let tree = "<li style=\"padding-left: 10px;\" aria-labelledby=\"part-" + root.id + "\"  >"
+                /*+ "<input type=\"checkbox\" id=\"part-" + root.id + "\" name=\"parts\" value=\"" + root.id + "\" data-offset=\"" + child.start + "\" data-code=\"" + child.code + "\"  aria-labelledby=\"part-" + root.id + "-label\" role=\"checkbox\" tabindex=\"-1\" onchange=\"modelPartSelected(event)\">"*/
+                + "<button id=\"part-" + root.id + "\" onclick=\"modelPartSelected(event)\" tabindex=\"0\" data-id=\"" + root.id + "\" data-offset=\"" + child.start + "\" data-code=\"" + child.code + "\" aria-label=\"level "+level+" "+child.name+"\" aria-level=\""+level+"\" role=\"listitem\" > Level "+level+" " + child.name + " </button>";
+
+            if (root.id == -1 || root.children.length == 0) {
+                return tree + "</li>";
+            }
+            const children = root.children;
+
+            tree = tree + "<ul style=\"padding-left: 10px;\" role=\"list\">";
+            for (let i = 0; i < children.length; i++) {
+                tree = tree + getDisplayTree(parts[children[i].id], children[i], index + (i + 1) + ".", level+1);
+            }
+            tree = tree + "</ul></li>";
+            return tree;
+        }
+
+        function findModule(name) {
+            for (let i = 0; i < parts.length; i++) {
+                if (parts[i].name == name) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        const primitives = ["circle", "square", "polygon", "text", "import", "projection", "sphere", "cube", "cylinder", "polyhedron", "linear_extrude", "rotate_extrude", "surface"];
+        function getChildren(code, offset, fullcode) {
+            let call_regexp = /\b(\w+)\s*\(([^)]*)\)\s*;/g;
+            let calls = [...code.matchAll(call_regexp)];
+
+            let children = [];
+            calls.forEach((match) => {
+                let call = match[1] + "(" + match[2] + ")";
+                let moduleId = findModule(match[1]);
+                let primId = primitives.indexOf(match[1]);
+                if (moduleId != -1) {
+                    children.push({
+                        id: parts[moduleId].id,
+                        name: match[1],
+                        code: call,
+                        start: offset + match.index,
+                    });
+                }
+
+            });
+
+            let names = [];
+            for (let i = 0; i < children.length; i++) {
+                names.push(children[i].name);
+            }
+            for (let i = 0; i < children.length; i++) {
+                for (let j = 0; j < names.length; j++) {
+                    if (i != j && children[i].name == names[j]) {
+                        children[i].name = children[i].code;
+                        break;
+                    }
+                }
+            }
+
+            return children;
+        }
+
+        function parseCode(code) {
+            parts = [];
+            currentPart = { index: 0, code: "", offset: 0 };
+            parts.push({
+                id: 0,
+                name: "Full Model",
+                description: "",
+                children: [],
+                code: "",
+                start: 0,
+                isModule: false
+            });
+
+            var globalCode = [];
+
+            let def_regexp = /\bmodule\s+(\w+)\s*\(([^)]*)\)\s*{/g;
+            let definitions = [...code.matchAll(def_regexp)];
+
+            var id = 1;
+            var prevModuleEnd = 0;
+            definitions.forEach((match) => {
+                let offset = code.substring(match.index);
+                let body = XRegExp.matchRecursive(offset, '\\{', '\\}')[0];
+
+                parts.push({
+                    id: id,
+                    name: match[1],
+                    description: "",
+                    children: [],
+                    code: match[0] + body + "}",
+                    start: match.index,
+                    isModule: true
+                });
+
+
+
+                globalCode.push({ start: prevModuleEnd, code: code.slice(prevModuleEnd, match.index) });
+
+                prevModuleEnd = match.index + match[0].length + body.length + 1;
+                id++;
+            });
+            
+            globalCode.push({ start: prevModuleEnd, code: code.slice(prevModuleEnd) });
+            
+            
+            for (let i = 0; i < primitives.length; i++) {
+                parts.push({
+                    id: parts.length,
+                    name: primitives[i],
+                    description: "",
+                    children: [],
+                    code: "",
+                    start: -1,
+                    isModule: false
+                });
+            }
+            
+
+            globalCode.forEach((section) => {
+                parts[0].children = parts[0].children.concat(getChildren(section.code, section.start, code));
+            });
+
+            parts.forEach((part) => {
+                if (part.id != 0) {
+                    part.children = getChildren(part.code, part.start, code);
+                }
+            });
+
+            console.log(parts);
+
+            // generate display tree
+            var tree = getDisplayTree(parts[0], parts[0], "", 1);
+            document.getElementById('openscad-code2').innerHTML = "<ul id=\"parts-tree\" aria-label=\"Parts of the model\" role=\"list\">" + tree + "</ul>";
+            const curPart = document.getElementById('part-' + currentPart.index);
+            curPart.checked = true;
+            parts[0].code = code;
+
+        }
+
+        // on code change
+        document.getElementById('openscad-code').addEventListener('change', function () {
+            var code = document.getElementById('openscad-code').value;
+            parseCode(code);
+            
+            document.getElementById('undo-code').disabled = false;
+            document.getElementById('redo-code').disabled = true;
+
+        });
+    </script>
+
+
+
+</body>
+
+</html>
