@@ -175,6 +175,7 @@ def gen_image(views, code, output_dir):
     for index in views:
         view = views[index]
         output_path = f'{output_dir}/{index}.png'
+        #print(output_path)
         
         current_process = subprocess.Popen(
             ["openscad", "-o", output_path, "--camera="+view, "--viewall", "--autocenter", "--imgsize=1024,1024", join(output_dir, file)],
