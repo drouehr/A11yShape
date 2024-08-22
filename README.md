@@ -14,7 +14,7 @@ Run:
 ngrok.exe config edit
 ```
 
-Set the contents of ngrok.yml to be the same as the attached file
+Set the contents of ngrok.yml to be the same as the ngrok.yml file in this repo
 
 Change the hostname of frontend and backend
 
