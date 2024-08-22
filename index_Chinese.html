@@ -263,17 +263,40 @@
             historyContainer.prepend(responseElement);
         }**/
 
-        async function storeAndDisplayHistoryResponse(newResponse) {
+        async function storeAndDisplayHistoryResponse(newResponse, code) {
+            const id = historyResponses.length;
             const historyContainer = document.getElementById('history-responses');
+            const responseButton = document.createElement('button');
             const responseElement = document.createElement('pre');
             responseElement.classList.add('mb-2', 'p-2', 'border', 'rounded-md', 'bg-gray-100', 'text-gray-500');
             responseElement.setAttribute('role', 'history response');
             responseElement.setAttribute('tabindex', '0');
-            historyContainer.prepend(responseElement);
+            responseElement.setAttribute('data-id', id);
+            responseElement.setAttribute('onclick', "historySelected(event)");
+            responseElement.style["text-align"] = "left";
+            responseButton.prepend(responseElement);
+            historyContainer.prepend(responseButton);
 
             const formData = new FormData();
             formData.append('text', newResponse);
             responseElement.textContent = newResponse;
+            
+            historyResponses.push({"id": id, "response": newResponse, "code": code});
+            //console.log(historyResponses);
+        }
+        
+        function historySelected(e) {
+            
+            var selected = e.target;
+            const id = parseInt(selected.getAttribute("data-id"));
+            if (id < 0 || id >= historyResponses.length) {
+              return;
+            }
+            const hist = historyResponses[id];
+            //console.log(hist);
+            //prevCode = document.getElementById('openscad-code').value;
+            document.getElementById('openscad-code').value = hist.code;
+            document.getElementById('generate-model').click();
         }
         
         function codeChangeSelected(e) {
@@ -349,7 +372,7 @@
 
                 console.log(generateData);
 
-                if (generateData.message && generateData.message === "Images generated successfully图像生成成功") {
+                if (generateData.message && generateData.message === "Images generated successfully") {
                     updateStatusAndSpeak("Images have been successfully generated.");
 
                     const mode = generateData.mode;
@@ -446,7 +469,7 @@
                                             history = "Prompt: "+prevPrompt+"\n\n"+history;
                                             prevPrompt = "";
                                           }
-                                          storeAndDisplayHistoryResponse(history);
+                                          storeAndDisplayHistoryResponse(history, code);
                                         }
                                         
                                         return;

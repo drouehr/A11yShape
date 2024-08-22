@@ -242,7 +242,7 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
         
     elif len(prevCode) > 0:
         content = [
-                    {"type": "text", "text": "Given the two versions of a 3D model and its OpenSCAD code, describe the changes between the first "+str(len(prevImgs))+" images and code (referred to as 以前的模型) and the last "+str(len(imgs))+" images and code (referred to as 现在的模型), focusing on the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). List which lines of the code were added, removed, or changed. 请使用中文返回结果"},
+                    {"type": "text", "text": "Given the two versions of a 3D model and its OpenSCAD code, with the last "+str(len(imgs))+" images and code referred to as 现在的模型 and the first "+str(len(prevImgs))+" images and code referred to as 以前的模型, describe the changes between the two versions, focusing on the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). List which lines of the code were added, removed, or changed. 请使用中文返回结果"},
                     {"type": "text", "text": prevCode},
                 ]
         for img in prevImgs:
@@ -428,7 +428,7 @@ def generate_images():
             f.write(json.dumps(logData)+'\n')
         
         
-        return jsonify({"message": "Images generated successfully图像生成成功", "mode": mode, "changes": changes, "image": encoded_imgs[0], "thumbnail": encoded_imgs_sm[0], "fullImg": encoded_imgs_full[0]})
+        return jsonify({"message": "Images generated successfully", "mode": mode, "changes": changes, "image": encoded_imgs[0], "thumbnail": encoded_imgs_sm[0], "fullImg": encoded_imgs_full[0]})
     except Exception as e:
         print(f"Execution error: {e}")
         logData["error"] = e

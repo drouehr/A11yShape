@@ -259,7 +259,7 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
         
     elif len(prevCode) > 0:
         content = [
-                    {"type": "text", "text": "Given the two versions of a 3D model and its OpenSCAD code, describe the changes between the first "+str(len(prevImgs))+" images and code (referred to as the previous model) and the last "+str(len(imgs))+" images and code (referred to as the current model), focusing on the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). List which lines of the code were added, removed, or changed."},
+                    {"type": "text", "text": "Given the two versions of a 3D model and its OpenSCAD code, with the last "+str(len(imgs))+" images and code referred to as the current model and the first "+str(len(prevImgs))+" images and code referred to as the previous model, describe the changes between the two versions, focusing on the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). List which lines of the code were added, removed, or changed."},
                     {"type": "text", "text": prevCode},
                 ]
         for img in prevImgs:
