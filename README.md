@@ -34,3 +34,19 @@ in the code2fab folder run:
 python app.py
 python -m http.server 9000
 ```
+
+## Updating changes to the server
+
+In the code2fab folder on the server, run:
+
+```
+git pull
+```
+
+Stop the frontend and backend and restart with:
+
+```
+python app.py
+python -m http.server 9000
+```
+
