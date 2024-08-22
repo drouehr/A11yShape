@@ -179,7 +179,7 @@
 
     <script src="https://unpkg.com/xregexp/xregexp-all.js"></script>
     <script>
-        const serverUrl = 'http://128.46.81.40:3000'
+        const serverUrl = 'https://code2fab.ngrok.io'
 
         // Display and update the status
         const statusDisplay = document.getElementById('statusText');
@@ -349,7 +349,7 @@
 
                 console.log(generateData);
 
-                if (generateData.message && generateData.message === "Images generated successfully") {
+                if (generateData.message && generateData.message === "Images generated successfully图像生成成功") {
                     updateStatusAndSpeak("Images have been successfully generated.");
 
                     const mode = generateData.mode;

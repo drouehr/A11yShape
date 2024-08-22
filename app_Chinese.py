@@ -106,7 +106,7 @@ manager = autogen.GroupChatManager(
 app = Flask(__name__)
 CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
-PORT = int(os.environ.get("PORT", 3000))
+PORT = int(os.environ.get("PORT", 4000))
 
 
 
@@ -220,7 +220,7 @@ availableFunctions = [
 ]
 
 def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs):
-    instructions = "描述这个3D模型的视觉细节，以便盲人用户可以理解这个模型（例如，形状，位置，姿势，样子与状态）。这些图片是同一个模型的不同角度的视图。"
+    instructions = "描述这个3D模型的视觉细节，以便盲人用户可以理解这个模型（例如，形状，位置，姿势，样子与状态）"
     if len(text) > 0:
         instructions = text
     
@@ -242,7 +242,7 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
         
     elif len(prevCode) > 0:
         content = [
-                    {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions+". Describe the changes between the first "+str(len(prevImgs))+" images and code (referred to as the previous model) and the last "+str(len(imgs))+" images and code (referred to as the current model). List which lines of the code were added, removed, or changed.请使用中文返回结果"},
+                    {"type": "text", "text": "Given the two versions of a 3D model and its OpenSCAD code, describe the changes between the first "+str(len(prevImgs))+" images and code (referred to as 以前的模型) and the last "+str(len(imgs))+" images and code (referred to as 现在的模型), focusing on the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). List which lines of the code were added, removed, or changed. 请使用中文返回结果"},
                     {"type": "text", "text": prevCode},
                 ]
         for img in prevImgs:
@@ -272,8 +272,8 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
                     }})
     
     if len(code) > 0:
-        content.append({"type": "text", "text": "请给出一个简短总结，以便盲人用户能够理解。输出不应该有格式，因为它将被屏幕阅读器读取。请注意：不要提及盲人用户。不要提到有多个图像。不要单独描述每个角度。同时描述应该基于模型的图像而不是代码。"})
-    
+        content.append({"type": "text", "text": "你必须首先给出一个句子的简单总结，然后再提供详细的以便盲人能够理解的细节。输出不应该有格式，因为它将被屏幕阅读器读取。请注意：不要提及盲人用户。这些图片是同一个模型的不同角度的视图。不要提到有多个图像。不要单独描述每个角度。同时描述应该基于模型的图像而不是代码。"})
+
     return content
 
 

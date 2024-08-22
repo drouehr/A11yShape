@@ -237,7 +237,7 @@ availableFunctions = [
 ]
 
 def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs):
-    instructions = "describe the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). The images are of the same model at different angles"
+    instructions = "describe the visual details such that a blind user could understand it (eg. shape, position, posture, pictures)"
     if len(text) > 0:
         instructions = text
     
@@ -259,7 +259,7 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
         
     elif len(prevCode) > 0:
         content = [
-                    {"type": "text", "text": "Given the 3D model and its OpenSCAD code, "+instructions+". Describe the changes between the first "+str(len(prevImgs))+" images and code (referred to as the previous model) and the last "+str(len(imgs))+" images and code (referred to as the current model). List which lines of the code were added, removed, or changed."},
+                    {"type": "text", "text": "Given the two versions of a 3D model and its OpenSCAD code, describe the changes between the first "+str(len(prevImgs))+" images and code (referred to as the previous model) and the last "+str(len(imgs))+" images and code (referred to as the current model), focusing on the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). List which lines of the code were added, removed, or changed."},
                     {"type": "text", "text": prevCode},
                 ]
         for img in prevImgs:
@@ -289,7 +289,7 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
                     }})
     
     if len(code) > 0:
-        content.append({"type": "text", "text": "Give a short answer or summary first such that a blind user could understand it. The output should not have formatting since it will be read by a screenreader. Do not mention blind users. Do not mention that there are multiple images. Do not describe each angle separately. The description should be based on the images of the model rather than the code."})
+        content.append({"type": "text", "text": "You must give a one sentence answer or summary first, followed by more details such that a blind user could understand it. The output should not have formatting since it will be read by a screenreader. Do not mention blind users. The images are of the same model at different angles. Do not mention that there are multiple images. Do not describe each angle separately. The description should be based on the images of the model rather than the code."})
     
     return content
 
