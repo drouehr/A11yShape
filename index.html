@@ -251,6 +251,11 @@
         var codeHistory = [""];
         var historyIndex = 0;
         var prevPrompt = "";
+        
+        const dingSound = new Audio("static/ding.wav");
+        const errorSound = new Audio("static/error.wav");
+        const clockSound = new Audio("static/tick.wav");
+        clockSound.loop = true;
 
         /**function storeAndDisplayHistoryResponse(newResponse) {
             historyResponses.unshift(newResponse); 
@@ -335,6 +340,7 @@
         }
 
         async function genImageAndDescribe(index, text) {
+            clockSound.play();
             var callId = new Date().getTime();
             var code = document.getElementById('openscad-code').value;
             console.log(codeHistory);
@@ -472,6 +478,9 @@
                                           storeAndDisplayHistoryResponse(history, code);
                                         }
                                         
+                                        clockSound.pause();
+                                        clockSound.currentTime = 0;
+                                        dingSound.play();
                                         return;
                                     }
                                     const chunk = new TextDecoder().decode(value);
