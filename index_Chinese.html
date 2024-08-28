@@ -636,27 +636,32 @@
         });
 
         function modelPartSelected(e) {
-            prevCode = "";
-            
-            var selected = e.target;
-            
-            const prevPart = document.getElementById('part-' + currentPart.index);
-            prevPart.style.color = "black";
-            
-            console.log(currentPart);
-
-            selected.style.color = "blue";
-            
-            if (currentPart.index != selected.getAttribute("data-id")) {
-              currentPart.index = selected.getAttribute("data-id");
-              currentPart.code = selected.getAttribute("data-code");
-              currentPart.offset = selected.getAttribute("data-offset");
+            try {
+              prevCode = "";
               
-              document.getElementById('openscad-code').focus();
-              document.getElementById('openscad-code').setSelectionRange(currentPart.offset, parseInt(currentPart.offset)+currentPart.code.length);
-              document.getElementById('generate-model').click();
+              var selected = e.target;
+              
+              const prevPart = document.getElementById('part-' + currentPart.index);
+              prevPart.style.color = "black";
+              
+              console.log(currentPart);
+
+              selected.style.color = "blue";
+              
+              if (currentPart.index != selected.getAttribute("data-id")) {
+                currentPart.index = selected.getAttribute("data-id");
+                currentPart.code = selected.getAttribute("data-code");
+                currentPart.offset = selected.getAttribute("data-offset");
+                
+                document.getElementById('openscad-code').focus();
+                document.getElementById('openscad-code').setSelectionRange(currentPart.offset, parseInt(currentPart.offset)+currentPart.code.length);
+                document.getElementById('generate-model').click();
+              }
+              console.log(currentPart);
+            } catch (error) {
+              parseCode(document.getElementById('openscad-code').value);
+              document.getElementById('status-message').innerHTML = "无法选模型部件。请重试";
             }
-            console.log(currentPart);
         }
 
 
