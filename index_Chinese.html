@@ -92,9 +92,14 @@
             <textarea tabindex="0" aria-labelledby="editor-input-heading" role="textbox"
                 class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive" id="openscad-code"
                 placeholder="请在此处输入OpenSCAD代码..."
-                style="resize: none; height: calc(75vh - 40px); width: calc(100% - 4px);"
+                style="resize: none; height: calc(70vh - 40px); width: calc(100% - 4px);"
                 data-hover-text="请在此处输入OpenSCAD代码..."></textarea>
                 
+            <h2 role="heading" id="status-heading">错误表</h2>
+            <div tabindex="0" class="w-full h-1/2 overflow-auto"
+                id="status-message" aria-labelledby="status-heading" role="alert" style="height: 5vh;">
+            </div>
+            
             <h2 role="heading" id="changes-heading">代码更改</h2>
             <ul tabindex="0" class="w-full h-1/2 overflow-auto"
                 id="code-changes" aria-labelledby="changes-heading" role="list" style="height: 12vh;">
@@ -179,7 +184,7 @@
 
     <script src="https://unpkg.com/xregexp/xregexp-all.js"></script>
     <script>
-        const serverUrl = 'https://code2fab.ngrok.io'
+        const serverUrl = 'https://code2fab1.ngrok.io'
 
         // Display and update the status
         const statusDisplay = document.getElementById('statusText');
@@ -251,6 +256,11 @@
         var codeHistory = [""];
         var historyIndex = 0;
         var prevPrompt = "";
+        
+        const dingSound = new Audio("static/ding.wav");
+        const errorSound = new Audio("static/error.wav");
+        const clockSound = new Audio("static/tick.wav");
+        clockSound.loop = true;
 
         /**function storeAndDisplayHistoryResponse(newResponse) {
             historyResponses.unshift(newResponse); 
@@ -335,6 +345,7 @@
         }
 
         async function genImageAndDescribe(index, text) {
+            clockSound.play();
             var callId = new Date().getTime();
             var code = document.getElementById('openscad-code').value;
             console.log(codeHistory);
@@ -351,10 +362,9 @@
                 code = code.slice(0, currentPart.offset) + "#" + code.slice(currentPart.offset);
                 console.log(code);
             }
-            const responseContainer = document.getElementById('code2fab-response');
-            responseContainer.innerHTML = '<pre></pre>';
-            const pre = responseContainer.querySelector('pre');
-            //console.log("Generating images for code:", code);
+            
+            const statusContainer = document.getElementById('status-message');
+            statusContainer.innerHTML = "";
 
             try {
                 // Generate images from code
@@ -419,11 +429,6 @@
                             code = code.slice(0, currentPart.offset) + "!" + code.slice(currentPart.offset);
                             partCode = code.slice(0, currentPart.offset) + "/* part of the model --> */" + code.slice(currentPart.offset);
                         }
-                        const responseContainer = document.getElementById('code2fab-response');
-                        const responsePre = document.createElement('pre');
-                        responseContainer.appendChild(responsePre);
-                        responseContainer.ariaLabel = "";
-                        updateStatusAndSpeak("The system reply is loading...")
 
                         var newCode = "";
                         var newResponse = "";
@@ -446,8 +451,6 @@
                                     if (done) {
                                         console.log('Stream completed');
                                         updateStatusAndSpeak("Please check the system reply.");
-                                        var section = document.getElementById('code2fab-response');
-                                        section.focus();
                                         
                                         if (mode == "modify" && text != "") {
                                             prevCode = document.getElementById('openscad-code').value;
@@ -458,19 +461,30 @@
                                             document.getElementById('redo-code').disabled = true;
                                             prevPrompt = text;
                                             document.getElementById('generate-model').click();
-                                        } else {
-                                          responsePre.textContent = newResponse;
-                                          const responseContainer = document.getElementById('code2fab-response');
-                                          responseContainer.ariaLabel = newResponse;
-                                          var history = newResponse;
-                                          if (text != "") {
-                                            history = "Prompt: "+text+"\n\n"+history;
-                                          } else if (prevPrompt != "") {
-                                            history = "Prompt: "+prevPrompt+"\n\n"+history;
-                                            prevPrompt = "";
-                                          }
-                                          storeAndDisplayHistoryResponse(history, code);
+                                            return;
                                         }
+                                        
+                                        const responseContainer = document.getElementById('code2fab-response');
+                                        responseContainer.innerHTML = '';
+                                        const responsePre = document.createElement('pre');
+                                        responseContainer.appendChild(responsePre);
+                                        responseContainer.ariaLabel = "";
+                                        responsePre.textContent = newResponse;
+                                        responseContainer.ariaLabel = newResponse;
+                                        var history = newResponse;
+                                        if (text != "") {
+                                          history = "Prompt: "+text+"\n\n"+history;
+                                        } else if (prevPrompt != "") {
+                                          history = "Prompt: "+prevPrompt+"\n\n"+history;
+                                          prevPrompt = "";
+                                        }
+                                        storeAndDisplayHistoryResponse(history, code);
+
+                                        clockSound.pause();
+                                        clockSound.currentTime = 0;
+                                        dingSound.play();
+
+                                        responseContainer.focus();
                                         
                                         return;
                                     }
@@ -495,7 +509,9 @@
                             });
 
                         prevCode = code;
-
+                        if (fullCode != "") {
+                          prevCode = fullCode;
+                        }
 
 
                     }, 1);
@@ -503,10 +519,20 @@
                 } else {
                     console.error("Failed to generate or retrieve images.");
                     updateStatusAndSpeak("Failed to generate images.");
+                    clockSound.pause();
+                    errorSound.play();
+                    if (generateData.message == "OpenSCAD code error") {
+                      statusContainer.innerHTML = '<pre>'+generateData.error+'<\pre>';
+                    } else {
+                      statusContainer.innerHTML = "无法生成系统回复。请重试";
+                    }
                 }
             } catch (error) {
                 console.error('Error during generation or loading:', error);
                 updateStatusAndSpeak("An error occurred during image generation.");
+                clockSound.pause();
+                errorSound.play();
+                statusContainer.innerHTML = "无法生成系统回复。请重试";
             }
 
         }
