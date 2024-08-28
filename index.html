@@ -95,9 +95,12 @@
                 style="resize: none; height: calc(70vh - 40px); width: calc(100% - 4px);"
                 data-hover-text="Enter OpenSCAD code here."></textarea>
                 
-            <h2 role="heading" id="status-heading">Errors</h2>
-            <div tabindex="0" class="w-full h-1/2 overflow-auto"
-                id="status-message" aria-labelledby="status-heading" role="alert" style="height: 5vh;">
+            <div tabindex="0" aria-labelledby="status-heading" role="status">
+              <h2 role="heading" id="status-heading">Errors</h2>
+              <div class="w-full h-1/2 overflow-auto"
+                  id="status-message" style="height: 5vh;">
+                  
+              </div>
             </div>
             
             <h2 role="heading" id="changes-heading">Code Changes</h2>
@@ -143,6 +146,11 @@
             <div id="history-responses-area" class="mt-4 pt-4 border-t border-gray-300 overflow-y: scroll"
                 role="region" aria-label="History" tabindex="0">
                 <h2 role="heading" id="history-heading">Response History:</h2>
+                <button aria-label="Clear history"
+                    class="flex justify-end items-end text-black font-bold py-1 px-4 rounded border border-black m-2"
+                    id="clearHistory">
+                    Clear
+                </button>
                 <div id="history-responses" style="height: 22vh; overflow-y: auto;"></div>
             </div>
         </div>
@@ -275,24 +283,34 @@
 
         async function storeAndDisplayHistoryResponse(newResponse, code) {
             const id = historyResponses.length;
-            const historyContainer = document.getElementById('history-responses');
-            const responseButton = document.createElement('button');
-            const responseElement = document.createElement('pre');
-            responseElement.classList.add('mb-2', 'p-2', 'border', 'rounded-md', 'bg-gray-100', 'text-gray-500');
-            responseElement.setAttribute('role', 'history response');
-            responseElement.setAttribute('tabindex', '0');
-            responseElement.setAttribute('data-id', id);
-            responseElement.setAttribute('onclick', "historySelected(event)");
-            responseElement.style["text-align"] = "left";
-            responseButton.prepend(responseElement);
-            historyContainer.prepend(responseButton);
-
-            const formData = new FormData();
-            formData.append('text', newResponse);
-            responseElement.textContent = newResponse;
-            
             historyResponses.push({"id": id, "response": newResponse, "code": code});
-            //console.log(historyResponses);
+            
+            const historyContainer = document.getElementById('history-responses');
+            historyContainer.innerHTML = "";
+            
+            let start = 0;
+            if (historyResponses.length > 3) {
+              start = historyResponses.length - 3;
+            }
+            for (let i = start; i < historyResponses.length; i++) {
+              const responseButton = document.createElement('button');
+              const responseElement = document.createElement('pre');
+              responseElement.classList.add('mb-2', 'p-2', 'border', 'rounded-md', 'bg-gray-100', 'text-gray-500');
+              responseElement.setAttribute('role', 'history response');
+              responseElement.setAttribute('tabindex', '0');
+              responseElement.setAttribute('data-id', id);
+              responseElement.setAttribute('onclick', "historySelected(event)");
+              responseElement.style["text-align"] = "left";
+              responseButton.prepend(responseElement);
+              historyContainer.prepend(responseButton);
+
+              const formData = new FormData();
+              formData.append('text', historyResponses[i].response);
+              responseElement.textContent = historyResponses[i].response;
+            }
+            
+            
+            console.log(historyResponses);
         }
         
         function historySelected(e) {
@@ -514,6 +532,7 @@
                                 updateStatusAndSpeak("Please try again.");
                                 clockSound.pause();
                                 errorSound.play();
+                                statusContainer.innerHTML = "Failed to generate a system reply. Please try again";
                             });
 
                         prevCode = code;
@@ -550,6 +569,11 @@
 
             await genImageAndDescribe(currentImageIndex, "");
 
+        });
+        
+        document.getElementById('clearHistory').addEventListener('click', async function () {
+            historyResponses = [];
+            document.getElementById('history-responses').innerHTML = '';
         });
         
         document.getElementById('undo-code').addEventListener('click', async function () {

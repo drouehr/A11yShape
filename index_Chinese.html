@@ -506,6 +506,9 @@
                             .catch(error => {
                                 console.error('Error:', error);
                                 updateStatusAndSpeak("Please try again.");
+                                clockSound.pause();
+                                errorSound.play();
+                                statusContainer.innerHTML = "无法生成系统回复。请重试";
                             });
 
                         prevCode = code;
