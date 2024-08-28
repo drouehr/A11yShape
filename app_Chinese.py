@@ -192,8 +192,8 @@ def gen_image(views, code, output_dir):
     for p in processes:
         out, err = p.communicate()
         if 'WARNING' in err or 'ERROR' in err:
-            #errors = [line for line in err.split('\n') if "WARNING" in line or 'ERROR' in line]
-            raise Exception('OpenSCAD code error: '+find_openscad_errors(code)) 
+            errors = [line for line in err.split('\n') if "WARNING" in line or 'ERROR' in line]
+            raise Exception('OpenSCAD code error: '+'\n'.join(errors)) 
         p.wait()
         
     for index in views:
