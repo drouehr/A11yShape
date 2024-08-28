@@ -289,8 +289,8 @@
             historyContainer.innerHTML = "";
             
             let start = 0;
-            if (historyResponses.length > 3) {
-              start = historyResponses.length - 3;
+            if (historyResponses.length > 10) {
+              start = historyResponses.length - 10;
             }
             for (let i = start; i < historyResponses.length; i++) {
               const responseButton = document.createElement('button');
@@ -310,7 +310,7 @@
             }
             
             
-            console.log(historyResponses);
+            //console.log(historyResponses);
         }
         
         function historySelected(e) {
