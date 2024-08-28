@@ -246,7 +246,7 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
     instructions = """
     描述这个3D模型的视觉细节，以便盲人用户可以理解这个模型（例如，形状，位置，姿势，样子与状态）。
     在描述过程中，请充分考虑到盲人用户的需求，确保描述足够详细并且站在盲人的角度，以便他们能够理解模型的细节。
-    除了以上的部分，为了帮助盲人建立想象，请遵守以下原则：！！！1.在描述模型的组成时候，必须描述模型部件之间的空间关系。 2.当你在涉及描述模型部件的大小角度等可以量化的特征时，你不能使用模糊的描述例如“更大一些”，而是使用具体的数值（如果有），或者使用相对的大小关系例如“<组件1>是<组件2>的2倍大”这种描述方式。 3. 如果你的描述将涉及到比喻，请确保这是盲人生活中可以接触到的物品或者了解的概念。比如说当你描述这是一个蜘蛛的话，大多数视力正常的人可能看到过就知道是什么形状，但是盲人只知道那些触摸过的物品的形状。 4.请表现出友善的态度，让盲人用户觉得自己不是面对一个冷冰冰的机器人，而是帮助他们理解模型的人类朋友。!!!
+    除了以上的部分，为了帮助盲人建立想象，请遵守以下原则：！！！1.在描述模型的组成时候，必须描述模型部件之间的空间关系。 2.当你在涉及描述模型部件的大小角度等可以量化的特征时，你不能使用模糊的描述例如「更大一些」，而是使用具体的数值（如果有），或者使用相对的大小关系例如「<组件1>是<组件2>的2倍大」这种描述方式。 3. 如果你的描述将涉及到比喻，请确保这是盲人生活中可以接触到的物品或者了解的概念。比如说当你描述这是一个蜘蛛的话，大多数视力正常的人可能看到过就知道是什么形状，但是盲人只知道那些触摸过的物品的形状。 4.请表现出友善的态度，让盲人用户觉得自己不是面对一个冷冰冰的机器人，而是帮助他们理解模型的人类朋友。!!!
     """
     if len(text) > 0:
         instructions = text
@@ -255,12 +255,12 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
         instructions = """
         比较这个模型部件与整体模型的关系,使盲人用户也能理解(例如空间位置、距离、交叉、大小、角度、方向、与其他部件的相对位置等)。描述这个部件如何影响模型的整体形状。如果适用,可以提及这个部件在什么操作中使用,以及是否不可见。
         请注意你的回复的重点有两个：1.描述模型部件的特征，例如大小，形状，位置等。2.描述模型部件与整体模型的关系。 关于整体模型的描述，用户在上一步中已经获得，所以只需要简单描述，目的是为了帮助盲人用户理解这个部件在整体模型中的位置和作用。 
-        除了以上的部分，为了帮助盲人建立想象，请遵守以下原则：！！！1.在描述外观或者部件与整体的关系的时候，必须描述准确描述空间关系。 2.当你在涉及描述模型部件的大小角度等可以量化的特征时，你不能使用模糊的描述例如“更大一些”，而是使用具体的数值（如果有），或者使用相对的大小关系例如“<组件1>是<组件2>的2倍大”这种描述方式。 3. 如果你的描述将涉及到比喻，请确保这是盲人生活中可以接触到的物品或者了解的概念，因为盲人只能类比那些触摸过的模型的形状。比如说当你描述这像一个蜘蛛的形状的话，可能盲人只知道蜘蛛是一种生物但是不知道形状是什么。 4.请表现出友善的态度，让盲人用户觉得自己不是面对一个冷冰冰的机器人，而是帮助他们理解模型的人类朋友。!!!
         """
         if len(text) > 0:
             instructions = text
         content = [
                     {"type": "text", "text": "Given the part of a 3D model and its OpenSCAD code, "+instructions+". The part of the model in the code is marked with the comment \"part of the model -->\". Do not mention it was marked with the comment. The first "+str(len(fullImgs))+" images are the full model in different angles with the part of the model highlighted in red and the last "+str(len(imgs))+" images are the part of the model in different angles.请使用中文返回自然语言部分结果。"},
+                    {"type": "text", "text": "除了以上的部分，为了帮助盲人建立想象，请遵守以下原则：！！！1.在描述外观或者部件与整体的关系的时候，必须描述准确描述空间关系。 2.当你在涉及描述模型部件的大小角度等可以量化的特征时，你不能使用模糊的描述例如「更大一些」，而是使用具体的数值（如果有），或者使用相对的大小关系例如「<组件1>是<组件2>的2倍大」这种描述方式。 3. 如果你的描述将涉及到比喻，请确保这是盲人生活中可以接触到的物品或者了解的概念，因为盲人只能类比那些触摸过的模型的形状。比如说当你描述这像一个蜘蛛的形状的话，可能盲人只知道蜘蛛是一种生物但是不知道形状是什么。 4.请表现出友善的态度，让盲人用户觉得自己不是面对一个冷冰冰的机器人，而是帮助他们理解模型的人类朋友。!!!"},
                     {"type": "text", "text": partCode},
                 ]
         
@@ -273,8 +273,9 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
         
     elif len(prevCode) > 0:
         content = [
-                    {"type": "text", "text": "Given the two versions of a 3D model and its OpenSCAD code, with the last "+str(len(imgs))+" images and code referred to as 现在的模型 and the first "+str(len(prevImgs))+" images and code referred to as 上一个模型, describe the changes between the two versions, focusing on the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). 除了以上的部分，为了帮助盲人建立想象，请遵守以下原则：！！！1.在涉及到模型的可视特征例如外观时候，请注意使用空间关系来帮助盲人用户理解。比如说当你描述这像一个蜘蛛的形状的话，可能盲人只知道蜘蛛是一种生物但是不知道形状是什么。 2.当涉及描述大小角度等可以量化的特征时，你不能使用模糊的描述例如“更大一些”，而是使用具体的数值（如果有），或者使用相对的大小关系例如“变大了两倍”这种描述方式。 3. 如果你的描述将涉及到比喻，请确保这是盲人生活中可以接触到的物品或者了解的概念，因为盲人只能类比触摸过的物品的形状。 4.请表现出友善的态度，让盲人用户觉得自己不是面对一个冷冰冰的机器人，而是帮助他们理解模型的人类朋友。!!!请使用中文表达结果"},
+                    {"type": "text", "text": "Given the two versions of a 3D model and its OpenSCAD code, with the last "+str(len(imgs))+" images and code referred to as 现在的模型 and the first "+str(len(prevImgs))+" images and code referred to as 上一个模型, describe the changes between the two versions, focusing on the visual details such that a blind user could understand it (eg. shape, position, posture, pictures). "},
                     {"type": "text", "text": prevCode},
+                    {"type": "text", "text": "除了以上的部分，为了帮助盲人建立想象，请遵守以下原则：！！！1.在涉及到模型的可视特征例如外观时候，请注意使用空间关系来帮助盲人用户理解。 2.当涉及描述大小角度等可以量化的特征时，你不能使用模糊的描述例如「更大一些」，而是使用具体的数值（如果有），或者使用相对的大小关系例如「变大了两倍」这种描述方式。 3. 如果你的描述将涉及到比喻，请确保这是盲人生活中可以接触到的物品或者了解的概念，因为盲人只能类比触摸过的物品的形状。 4.请表现出友善的态度，让盲人用户觉得自己不是面对一个冷冰冰的机器人，而是帮助他们理解模型的人类朋友。!!!请使用中文表达结果."},
                 ]
         for img in prevImgs:
             content.append({
@@ -289,9 +290,12 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
                     {"type": "text", "text": code},
                 ]
     elif len(text) > 0:
-        content = [{"type": "text", "text": text}]
+        content = [
+                    {"type": "text", "text": text},
+                    {"type": "text", "text": "和盲人对话时候，请遵守以下原则：！！！1.在需要向盲人描述模型时候，必须描述相对的空间关系。 2.当你在涉及描述大小角度等可以量化的特征时，你不能使用模糊的描述例如「更大一些”」，而是使用具体的数值（如果有），或者使用相对的大小关系例如「<组件1>是<组件2>的2倍大」这种描述方式。 3. 如果你的描述将涉及到比喻，请确保这是盲人生活中可以接触到的物品或者了解的概念。比如说当你描述这是一个蜘蛛的话，大多数视力正常的人可能看到过就知道是什么形状，但是盲人只知道那些触摸过的物品的形状。 4.请表现出友善的态度，让盲人用户觉得自己不是面对一个冷冰冰的机器人，而是帮助他们理解模型的人类朋友。!!!"},
+                ]
     else:
-        content = [{"type": "text", "text": "describe how to create a model with OpenScad，请使用中文返回结果"}]
+        content = [{"type": "text", "text": "describe how to create a model with OpenScad，请使用中文返回结果，请表现出友善的态度，让盲人用户觉得自己不是面对一个冷冰冰的机器人，而是帮助他们的人类朋友。"}]
     
     #print(content)
     
@@ -303,7 +307,7 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
                     }})
     
     if len(code) > 0:
-        content.append({"type": "text", "text": "你必须首先给出一个句子的简单总结，然后再提供详细的以便盲人能够理解的细节。输出不应该有格式，因为它将被屏幕阅读器读取。请注意：不要提及盲人用户。这些图片是同一个模型的不同角度的视图。不要提到有多个图像。不要单独描述每个角度。同时描述应该基于模型的图像而不是代码。除了以上的部分，为了帮助盲人建立想象，请遵守以下原则：！！！1.在描述外观或者部件与整体的关系的时候，必须描述准确描述空间关系。 2.当你在涉及描述模型部件的大小角度等可以量化的特征时，你不能使用模糊的描述例如“更大一些”，而是使用具体的数值（如果有），或者使用相对的大小关系例如“<组件1>是<组件2>的2倍大”这种描述方式。 3. 如果你的描述将涉及到比喻，请确保这是盲人生活中可以接触到的物品或者了解的概念，因为盲人只能类比那些触摸过的模型的形状。比如说当你描述这像一个蜘蛛的形状的话，可能盲人只知道蜘蛛是一种生物但是不知道形状是什么。 4.请表现出友善的态度，让盲人用户觉得自己不是面对一个冷冰冰的机器人，而是帮助他们理解模型的人类朋友。!!!"})
+        content.append({"type": "text", "text": "你必须首先给出一个句子的简单总结，然后再提供详细的以便盲人能够理解的细节。输出不应该有格式，因为它将被屏幕阅读器读取。请注意：不要提及盲人用户。这些图片是同一个模型的不同角度的视图。不要提到有多个图像。不要单独描述每个角度。同时描述应该基于模型的图像而不是代码。除了以上的部分，请表现出友善的态度，让盲人用户觉得自己不是面对一个冷冰冰的机器人，而是帮助他们理解模型的人类朋友。同时确保使用了空间关系来帮助盲人理解位置，如果可以使用可量化的数值就不要给出模糊的描述例如「大一些」，或者至少请使用对比的方式例如倍数来描述，使用比喻的时候请使用盲人生活中的常用概念!!!"})
 
     return content
 
