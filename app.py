@@ -162,8 +162,27 @@ def upload_image(image_path):
 
 current_process = None
 
+def find_openscad_errors(code):
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        temperature=0.0,
+        timeout=10,
+        #stream=True,
+        messages=[
+            {
+            "role": "user",
+            "content": [
+                    {"type": "text", "text": 'Describe all of the errors the OpenSCAD code. Each error should be outputted as a new line. Output only the errors and nothing else'},
+                    {"type": "text", "text": addLineNum(code)},
+                ],
+            }
+        ],
+    )
+    return response.choices[0].message.content.replace('`', '')
+
+
 def gen_image(views, code, output_dir):
-    code = code.encode('ascii',errors='ignore').decode()
+    code = code.encode('ascii',errors='ignore').decode().lower()
     
     file = 'model.scad'
     f = open(join(output_dir, file), "w")
@@ -190,6 +209,10 @@ def gen_image(views, code, output_dir):
         #print(index)
         
     for p in processes:
+        out, err = p.communicate()
+        if 'WARNING' in err or 'ERROR' in err:
+            #errors = [line for line in err.split('\n') if "WARNING" in line or 'ERROR' in line]
+            raise Exception('OpenSCAD code error: '+find_openscad_errors(code)) 
         p.wait()
         
     for index in views:
@@ -450,10 +473,12 @@ def generate_images():
         return jsonify({"message": "Images generated successfully", "mode": mode, "changes": changes, "image": encoded_imgs[0], "thumbnail": encoded_imgs_sm[0], "fullImg": encoded_imgs_full[0]})
     except Exception as e:
         print(f"Execution error: {e}")
-        logData["error"] = e
+        logData["error"] = str(e)
         with open('log.txt', 'a') as f:
             f.write(json.dumps(logData)+'\n')
-        return jsonify(error="Failed to generate images."), 500
+        if 'OpenSCAD code error: ' in str(e):
+            return jsonify({'message': "OpenSCAD code error", 'error': str(e).replace('OpenSCAD code error: ','')})
+        return jsonify({'message': "Failed to generate images.", 'error': str(e)}), 500
 
 @app.route("/api/describe", methods=["POST"])
 def describe():
@@ -554,7 +579,7 @@ def describe():
         logData["error"] = e
         with open('log.txt', 'a') as f:
             f.write(json.dumps(logData)+'\n')
-        return jsonify({"error": "Internal server error"}), 500
+        return jsonify({'message': "Internal server error", 'error': str(e)}), 500
 
 
 

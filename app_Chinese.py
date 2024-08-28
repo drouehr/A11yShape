@@ -147,7 +147,7 @@ def upload_image(image_path):
 current_process = None
 
 def gen_image(views, code, output_dir):
-    code = code.encode('ascii',errors='ignore').decode()
+    code = code.encode('ascii',errors='ignore').decode().lower()
 
     file = 'model.scad'
     f = open(join(output_dir, file), "w")

@@ -92,9 +92,14 @@
             <textarea tabindex="0" aria-labelledby="editor-input-heading" role="textbox"
                 class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive" id="openscad-code"
                 placeholder="Enter OpenSCAD code here"
-                style="resize: none; height: calc(75vh - 40px); width: calc(100% - 4px);"
+                style="resize: none; height: calc(70vh - 40px); width: calc(100% - 4px);"
                 data-hover-text="Enter OpenSCAD code here."></textarea>
                 
+            <h2 role="heading" id="status-heading">Errors</h2>
+            <div tabindex="0" class="w-full h-1/2 overflow-auto"
+                id="status-message" aria-labelledby="status-heading" role="alert" style="height: 5vh;">
+            </div>
+            
             <h2 role="heading" id="changes-heading">Code Changes</h2>
             <ul tabindex="0" class="w-full h-1/2 overflow-auto"
                 id="code-changes" aria-labelledby="changes-heading" role="list" style="height: 12vh;">
@@ -357,9 +362,10 @@
                 code = code.slice(0, currentPart.offset) + "#" + code.slice(currentPart.offset);
                 console.log(code);
             }
-            const responseContainer = document.getElementById('code2fab-response');
-            responseContainer.innerHTML = '<pre></pre>';
-            const pre = responseContainer.querySelector('pre');
+            
+            const statusContainer = document.getElementById('status-message');
+            statusContainer.innerHTML = "";
+            
             //console.log("Generating images for code:", code);
 
             try {
@@ -425,10 +431,7 @@
                             code = code.slice(0, currentPart.offset) + "!" + code.slice(currentPart.offset);
                             partCode = code.slice(0, currentPart.offset) + "/* part of the model --> */" + code.slice(currentPart.offset);
                         }
-                        const responseContainer = document.getElementById('code2fab-response');
-                        const responsePre = document.createElement('pre');
-                        responseContainer.appendChild(responsePre);
-                        responseContainer.ariaLabel = "";
+                        
                         updateStatusAndSpeak("The system reply is loading...")
 
                         var newCode = "";
@@ -450,10 +453,11 @@
                                 const reader = response.body.getReader();
                                 function processStream({ done, value }) {
                                     if (done) {
+                                        
+                                    
                                         console.log('Stream completed');
                                         updateStatusAndSpeak("Please check the system reply.");
-                                        var section = document.getElementById('code2fab-response');
-                                        section.focus();
+                                        
                                         
                                         if (mode == "modify" && text != "") {
                                             prevCode = document.getElementById('openscad-code').value;
@@ -464,23 +468,30 @@
                                             document.getElementById('redo-code').disabled = true;
                                             prevPrompt = text;
                                             document.getElementById('generate-model').click();
-                                        } else {
-                                          responsePre.textContent = newResponse;
-                                          const responseContainer = document.getElementById('code2fab-response');
-                                          responseContainer.ariaLabel = newResponse;
-                                          var history = newResponse;
-                                          if (text != "") {
-                                            history = "Prompt: "+text+"\n\n"+history;
-                                          } else if (prevPrompt != "") {
-                                            history = "Prompt: "+prevPrompt+"\n\n"+history;
-                                            prevPrompt = "";
-                                          }
-                                          storeAndDisplayHistoryResponse(history, code);
+                                            return;
                                         }
+                                        
+                                        const responseContainer = document.getElementById('code2fab-response');
+                                        responseContainer.innerHTML = '';
+                                        const responsePre = document.createElement('pre');
+                                        responseContainer.appendChild(responsePre);
+                                        responseContainer.ariaLabel = "";
+                                        responsePre.textContent = newResponse;
+                                        responseContainer.ariaLabel = newResponse;
+                                        var history = newResponse;
+                                        if (text != "") {
+                                          history = "Prompt: "+text+"\n\n"+history;
+                                        } else if (prevPrompt != "") {
+                                          history = "Prompt: "+prevPrompt+"\n\n"+history;
+                                          prevPrompt = "";
+                                        }
+                                        storeAndDisplayHistoryResponse(history, code);
                                         
                                         clockSound.pause();
                                         clockSound.currentTime = 0;
                                         dingSound.play();
+                                        
+                                        responseContainer.focus();
                                         return;
                                     }
                                     const chunk = new TextDecoder().decode(value);
@@ -501,21 +512,35 @@
                             .catch(error => {
                                 console.error('Error:', error);
                                 updateStatusAndSpeak("Please try again.");
+                                clockSound.pause();
+                                errorSound.play();
                             });
 
                         prevCode = code;
-
-
+                        if (fullCode != "") {
+                          prevCode = fullCode;
+                        }
+                        
 
                     }, 1);
 
                 } else {
                     console.error("Failed to generate or retrieve images.");
                     updateStatusAndSpeak("Failed to generate images.");
+                    clockSound.pause();
+                    errorSound.play();
+                    if (generateData.message == "OpenSCAD code error") {
+                      statusContainer.innerHTML = '<pre>'+generateData.error+'<\pre>';
+                    } else {
+                      statusContainer.innerHTML = "Failed to generate a system reply. Please try again";
+                    }
                 }
             } catch (error) {
                 console.error('Error during generation or loading:', error);
                 updateStatusAndSpeak("An error occurred during image generation.");
+                clockSound.pause();
+                errorSound.play();
+                statusContainer.innerHTML = "Failed to generate a system reply. Please try again";
             }
 
         }
