@@ -481,6 +481,21 @@
                                             return;
                                         }
                                         
+                                        if (generateData.changes != '') {
+                                          newResponse += "\n代码更改:"
+                                          const changes = JSON.parse(generateData.changes);
+                                          for(var i=0; i<changes.length; i++) {
+                                            var lines = "Lines "+changes[i].startLine+" - " + changes[i].endLine + ": ";
+                                            if (changes[i].startLine == -1) {
+                                              lines = "";
+                                            } else if (changes[i].startLine == changes[i].endLine) {
+                                              lines = "Line "+changes[i].startLine + ": ";
+                                            }
+                                            
+                                            newResponse += "\n"+lines+changes[i].description
+                                          }
+                                        }
+                                        
                                         const responseContainer = document.getElementById('code2fab-response');
                                         responseContainer.innerHTML = '';
                                         const responsePre = document.createElement('pre');

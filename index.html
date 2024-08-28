@@ -411,8 +411,8 @@
                     }
 					
                     if (generateData.changes != '') {
-						displayChanges(code, JSON.parse(generateData.changes));
-					}
+                      displayChanges(code, JSON.parse(generateData.changes));
+                    }
                     
 
                     const byteCharacters = atob(generateData.image);
@@ -487,6 +487,21 @@
                                             prevPrompt = text;
                                             document.getElementById('generate-model').click();
                                             return;
+                                        }
+                                        
+                                        if (generateData.changes != '') {
+                                          newResponse += "\nCode changes:"
+                                          const changes = JSON.parse(generateData.changes);
+                                          for(var i=0; i<changes.length; i++) {
+                                            var lines = "Lines "+changes[i].startLine+" - " + changes[i].endLine + ": ";
+                                            if (changes[i].startLine == -1) {
+                                              lines = "";
+                                            } else if (changes[i].startLine == changes[i].endLine) {
+                                              lines = "Line "+changes[i].startLine + ": ";
+                                            }
+                                            
+                                            newResponse += "\n"+lines+changes[i].description
+                                          }
                                         }
                                         
                                         const responseContainer = document.getElementById('code2fab-response');
