@@ -2,18 +2,10 @@ version: "2"
 authtoken: 2kzCT6DzDzsXP5juVGDPu0HtNSg_22DgLS4GXzfy7jy2W1a9e
 tunnels:
   frontend:
-    addr: 8000
+    addr: 9000
     proto: http
     hostname: code2fab.ngrok.app
   backend:
-    addr: 4000
-    proto: http
-    hostname: code2fab.ngrok.io
-  frontend2:
-    addr: 9000
-    proto: http
-    hostname: code2fab2.ngrok.app
-  backend2:
     addr: 3000
     proto: http
-    hostname: code2fab2.ngrok.io
+    hostname: code2fab.ngrok.io
