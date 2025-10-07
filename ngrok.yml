@@ -1,11 +1,7 @@
 version: "2"
 authtoken: 2kzCT6DzDzsXP5juVGDPu0HtNSg_22DgLS4GXzfy7jy2W1a9e
 tunnels:
-  frontend:
-    addr: 9000
-    proto: http
-    hostname: code2fab.ngrok.app
   backend:
     addr: 3000
     proto: http
-    hostname: code2fab.ngrok.io
+    hostname: livid-memorisingly-lavonne.ngrok-free.dev
