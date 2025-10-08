@@ -360,7 +360,7 @@
               }
               
               output += "<li aria-labelledby=\"change-" + i + "\"  >"
-                + "<button id=\"change-" + i + "\" onclick=\"codeChangeSelected(event)\" tabindex=\"0\" data-start=\"" + lineIndex[changes[i].startLine] + "\" data-end=\"" + lineIndex[changes[i].endLine+1] + "\" aria-label=\""+changes[i].description+"\" role=\"listitem\" >"+lines + changes[i].description + " </button></li>";
+                + "<button id=\"change-" + i + "\" onclick=\"codeChangeSelected(event)\" tabindex=\"0\" data-start=\"" + lineIndex[changes[i].startLine] + "\" data-end=\"" + lineIndex[changes[i].endLine+1] + "\" aria-label=\""+changes[i].description+"\" role=\"listitem\" style=\"text-align: left;\" >"+lines + changes[i].description + " </button></li>";
           }
           
           
