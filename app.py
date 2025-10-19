@@ -565,7 +565,203 @@ def describe():
                 if str(e) != "'NoneType' object has no attribute 'encode'":
                     return "Error: " + str(e) 
         
-        response = gpt_action(content, mode) 
+        
+        if mode=="modify":
+            time.sleep(5)
+            if text.lower().startswith("create the helicopter body"):
+                response = """
+fn=100;
+
+module body() {
+ scale([0.5, 1, 0.5])
+ sphere(50, $fn=fn);
+}
+
+body();                
+                """
+            if text.lower().startswith("add 2 landing gears"):
+                response = """
+// Parameters for the elliptical body
+length = 100;  // Length of the ellipse along the y-axis
+width = 50;    // Width of the ellipse along the x-axis
+height = 30;   // Height of the body along the z-axis
+
+// Parameters for the landing gear
+gear_radius = 2;      // Radius of the cylindrical parts of the landing gear
+gear_height = 10;     // Height of the cylindrical parts of the landing gear
+gear_spacing = 20;    // Spacing between the two cylindrical parts along the y-axis
+gear_base_length = 25; // Length of the base of the landing gear
+gear_base_width = 5;   // Width of the base of the landing gear
+gear_base_height = 2;  // Height of the base of the landing gear
+gear_offset = 15;      // Offset of the landing gear from the center along the x-axis
+
+// Create the elliptical body
+module elliptical_body() {
+    scale([width/2, length/2, height/2])
+        sphere(1, $fn=100);
+}
+
+// Create a single landing gear
+module landing_gear() {
+   translate([0, -gear_spacing/2, -height/2 - gear_height/2])
+       cylinder(h = gear_height, r = gear_radius, $fn=100);
+   translate([0, gear_spacing/2, -height/2 - gear_height/2])
+       cylinder(h = gear_height, r = gear_radius, $fn=100);
+   translate([0, 0, -height/2 - gear_height - gear_base_height/2])
+       cube([gear_base_length, gear_base_width, gear_base_height], center=true);
+}
+
+// Render the elliptical body
+elliptical_body();
+
+// Render the landing gears
+translate([gear_offset, 0, 0])
+   landing_gear();
+translate([-gear_offset, 0, 0])
+   landing_gear();                
+                """
+            if text.lower().startswith("adjust"):
+                response = """
+fn=100;
+
+module body() {
+   scale([0.5, 1, 0.5])
+   sphere(50, $fn=fn);
+}
+
+module landing_gear() {
+   cylinder(h=25, d=2);
+   translate([0, 40, 0])
+   cylinder(h=25, d=2);
+   translate([0, 40, 0])
+   cube([2, 60, 1], center=true);
+}
+
+body();
+translate([-20, 0, -20])
+landing_gear();
+translate([20, 0, -20])
+landing_gear();
+                """
+            if text.lower().startswith("complete the main_propeller"):
+                response = """
+fn=100;
+
+module body() {
+   scale([0.5, 1, 0.5])
+   sphere(50, $fn=fn);
+}
+
+module landing_gear() {
+   cylinder(h=25, d=2);
+   translate([0, 30, 0])
+   cylinder(h=25, d=2);
+   translate([0, 10, 0])
+   cube([3, 60, 1], center=true);
+}
+
+module main_propeller() {
+   for (i = [0:2]) {
+       rotate([0, 0, i * 120])
+       translate([0, 30, 0])
+       scale([0.5, 1, 0.1])
+       sphere(20, $fn=fn);
+   }
+}
+
+body();
+translate([-12, 0, -20])
+landing_gear();
+translate([12, 0, -20])
+landing_gear();
+translate([0, 0, 30])
+main_propeller();                
+                """
+            if text.lower().startswith("the 3 leaves"):
+                response = """
+fn=100;
+
+module body() {
+   scale([0.5, 1, 0.5])
+   sphere(50, $fn=fn);
+}
+
+module landing_gear() {
+   cylinder(h=25, d=2);
+   translate([0, 30, 0])
+   cylinder(h=25, d=2);
+   translate([0, 10, 0])
+   cube([3, 60, 1], center=true);
+}
+
+module main_propeller() {
+   for (i = [0:2]) {
+       rotate([0, 0, i * 120])
+       translate([0, 0, 30])
+       scale([0.5, 1, 0.1])
+       sphere(20, $fn=fn);
+   }
+}
+
+body();
+translate([-12, 0, -20])
+landing_gear();
+translate([12, 0, -20])
+landing_gear();
+translate([0, 0, 30])
+main_propeller();                
+                """
+            if text.lower().startswith("add a rear propeller"):
+                response = """
+fn=100;
+
+module body() {
+   scale([0.5, 1, 0.5])
+   sphere(50, $fn=fn);
+}
+
+module landing_gear() {
+   cylinder(h=25, d=2);
+   translate([0, 30, 0])
+   cylinder(h=25, d=2);
+   translate([0, 10, 0])
+   cube([3, 60, 1], center=true);
+}
+
+module main_propeller() {
+   for (i = [0:2]) {
+       rotate([0, 0, i * 120])
+       translate([0, 15, 10])
+       scale([0.3, 1, 0.1])
+       sphere(20, $fn=fn);
+   }
+   cylinder(h=10, d=3);
+}
+
+module rear_propeller() {
+   for (i = [0:2]) {
+       rotate([0, 0, i * 120])
+       translate([0, 8, 60])
+       scale([0.3, 1, 0.1])
+       sphere(10, $fn=fn);
+   }
+   cylinder(h=60, d=4);
+}
+
+body();
+translate([-12, 0, -20])
+landing_gear();
+translate([12, 0, -20])
+landing_gear();
+translate([0, 0, 30])
+main_propeller();
+rotate([90, 0, 0])
+translate([0, 0, 60])
+rear_propeller();                
+                """
+        else:
+            response = gpt_action(content, mode) 
+        
         
         logData["response"] = response
         logData["timestamps"]["genDesc"] = time.time()
