@@ -30,10 +30,10 @@ import os
 from os.path import isfile, join
 import subprocess
 from openai import OpenAI 
-import autogen
-from autogen import Agent, AssistantAgent, ConversableAgent, UserProxyAgent
+#import autogen
+#from autogen import Agent, AssistantAgent, ConversableAgent, UserProxyAgent
 import requests
-from autogen.agentchat.contrib.multimodal_conversable_agent import MultimodalConversableAgent
+#from autogen.agentchat.contrib.multimodal_conversable_agent import MultimodalConversableAgent
 from PIL import Image
 import io
 import json
@@ -66,57 +66,6 @@ config_list_4 = {
     "config_list": config_llm_4,
     "temperature": 0,
 }
-
-model_descriptor = MultimodalConversableAgent(
-    name="3D_model_descriptor",
-    max_consecutive_auto_reply=10,
-    llm_config=config_list_4v,
-    system_message="""
-As a good 3D model descriptor, you will receive images from the OpenSCAD 3D model and generate a detailed description of the 3D model, describing what the 3D model is and what parts it consists of. After that, you will work with the code interpreter to match the different parts of the model to the code that generates this corresponding part.
-Use the following format for output:
-***Report Begins***
-##Description of the model##
-[Insert the description of the model here, highlighting key elements.]
-
-##Summary of the model##
-[Insert the summary of the model here, contains all the components.]
-***Report Ends***
-""",
-)
-
-code_interpreter = autogen.AssistantAgent(
-    name="code_interpreter",
-    llm_config=config_list_4,
-    system_message="""
-As an expert in OpenSCAD code interpretation, you will receive a set of OpenSCAD code. For a given piece of code, you will work with the 3D model descriptor to connect the different parts of the 3d model and their corresponding code.
-Use the following format for output:
-***Report Begins***
-##Codes##
-"Code1", [The corresponding part in the model], 
-[content of Code1]
-"Code2", [The corresponding part in the model], 
-[content of Code1]
-...
-***Report Ends***
-""",
-)
-
-user_proxy = autogen.UserProxyAgent(
-    name="User_proxy",
-    system_message="A human admin.",
-    human_input_mode="NEVER",  # Try between ALWAYS or NEVER
-    max_consecutive_auto_reply=0,
-    code_execution_config={
-        "use_docker": False
-    },  # Please set use_docker=True if docker is available to run the generated code. Using docker is safer than running the generated code directly.
-)
-
-groupchat = autogen.GroupChat(
-    agents=[model_descriptor, code_interpreter,
-            user_proxy], messages=[], max_round=5
-)
-manager = autogen.GroupChatManager(
-    groupchat=groupchat, llm_config=config_list_4)
 
 
 app = Flask(__name__)
@@ -861,63 +810,6 @@ Code2Fab is a system that helps the blind to use OpenSCAD to model for 3D printi
         return jsonify({"error": "Internal server error"}), 500
     
 
-@app.route("/api/match", methods=["POST"])
-def match():
-    try:
-        text = request.form["text"]
-        code = request.form["code"]
-        image = request.files["image"]
-        logging.info(f"Received text: {text}")
-
-        # Save the image and encode it
-        image_path = "./static/img/temp.jpg"
-        image.save(image_path)
-        img_url = upload_image(image_path)
-
-        template = f"""
-You will first ask the model descriptor to describe what the model consists of and what it looks like, and then the code interpreter will work with the model descriptor to match the different parts of the model to the corresponding code:
-<img {img_url}>.
-
-Extra requirement: [{text}]
-***Code Begins***
-'''openscad'''
-{code}
-'''openscad'''
-***Code Ends***
-
-Use the follow format for output:
-***Report Begins***
-##Direct Reply for user's input##
-[Insert the direct reply for user's input. DO NOT return this section if there isn't any extra requirement.]
-
-##Description of the model##
-[Insert the description of the model here, highlighting key elements.]
-
-##Summary of the model##
-[Insert the summary of the model here, contains all the components.]
-
-##Codes##
-"Code1", [The corresponding part in the model], 
-[content of Code1]
-"Code2", [The corresponding part in the model], 
-[content of Code1]
-...
-***Report Ends***
-"""
-        user_proxy.initiate_chat(manager, message=template)
-
-        message = code_interpreter.last_message()['content']
-
-        try:
-            return message
-        except Exception as e:
-            logging.error(f"Error processing GPT action: {e}")
-            error_message = "Error: " + str(e)
-            return error_message
-
-    except Exception as e:
-        logging.error(f"Error processing request: {e}")
-        return jsonify({"error": "Internal server error"}), 500
 
 
 @app.route("/api/analysis", methods=["POST"])
