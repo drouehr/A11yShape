@@ -2,42 +2,43 @@
 
 ## Starting the server
 
-Here are the instructions for setting up a server on your own computer:
+Here are the instructions for setting up the backend server on your own computer:
 
-download the zip file in https://ngrok.com/download
+install ngrok from https://ngrok.com/download
 
-in command prompt, navigate to the folder containing ngrok.exe
+In commandline, run:
+
+```
+ngrok config edit
+```
+
+Set the contents of ngrok.yml to be the same as the ngrok.yml file from this repo
 
 Run:
 
 ```
-ngrok.exe config edit
+ngrok start --all
 ```
 
-Set the contents of ngrok.yml to be the same as the ngrok.yml file in this repo
-
-Change the hostname of frontend and backend
-
-Run:
-
-```
-ngrok.exe start --all
-```
-
-make sure the PORT in app.py matches the addr of backend in ngrok.yml
-
-make sure the serverUrl in index.html matches the hostname of backend in ngrok.yml
-
-in the code2fab folder run:
+in the A11yShape folder run:
 
 ```
 python app.py
-python -m http.server 9000
 ```
+
+Test the backend server at https://livid-memorisingly-lavonne.ngrok-free.dev/
+
+If it's running successfully, it should display:
+
+```
+Hello from Flask6!
+```
+
+The frontend is always running at https://a11yshape.pages.dev/ and is already configured to access the backend server.
 
 ## Updating changes to the server
 
-In the code2fab folder on the server, run:
+In the A11yShape folder on the server, run:
 
 ```
 git pull
