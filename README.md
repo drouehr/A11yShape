@@ -4,7 +4,7 @@
 
 Here are the instructions for setting up the backend server on your own computer:
 
-install ngrok from https://ngrok.com/download
+Install Ngrok from https://ngrok.com/download
 
 In commandline, run:
 
@@ -20,7 +20,7 @@ Run:
 ngrok start --all
 ```
 
-in the A11yShape folder run:
+In the A11yShape folder run:
 
 ```
 python app.py
