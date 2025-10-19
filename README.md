@@ -4,6 +4,8 @@
 
 Here are the instructions for setting up the backend server on your own computer:
 
+Install OpenSCAD (https://openscad.org/downloads.html) and make sure the folder containing openscad.exe is added to the system PATH environment variable.
+
 Install Ngrok from https://ngrok.com/download
 
 In commandline, run:
@@ -23,6 +25,7 @@ ngrok start --all
 In the A11yShape folder run:
 
 ```
+pip install -r requirements.txt
 python app.py
 ```
 
