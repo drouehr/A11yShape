@@ -1,16 +1,16 @@
 """
-This code defines a Flask application that serves as an API for generating STL files, saving and loading OpenSCAD code files, and performing model description and code matching tasks using OpenAI's GPT-4 models.
+This code defines a Flask application that serves as an API for generating STL files, saving and loading OpenSCAD code files, and performing model description and code matching tasks using OpenAI's gpt-5 models.
 
 The API endpoints include:
 - /generate-stl: Accepts a POST request with OpenSCAD code and generates an STL file.
 - /save-code: Accepts a POST request with OpenSCAD code and saves it as a file.
 - /get-files: Returns a list of saved code files.
 - /load-code/<file_name>: Returns the content of a specific code file.
-- /api/describe: Accepts a POST request with text, code, and an image, and uses GPT-4 to generate a description of the 3D model.
-- /api/match: Accepts a POST request with text, code, and an image, and uses GPT-4 to match the different parts of the 3D model to the corresponding code.
-- /api/analysis: Accepts a POST request with text and code, and uses GPT-4 to analyze the OpenSCAD code.
-- /api/improve: Accepts a POST request with text and code, and uses GPT-4 to provide suggestions for improving the code.
-The code also includes configuration settings for the GPT-4 models, agent definitions for model descriptor, code interpreter, and user proxy, and a Flask route for serving the index.html file.
+- /api/describe: Accepts a POST request with text, code, and an image, and uses gpt-5 to generate a description of the 3D model.
+- /api/match: Accepts a POST request with text, code, and an image, and uses gpt-5 to match the different parts of the 3D model to the corresponding code.
+- /api/analysis: Accepts a POST request with text and code, and uses gpt-5 to analyze the OpenSCAD code.
+- /api/improve: Accepts a POST request with text and code, and uses gpt-5 to provide suggestions for improving the code.
+The code also includes configuration settings for the gpt-5 models, agent definitions for model descriptor, code interpreter, and user proxy, and a Flask route for serving the index.html file.
 
 Note: The code includes sensitive information such as API keys and authorization headers. Make sure to handle this information securely in a production environment.
 """
@@ -29,28 +29,51 @@ import logging
 import os
 from os.path import isfile, join
 import subprocess
-from openai import OpenAI 
-#import autogen
-#from autogen import Agent, AssistantAgent, ConversableAgent, UserProxyAgent
-import requests
-#from autogen.agentchat.contrib.multimodal_conversable_agent import MultimodalConversableAgent
+import shutil
+
+from dotenv import load_dotenv
+from openai import OpenAI
+
+load_dotenv()
+
+OPENSCAD_PATH = (os.environ.get("OPENSCAD_PATH") or "").strip() or "openscad"
+resolved_openscad = shutil.which(OPENSCAD_PATH)
+if resolved_openscad:
+    OPENSCAD_PATH = resolved_openscad
+logging.info(f"OPENSCAD_PATH resolved to: {OPENSCAD_PATH!r}")
+
 from PIL import Image
 import io
 import json
 import time
 
+LOG_LEVEL = (os.environ.get("LOG_LEVEL") or "INFO").upper()
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    force=True,
+)
 
-logging.basicConfig(level=logging.INFO)
+logging.getLogger("werkzeug").setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
+logging.getLogger().info("LOG_LEVEL=%s", LOG_LEVEL)
 
-api_key = "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"
-# client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", 'Insert you api key here'))
-#client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", api_key))
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", api_key))
+api_key = os.environ.get("OPENAI_API_KEY")
+if not api_key:
+    raise RuntimeError(
+        "Missing OpenAI API key. Set OPENAI_API_KEY in your environment/.env"
+    )
+
+base_url = (os.environ.get("OPENAI_BASE_URL") or "").strip() or None
+
+MODEL_NANO = os.environ.get("OPENAI_MODEL_LIGHT", "gpt-5-nano")
+MODEL_MINI = os.environ.get("OPENAI_MODEL_HEAVY", "gpt-5-mini")
+
+client = OpenAI(api_key=api_key, base_url=base_url)
 
 """AutoGen Config"""
-config_llm_4v = [{"model": "gpt-4o", "api_key": api_key}]
+config_llm_4v = [{"model": MODEL_NANO, "api_key": api_key}]
 
-config_llm_4 = [{"model": "gpt-4o", "api_key": api_key}]
+config_llm_4 = [{"model": MODEL_NANO, "api_key": api_key}]
 
 config_list_4v = {
     "timeout": 600,
@@ -72,21 +95,33 @@ app = Flask(__name__)
 CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 PORT = int(os.environ.get("PORT", 3000))
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
+A11YSHAPE_API_BASE = (
+    os.environ.get("A11YSHAPE_API_BASE")
+    or os.environ.get("NGROK_URL")
+    or ""
+).strip()
 
+@app.route("/")
+def index():
+    return send_from_directory(APP_ROOT, "index.html")
 
+@app.route("/index_Chinese.html")
+def index_chinese():
+    return send_from_directory(APP_ROOT, "index_Chinese.html")
 
-@app.route('/')
-def hello_world():
-    return 'Hello from Flask6!'
+@app.route("/config.js")
+def client_config():
+    api_base = A11YSHAPE_API_BASE.replace("\\", "\\\\").replace("\"", "\\\"")
+    body = f'window.__A11YSHAPE_API_BASE__ = "{api_base}";\n'
+    return Response(body, mimetype="text/javascript")
 
 @app.route('/code2fab', methods=['POST'])
 def code2fab():
     req = request.json
     #return jsonify(req['code'])
     return jsonify(request.json)
-
-
 
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
@@ -113,7 +148,7 @@ current_process = None
 
 def find_openscad_errors(code):
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model=MODEL_NANO,
         temperature=0.0,
         timeout=10,
         #stream=True,
@@ -131,58 +166,97 @@ def find_openscad_errors(code):
 
 
 def gen_image(views, code, output_dir):
-    code = code.encode('ascii',errors='ignore').decode().lower()
-    
-    file = 'model.scad'
-    f = open(join(output_dir, file), "w")
-    f.write(code)
-    f.close()
-    
+    """Render OpenSCAD code to one or more PNGs and return base64 images."""
+    code = code.encode("ascii", errors="ignore").decode().lower()
+
+    if logging.getLogger().isEnabledFor(logging.DEBUG):
+        logging.debug("gen_image cwd=%s", os.getcwd())
+        logging.debug("gen_image output_dir=%s", output_dir)
+        logging.debug("OPENSCAD_PATH=%s", OPENSCAD_PATH)
+        logging.debug("PATH=%s", os.environ.get("PATH", ""))
+        logging.debug("which(OPENSCAD_PATH)=%s", shutil.which(OPENSCAD_PATH))
+
+    file = "model.scad"
+    with open(join(output_dir, file), "w", encoding="utf-8") as f:
+        f.write(code)
+
     encoded_imgs = []
     encoded_imgs_sm = []
-    
+
     processes = []
     for index in views:
         view = views[index]
-        output_path = f'{output_dir}/{index}.png'
-        #print(output_path)
-        
-        current_process = subprocess.Popen(
-            ["openscad", "-o", output_path, "--camera="+view, "--viewall", "--autocenter", "--imgsize=1024,1024", join(output_dir, file)],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
+        output_path = os.path.join(output_dir, f"{index}.png")
+
+        input_scad_path = os.path.join(output_dir, file)
+        cmd = [
+            OPENSCAD_PATH,
+            "-o",
+            output_path,
+            "--camera=" + view,
+            "--viewall",
+            "--autocenter",
+            "--imgsize=1024,1024",
+            input_scad_path,
+        ]
+
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.debug("OpenSCAD command: %s", cmd)
+            logging.debug("input_scad_path exists=%s", os.path.exists(input_scad_path))
+            logging.debug("output_path=%s", output_path)
+
+        try:
+            current_process = subprocess.Popen(
+                cmd,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+        except FileNotFoundError as e:
+            raise Exception(
+                "OpenSCAD executable not found. "
+                "Set OPENSCAD_PATH in your .env to the full path of openscad.exe, e.g. "
+                "OPENSCAD_PATH=C:\\Program Files\\OpenSCAD\\openscad.exe. "
+                f"Currently OPENSCAD_PATH='{OPENSCAD_PATH}'."
+            ) from e
+
         processes.append(current_process)
-        #print(index)
-        
+
     for p in processes:
         out, err = p.communicate()
-        if 'ERROR' in err:
-            #errors = [line for line in err.split('\n') if "WARNING" in line or 'ERROR' in line]
-            raise Exception('OpenSCAD code error: '+find_openscad_errors(code)) 
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.debug("OpenSCAD returncode: %s", p.returncode)
+            logging.debug("OpenSCAD stdout: %s", (out or "").strip())
+            logging.debug("OpenSCAD stderr: %s", (err or "").strip())
+        if err and "ERROR" in err:
+            raise Exception("OpenSCAD code error: " + find_openscad_errors(code))
         p.wait()
-        
+
     for index in views:
-        view = views[index]
-        output_path = f'{output_dir}/{index}.png'
-        
+        output_path = os.path.join(output_dir, f"{index}.png")
+
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.debug("Checking output image exists=%s path=%s", os.path.exists(output_path), output_path)
+
+        if not os.path.exists(output_path):
+            raise Exception(f"OpenSCAD did not produce expected output file: {output_path}")
+
         img = Image.open(output_path)
         fullsize = pil_to_bytes(img)
         imgsize = 256, 256
         img.thumbnail(imgsize, Image.Resampling.LANCZOS)
         thumbnail = pil_to_bytes(img)
-        
+
         encoded_imgs.append(fullsize)
         encoded_imgs_sm.append(thumbnail)
-    
+
     return encoded_imgs, encoded_imgs_sm
 
 availableFunctions = [
     {
       "name": "describe",
-      "description": "Function to generate descriptions of the model or answer questions about the details",
+      "description": "Use when the user asks to describe, analyze, or explain the current model or code. Do not modify code.",
       "parameters": {
           "type": "object",
           "properties": {
@@ -196,7 +270,7 @@ availableFunctions = [
   },
   {
     "name": "modify",
-    "description": "Function to make changes to the model based on the user prompt",
+    "description": "Use when the user requests changes, additions, removals, or creation of geometry. Return OpenSCAD code only.",
     "parameters": {
         "type": "object",
         "properties": {
@@ -207,16 +281,16 @@ availableFunctions = [
         },
         "required": ["change"],
     },
-  }          
+  }
 ]
 
 def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs):
-    instructions = "describe the visual details such that a blind user could understand it (eg. shape, position, posture, pictures)"
+    instructions = "Describe only the physical geometry of the model (shape, size, proportions, relative positions, intersections, symmetry, and orientation). Avoid background, color, lighting, or rendering details. Do not explain how to create the model unless explicitly asked."
     if len(text) > 0:
         instructions = text
     
     if len(fullCode) > 0:
-        instructions = "compare this part of the model in relation to the full model such that a blind user could understand it (eg. spatial position, distance, intersection, size, angle, orientation, side in relation to other parts of the model). Describe how this part affects the model's shape. Only if applicable, mention what operation the part is used in and if it's invisible"
+        instructions = "Compare this part to the full model in terms of spatial position, scale, intersections, and how it changes the overall shape. Avoid background, color, lighting, or rendering details. Do not explain how to create the model unless explicitly asked."
         if len(text) > 0:
             instructions = text
         content = [
@@ -233,7 +307,7 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
         
     elif len(prevCode) > 0:
         content = [
-                    {"type": "text", "text": "Given the two versions of a 3D model and its OpenSCAD code, with the last "+str(len(imgs))+" images and code referred to as the current model and the first "+str(len(prevImgs))+" images and code referred to as the previous model, describe the changes between the two versions, focusing on the visual details such that a blind user could understand it (eg. shape, position, posture, pictures)."},
+                    {"type": "text", "text": "Given the two versions of a 3D model and its OpenSCAD code, with the last "+str(len(imgs))+" images and code referred to as the current model and the first "+str(len(prevImgs))+" images and code referred to as the previous model, describe the changes between the two versions focusing on physical geometry (shape, size, proportions, relative positions, intersections, symmetry, and orientation). Avoid background, color, lighting, or rendering details."},
                     {"type": "text", "text": prevCode},
                 ]
         for img in prevImgs:
@@ -251,7 +325,7 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
     elif len(text) > 0:
         content = [{"type": "text", "text": text}]
     else:
-        content = [{"type": "text", "text": "describe how to create a model with openscad"}]
+        content = [{"type": "text", "text": "Describe the model's physical geometry in plain language."}]
     
     #print(content)
     
@@ -263,7 +337,7 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
                     }})
     
     if len(code) > 0:
-        content.append({"type": "text", "text": "You must give a one sentence answer or summary first, followed by more details such that a blind user could understand it. The output should not have formatting since it will be read by a screenreader. Do not mention blind users. The images are of the same model at different angles. Do not mention that there are multiple images. Do not describe each angle separately. The description should be based on the images of the model rather than the code."})
+        content.append({"type": "text", "text": "Start with a one-sentence summary, then provide concise details. Output plain text only (no formatting). Do not mention the user or how to create the model. Do not mention multiple images or viewing angles. Describe only the model's physical geometry and spatial relationships."})
     
     return content
 
@@ -271,7 +345,7 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
 def getModificationPrompts(code, text, imgs):
     if len(code) > 0:
         content = [
-            {"type": "text", "text": "Given the OpenScad code, modify the code to "+text+". Output only the modified OpenScad code and nothing else"},
+            {"type": "text", "text": "Modify the OpenSCAD code to satisfy: "+text+". Return ONLY the modified OpenSCAD code with no commentary, no backticks, and no extra text. Preserve unchanged code where possible."},
             {"type": "text", "text": code},
         ]
         for img in imgs:
@@ -282,7 +356,7 @@ def getModificationPrompts(code, text, imgs):
                         }})
     else:
         content = [
-            {"type": "text", "text": "Generate the OpenScad code to "+text+". Output only the OpenScad code and nothing else"},
+            {"type": "text", "text": "Generate OpenSCAD code that satisfies: "+text+". Return ONLY the OpenSCAD code with no commentary, no backticks, and no extra text."},
         ]
 
     return content
@@ -300,7 +374,7 @@ def summarize():
         def gpt_action(text):
             try:
                 completion = client.chat.completions.create(
-                    model="gpt-4o",
+                    model=MODEL_NANO,
                     temperature=0.0,
                     timeout=10,
                     stream=True,
@@ -335,49 +409,143 @@ def addLineNum(code):
     return code
 
 
+MODIFY_KEYWORDS = [
+    "add",
+    "remove",
+    "delete",
+    "change",
+    "modify",
+    "make",
+    "create",
+    "generate",
+    "insert",
+    "cut",
+    "drill",
+    "hole",
+    "subtract",
+    "difference",
+    "union",
+    "intersect",
+    "translate",
+    "rotate",
+    "scale",
+    "resize",
+    "taller",
+    "shorter",
+    "wider",
+    "narrower",
+    "bigger",
+    "smaller",
+    "thicker",
+    "thinner",
+    "through",
+    "cylinder",
+    "cube",
+    "sphere",
+    "extrude",
+    "fillet",
+    "chamfer",
+]
+
+DESCRIBE_KEYWORDS = [
+    "describe",
+    "explain",
+    "analyze",
+    "analysis",
+    "summary",
+    "summarize",
+    "what is",
+    "what's",
+    "details",
+    "how does",
+]
+
+
+def infer_mode_from_text(text):
+    lowered = (text or "").lower()
+    if not lowered.strip():
+        return None
+    if any(keyword in lowered for keyword in MODIFY_KEYWORDS):
+        return "modify"
+    if any(keyword in lowered for keyword in DESCRIBE_KEYWORDS):
+        return "describe"
+    return None
+
+
 @app.route("/generate-img", methods=["POST"])
 def generate_images():
     global current_process
     try:
-        sessionId = request.json.get("sessionId")
-        callId = request.json.get("callId")
-        code = request.json.get("code")
-        prevCode = request.json.get("prevCode")
-        fullCode = request.json.get("fullCode")
-        imageIndex = request.json.get("imageIndex")
-        text = request.json.get("text")
+        payload = request.get_json(silent=True) or {}
+        sessionId = payload.get("sessionId")
+        callId = payload.get("callId")
+        code = payload.get("code") or ""
+        prevCode = payload.get("prevCode") or ""
+        fullCode = payload.get("fullCode") or ""
+        imageIndex = payload.get("imageIndex")
+        text = payload.get("text") or ""
+        requested_mode = (payload.get("mode") or "").strip().lower()
+
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.debug("/generate-img cwd=%s", os.getcwd())
+            logging.debug("/generate-img env OPENSCAD_PATH=%s", OPENSCAD_PATH)
+            logging.debug("/generate-img env PATH=%s", os.environ.get("PATH", ""))
+            logging.debug(
+                "/generate-img request payload: %s",
+                json.dumps(
+                    {
+                        "sessionId": sessionId,
+                        "callId": callId,
+                        "imageIndex": imageIndex,
+                        "text_len": len(text),
+                        "code_len": len(code),
+                        "prevCode_len": len(prevCode),
+                        "fullCode_len": len(fullCode),
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+
         #if current_process and current_process.poll() is None:
         #    current_process.terminate()
-        
+
         logData = {"sessionId": sessionId, "callId": callId, "function": "generate_images", "timestamps": {"start": time.time()}}
 
     
         output_dir = "temp/"+str(sessionId)
         os.makedirs(output_dir, exist_ok=True)
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.debug("/generate-img output_dir created=%s", output_dir)
         
-        if text == "":
-            mode = "describe"
+        mode = "describe"
+        if requested_mode in {"describe", "modify"}:
+            mode = requested_mode
         else:
-            try:
-                response = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                    {"role": "user", "content": text}
-                    ],
-                    functions=availableFunctions,
-                    function_call="auto"
-                )
-                #print(response)
-                mode = response.choices[0].message.function_call.name
-            except:
-                pass
+            heuristic_mode = infer_mode_from_text(text)
+            if heuristic_mode:
+                mode = heuristic_mode
+            elif text != "":
+                try:
+                    response = client.chat.completions.create(
+                        model=MODEL_NANO,
+                        messages=[{"role": "user", "content": text}],
+                        functions=availableFunctions,
+                        function_call="auto",
+                    )
+
+                    fn_call = getattr(response.choices[0].message, "function_call", None)
+                    if fn_call and getattr(fn_call, "name", None):
+                        mode = fn_call.name
+                except Exception as e:
+                    logging.warning(f"/generate-img mode detection failed; defaulting to describe: {e}")
+
         logData["timestamps"]["getMode"] = time.time()
         
         changes = ""
         if prevCode != "" and prevCode != code:
             try:
                 response = client.chat.completions.create(
-                    model="gpt-4o",
+                    model=MODEL_NANO,
                     temperature=0.0,
                     timeout=10,
                     #stream=True,
@@ -421,7 +589,7 @@ def generate_images():
         
         return jsonify({"message": "Images generated successfully", "mode": mode, "changes": changes, "image": encoded_imgs[0], "thumbnail": encoded_imgs_sm[0], "fullImg": encoded_imgs_full[0]})
     except Exception as e:
-        print(f"Execution error: {e}")
+        logging.exception("/generate-img failed")
         logData["error"] = str(e)
         with open('log.txt', 'a') as f:
             f.write(json.dumps(logData)+'\n')
@@ -490,7 +658,7 @@ def describe():
         def gpt_action(content, mode):
             try:
                 completion = client.chat.completions.create(
-                    model="gpt-4o",
+                    model=MODEL_NANO,
                     temperature=0.0,
                     timeout=10,
                     #stream=True,
@@ -514,202 +682,7 @@ def describe():
                 if str(e) != "'NoneType' object has no attribute 'encode'":
                     return "Error: " + str(e) 
         
-        
-        if mode=="modify":
-            time.sleep(5)
-            if text.lower().startswith("create the helicopter body"):
-                response = """
-fn=100;
-
-module body() {
- scale([0.5, 1, 0.5])
- sphere(50, $fn=fn);
-}
-
-body();                
-                """
-            if text.lower().startswith("add 2 landing gears"):
-                response = """
-// Parameters for the elliptical body
-length = 100;  // Length of the ellipse along the y-axis
-width = 50;    // Width of the ellipse along the x-axis
-height = 30;   // Height of the body along the z-axis
-
-// Parameters for the landing gear
-gear_radius = 2;      // Radius of the cylindrical parts of the landing gear
-gear_height = 10;     // Height of the cylindrical parts of the landing gear
-gear_spacing = 20;    // Spacing between the two cylindrical parts along the y-axis
-gear_base_length = 25; // Length of the base of the landing gear
-gear_base_width = 5;   // Width of the base of the landing gear
-gear_base_height = 2;  // Height of the base of the landing gear
-gear_offset = 15;      // Offset of the landing gear from the center along the x-axis
-
-// Create the elliptical body
-module elliptical_body() {
-    scale([width/2, length/2, height/2])
-        sphere(1, $fn=100);
-}
-
-// Create a single landing gear
-module landing_gear() {
-   translate([0, -gear_spacing/2, -height/2 - gear_height/2])
-       cylinder(h = gear_height, r = gear_radius, $fn=100);
-   translate([0, gear_spacing/2, -height/2 - gear_height/2])
-       cylinder(h = gear_height, r = gear_radius, $fn=100);
-   translate([0, 0, -height/2 - gear_height - gear_base_height/2])
-       cube([gear_base_length, gear_base_width, gear_base_height], center=true);
-}
-
-// Render the elliptical body
-elliptical_body();
-
-// Render the landing gears
-translate([gear_offset, 0, 0])
-   landing_gear();
-translate([-gear_offset, 0, 0])
-   landing_gear();                
-                """
-            if text.lower().startswith("adjust"):
-                response = """
-fn=100;
-
-module body() {
-   scale([0.5, 1, 0.5])
-   sphere(50, $fn=fn);
-}
-
-module landing_gear() {
-   cylinder(h=25, d=2);
-   translate([0, 40, 0])
-   cylinder(h=25, d=2);
-   translate([0, 40, 0])
-   cube([2, 60, 1], center=true);
-}
-
-body();
-translate([-20, 0, -20])
-landing_gear();
-translate([20, 0, -20])
-landing_gear();
-                """
-            if text.lower().startswith("complete the main_propeller"):
-                response = """
-fn=100;
-
-module body() {
-   scale([0.5, 1, 0.5])
-   sphere(50, $fn=fn);
-}
-
-module landing_gear() {
-   cylinder(h=25, d=2);
-   translate([0, 30, 0])
-   cylinder(h=25, d=2);
-   translate([0, 10, 0])
-   cube([3, 60, 1], center=true);
-}
-
-module main_propeller() {
-   for (i = [0:2]) {
-       rotate([0, 0, i * 120])
-       translate([0, 30, 0])
-       scale([0.5, 1, 0.1])
-       sphere(20, $fn=fn);
-   }
-}
-
-body();
-translate([-12, 0, -20])
-landing_gear();
-translate([12, 0, -20])
-landing_gear();
-translate([0, 0, 30])
-main_propeller();                
-                """
-            if text.lower().startswith("the 3 leaves"):
-                response = """
-fn=100;
-
-module body() {
-   scale([0.5, 1, 0.5])
-   sphere(50, $fn=fn);
-}
-
-module landing_gear() {
-   cylinder(h=25, d=2);
-   translate([0, 30, 0])
-   cylinder(h=25, d=2);
-   translate([0, 10, 0])
-   cube([3, 60, 1], center=true);
-}
-
-module main_propeller() {
-   for (i = [0:2]) {
-       rotate([0, 0, i * 120])
-       translate([0, 0, 30])
-       scale([0.5, 1, 0.1])
-       sphere(20, $fn=fn);
-   }
-}
-
-body();
-translate([-12, 0, -20])
-landing_gear();
-translate([12, 0, -20])
-landing_gear();
-translate([0, 0, 30])
-main_propeller();                
-                """
-            if text.lower().startswith("add a rear propeller"):
-                response = """
-fn=100;
-
-module body() {
-   scale([0.5, 1, 0.5])
-   sphere(50, $fn=fn);
-}
-
-module landing_gear() {
-   cylinder(h=25, d=2);
-   translate([0, 30, 0])
-   cylinder(h=25, d=2);
-   translate([0, 10, 0])
-   cube([3, 60, 1], center=true);
-}
-
-module main_propeller() {
-   for (i = [0:2]) {
-       rotate([0, 0, i * 120])
-       translate([0, 15, 10])
-       scale([0.3, 1, 0.1])
-       sphere(20, $fn=fn);
-   }
-   cylinder(h=10, d=3);
-}
-
-module rear_propeller() {
-   for (i = [0:2]) {
-       rotate([0, 0, i * 120])
-       translate([0, 8, 60])
-       scale([0.3, 1, 0.1])
-       sphere(10, $fn=fn);
-   }
-   cylinder(h=60, d=4);
-}
-
-body();
-translate([-12, 0, -20])
-landing_gear();
-translate([12, 0, -20])
-landing_gear();
-translate([0, 0, 30])
-main_propeller();
-rotate([90, 0, 0])
-translate([0, 0, 60])
-rear_propeller();                
-                """
-        else:
-            response = gpt_action(content, mode) 
+        response = gpt_action(content, mode) 
         
         
         logData["response"] = response
@@ -775,7 +748,7 @@ Code2Fab is a system that helps the blind to use OpenSCAD to model for 3D printi
         def gpt_action(img_url):
             try:
                 completion = client.chat.completions.create(
-                    model="gpt-4o",
+                    model=MODEL_NANO,
                     temperature=0.0,
                     timeout=10,
                     stream=True,
@@ -853,7 +826,7 @@ Use the follow format for output:
         def gpt_action(text, code):
             try:
                 completion = client.chat.completions.create(
-                    model="gpt-4o",
+                    model=MODEL_NANO,
                     temperature=0.0,
                     timeout=10,
                     stream=True,
@@ -919,7 +892,7 @@ Improved Code: [Improved content of Code2]
         def gpt_action(text, code):
             try:
                 completion = client.chat.completions.create(
-                    model="gpt-4o",
+                    model=MODEL_NANO,
                     temperature=0.0,
                     timeout=10,
                     stream=True,
@@ -1011,7 +984,7 @@ Follow the template below to output the result:
         def gpt_action(text, code):
             try:
                 completion = client.chat.completions.create(
-                    model="gpt-4o",
+                    model=MODEL_NANO,
                     temperature=0.0,
                     timeout=10,
                     stream=True,

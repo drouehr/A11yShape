@@ -1,17 +1,26 @@
 # https://stackoverflow.com/questions/77284901/upload-an-image-to-chat-gpt-using-the-api
 
 import base64
-import requests
-from dotenv import load_dotenv
 import os
 from io import BytesIO
+
+import requests
+from dotenv import load_dotenv
 from PIL import Image
 
 
 load_dotenv()
 
 # OpenAI API Key
-api_key = os.getenv("OPENAI_KEY")
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise RuntimeError("Missing OPENAI_API_KEY in environment/.env")
+
+# Base URL override (if unset/blank, default OpenAI endpoint is used)
+base_url = (os.getenv("OPENAI_BASE_URL") or "").strip() or "https://api.openai.com/v1"
+
+# Models
+MODEL_NANO = os.getenv("OPENAI_MODEL_LIGHT", "gpt-5-nano")
 
 # Function to encode the image
 def encode_image(image_path):
@@ -36,7 +45,7 @@ headers = {
 }
 
 payload = {
-    "model": "gpt-4-vision-preview",
+    "model": MODEL_NANO,
     "messages": [
       {
         "role": "user",
@@ -57,6 +66,6 @@ payload = {
     "max_tokens": 300
 }
 
-response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+response = requests.post(f"{base_url}/chat/completions", headers=headers, json=payload)
 
 print(response.json())

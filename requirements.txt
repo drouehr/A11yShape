@@ -2,6 +2,7 @@ flask
 flask-cors
 gunicorn
 openai
+python-dotenv
 pyautogen
 pillow
 pyopenssl

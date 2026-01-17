@@ -6,7 +6,7 @@ Here are the instructions for setting up the backend server on your own computer
 
 Install OpenSCAD (https://openscad.org/downloads.html) and make sure the folder containing openscad.exe is added to the system PATH environment variable.
 
-Install Ngrok from https://ngrok.com/download
+Optional: Install Ngrok from https://ngrok.com/download (only needed for remote access)
 
 In commandline, run:
 
@@ -29,7 +29,13 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Test the backend server at https://livid-memorisingly-lavonne.ngrok-free.dev/
+Local-only mode
+
+- Open http://127.0.0.1:3000 or http://localhost:3000 in your browser.
+- The frontend calls the local origin for API requests by default.
+- To use ngrok, set A11YSHAPE_API_BASE to your ngrok https URL and restart Flask.
+
+Test the backend server at https://livid-memorisingly-lavonne.ngrok-free.dev/ (only when ngrok is enabled)
 
 If it's running successfully, it should display:
 
@@ -37,7 +43,7 @@ If it's running successfully, it should display:
 Hello from Flask6!
 ```
 
-The frontend is always running at https://a11yshape.pages.dev/ and is already configured to access the backend server.
+The frontend is always running at https://a11yshape.pages.dev/. It will use the local API base by default when served from Flask.
 
 ## Updating changes to the server
 

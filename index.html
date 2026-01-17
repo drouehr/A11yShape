@@ -15,6 +15,110 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
 
     <style>
+        :root {
+            color-scheme: dark light;
+        }
+
+        .theme-dark {
+            --bg: #202124;
+            --panel: #18191b;
+            --panel-muted: #222329;
+            --border: #5d5f69;
+            --text: #e5e7eb;
+            --text-muted: #b9bbc2;
+            --accent: #4d5057;
+            --button-bg: #222329;
+            --button-hover: #2f3138;
+            --input-bg: #1f2026;
+        }
+
+        .theme-light {
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --panel-muted: #f1f5f9;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #475569;
+            --accent: #a0d0ff;
+            --button-bg: #ffffff;
+            --button-hover: #e2e8f0;
+            --input-bg: #ffffff;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        }
+
+        header.app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--panel);
+        }
+
+        .panel {
+            background: var(--panel);
+            border-radius: 0.9rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+        }
+
+        .theme-toggle {
+            padding: 0.4rem 0.6rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--button-bg);
+            color: var(--text);
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            width: 2.25rem;
+            height: 2.25rem;
+        }
+
+        .theme-toggle:hover {
+            background: var(--button-hover);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--text);
+            border: 1px solid transparent;
+            font-weight: 600;
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 22px rgba(15, 23, 42, 0.3);
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+            border-radius: 0.6rem;
+            border-color: var(--border);
+            background: var(--input-bg);
+            color: var(--text);
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+
+        button:focus,
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: 2px solid transparent;
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
         .code2fab-container {
             overflow-x: hidden;
         }
@@ -24,6 +128,10 @@
             overflow-wrap: break-word;
             word-break: break-all;
             padding: 1rem;
+            background: var(--panel-muted);
+            color: var(--text);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
         }
 
         .hidden {
@@ -38,8 +146,59 @@
             white-space: pre-wrap;
         }
 
+        h1{
+            font-size: 40px;
+        }
+
         h1, h2 {
             padding-left: 0.5rem;
+            color: var(--text);
+        }
+
+        .bg-white {
+            background-color: var(--panel) !important;
+        }
+
+        .bg-gray-100 {
+            background-color: var(--panel-muted) !important;
+        }
+
+        .text-gray-600,
+        .text-gray-700,
+        .text-gray-500 {
+            color: var(--text-muted) !important;
+        }
+
+        .border-black,
+        .border-gray-300 {
+            border-color: var(--border) !important;
+        }
+
+        .action-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.7rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--panel-muted);
+            color: var(--text);
+            font-size: 0.85rem;
+        }
+
+        .spinner {
+            width: 0.9rem;
+            height: 0.9rem;
+            border-radius: 999px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -48,13 +207,16 @@
 
 <body class="bg-white h-screen ">
 
-    <header>
+    <header class="app-header">
         <h1>A11yShape</h1>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle color theme">
+            <i id="theme-icon" class="fas fa-sun" aria-hidden="true"></i>
+        </button>
     </header>
     <!-- Main Content -->
     <div class="flex w-full height:98vh">
         <!-- Code Editor area -->
-        <div class="w-1/3 bg-white border-2 border-black m-1 flex-col flex flex-col " tabindex="0"
+        <div class="w-1/3 bg-white border border-gray-300 m-2 flex-col flex flex-col panel" tabindex="0"
             aria-labelledby="editor-heading" role="region">
             <h1 role="heading" id="editor-heading">Code Editor Panel</h1>
 
@@ -114,22 +276,36 @@
             </ul>
         </div>
         <!-- AI Area -->
-        <div class="w-1/3 border-2 border-black m-1 flex-col overflow-auto" tabindex="0"
+        <div class="w-1/3 border border-gray-300 m-2 flex-col overflow-auto panel" tabindex="0"
             aria-labelledby="ai-panel-heading" role="region">
             <h1 role="heading" id="ai-panel-heading">AI Assistance Panel</h1>
-            <div class="border border-black" tabindex="0" aria-labelledby="prompt-heading" role="region">
+            <div class="border border-gray-300" tabindex="0" aria-labelledby="prompt-heading" role="region">
                 <!-- Prompt Area at the top-->
                 <h2 role="heading" id="prompt-heading"> Command:</h2>
                 <div class="h-1/4 mb-1 overflow-auto flex flex-col border border-black mx-1">
 
+                    <div class="flex items-center gap-2 p-2">
+                        <label for="mode-select" class="text-sm text-gray-700">Mode</label>
+                        <select id="mode-select" class="text-sm text-gray-700 border border-black rounded px-2 py-1"
+                            aria-label="Select mode">
+                            <option value="auto">Auto</option>
+                            <option value="describe">Describe</option>
+                            <option value="modify">Modify</option>
+                        </select>
+                    </div>
+
                     <div class="h-1/4">
+                        <div id="action-indicator" class="action-indicator hidden mb-2" role="status" aria-live="polite" aria-busy="false">
+                            <span class="spinner" aria-hidden="true"></span>
+                            <span id="action-text">Working</span>
+                        </div>
                         <textarea
                             class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive bg-gray-100"
                             id="gpt-input" placeholder="Enter your prompt here" style="resize: none; height: 6vh;"
                             aria-label="Prompt box" role="textbox"></textarea>
                         <!-- Buttons below the prompt textbox -->
                         <button aria-label="Submit prompt"
-                            class="flex justify-end items-end text-black font-bold py-1 px-4 rounded border border-black m-2"
+                            class="flex justify-end items-end font-bold py-1 px-4 rounded border border-black m-2 btn-primary"
                             id="callGPT">
                             Enter
                         </button>
@@ -152,7 +328,7 @@
                 role="region" aria-label="History" tabindex="0">
                 <h2 role="heading" id="history-heading"> Response History:</h2>
                 <button aria-label="Clear history"
-                    class="flex justify-end items-end text-black font-bold py-1 px-4 rounded border border-black m-2"
+                    class="flex justify-end items-end font-bold py-1 px-4 rounded border border-black m-2 btn-primary"
                     id="clearHistory">
                     Clear
                 </button>
@@ -160,7 +336,7 @@
             </div>
         </div>
         <!-- Rendering Area -->
-        <div class="w-1/3 flex-col border-2 border-black m-1" tabindex="0" aria-labelledby="model-panel-heading"
+        <div class="w-1/3 flex-col border border-gray-300 m-2 panel" tabindex="0" aria-labelledby="model-panel-heading"
             role="region">
             <h1 role="heading" id="model-panel-heading">Model Panel</h1>
             <div class="flex-col  m-1" id="col2">
@@ -182,7 +358,7 @@
                         <h2 role="heading" id="rendered-heading"> Rendered model</h2>
 
                         <!-- Model viewer goes here -->
-                        <img id="modelImage" src="logo.png" tabindex="0" aria-label="Rendered model"
+                        <img id="modelImage" src="/static/img/logo.png" tabindex="0" aria-label="Rendered model"
                             aria-describedby="code2fab-response" role="img" class="max-w-full" style="max-height: 90%;">
                         <!-- Initially hide the image -->
 
@@ -195,18 +371,67 @@
     </div>
     </div>
 
+    <script src="/config.js"></script>
     <script src="https://unpkg.com/xregexp/xregexp-all.js"></script>
     <script>
-        const serverUrl = 'https://livid-memorisingly-lavonne.ngrok-free.dev'; //'http://128.46.81.40:3000';
+        const serverUrl = window.__A11YSHAPE_API_BASE__ || window.location.origin;
+        const themeStorageKey = "a11yshape-theme";
+        const themeToggle = document.getElementById("theme-toggle");
+        const themeIcon = document.getElementById("theme-icon");
+        const themeRoot = document.documentElement;
+
+        function applyTheme(mode) {
+            themeRoot.classList.remove("theme-dark", "theme-light");
+            themeRoot.classList.add(`theme-${mode}`);
+            if (themeToggle) {
+                const nextLabel = mode === "dark" ? "Light mode" : "Dark mode";
+                themeToggle.setAttribute("aria-label", nextLabel);
+                themeToggle.setAttribute("aria-pressed", mode === "dark" ? "true" : "false");
+            }
+            if (themeIcon) {
+                themeIcon.className = mode === "dark" ? "fas fa-sun" : "fas fa-moon";
+            }
+        }
+
+        const savedTheme = localStorage.getItem(themeStorageKey);
+        applyTheme(savedTheme === "light" ? "light" : "dark");
+
+        if (themeToggle) {
+            themeToggle.addEventListener("click", () => {
+                const isDark = themeRoot.classList.contains("theme-dark");
+                const next = isDark ? "light" : "dark";
+                localStorage.setItem(themeStorageKey, next);
+                applyTheme(next);
+            });
+        }
 
         // Display and update the status
         const statusDisplay = document.getElementById('statusText');
+        const actionIndicator = document.getElementById('action-indicator');
+        const actionText = document.getElementById('action-text');
         function updateStatusAndSpeak(text) {
             //speechSynthesis.cancel();
             //statusDisplay.textContent = text;
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = 5;
             //speechSynthesis.speak(utterance);
+        }
+
+        function setLoading(action) {
+            if (!actionIndicator || !actionText) {
+                return;
+            }
+            actionText.textContent = action;
+            actionIndicator.classList.remove('hidden');
+            actionIndicator.setAttribute('aria-busy', 'true');
+        }
+
+        function clearLoading() {
+            if (!actionIndicator) {
+                return;
+            }
+            actionIndicator.classList.add('hidden');
+            actionIndicator.setAttribute('aria-busy', 'false');
         }
 
         const elements = [
@@ -371,6 +596,9 @@
             clockSound.play();
             var callId = new Date().getTime();
             var code = document.getElementById('openscad-code').value;
+            const selectedMode = document.getElementById('mode-select')?.value || "describe";
+            const actionLabel = text ? "Processing prompt" : "Generating model";
+            setLoading(actionLabel);
             console.log(codeHistory);
             if (prevCode != code && code != codeHistory[historyIndex]) {
               codeHistory.length = historyIndex+1;
@@ -396,7 +624,7 @@
                 const generateResponse = await fetch(serverUrl + '/generate-img', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionId: session_id, callId: callId, code: code, prevCode: prevCode, fullCode: fullCode, imageIndex: index, text: text })
+                    body: JSON.stringify({ sessionId: session_id, callId: callId, code: code, prevCode: prevCode, fullCode: fullCode, imageIndex: index, text: text, mode: selectedMode })
                 });
 
                 if (!generateResponse.ok) {
@@ -490,6 +718,7 @@
                                             document.getElementById('undo-code').disabled = false;
                                             document.getElementById('redo-code').disabled = true;
                                             prevPrompt = text;
+                                            clearLoading();
                                             document.getElementById('generate-model').click();
                                             return;
                                         }
@@ -528,6 +757,7 @@
                                         clockSound.pause();
                                         clockSound.currentTime = 0;
                                         dingSound.play();
+                                        clearLoading();
                                         
                                         responseContainer.focus();
                                         return;
@@ -552,6 +782,7 @@
                                 updateStatusAndSpeak("Please try again.");
                                 clockSound.pause();
                                 errorSound.play();
+                                clearLoading();
                                 statusContainer.innerHTML = "Failed to generate a system reply. Please try again";
                             });
 
@@ -568,6 +799,7 @@
                     updateStatusAndSpeak("Failed to generate images.");
                     clockSound.pause();
                     errorSound.play();
+                    clearLoading();
                     if (generateData.message == "OpenSCAD code error") {
                       statusContainer.innerHTML = '<pre>'+generateData.error+'<\pre>';
                     } else {
@@ -579,6 +811,7 @@
                 updateStatusAndSpeak("An error occurred during image generation.");
                 clockSound.pause();
                 errorSound.play();
+                clearLoading();
                 statusContainer.innerHTML = "Failed to generate a system reply. Please try again";
             }
 

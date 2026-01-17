@@ -3,22 +3,27 @@
 from difference import get_difference
 
 import base64
-import requests
-from dotenv import load_dotenv
+import json
 import os
 from io import BytesIO
+
+import requests
+from dotenv import load_dotenv
 from PIL import Image
-import json
-
-from os import listdir
-from os.path import isfile, join
-
-#import replicate
 
 load_dotenv()
 
 # OpenAI API Key
-api_key = os.getenv("OPENAI_KEY")
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise RuntimeError("Missing OPENAI_API_KEY in environment/.env")
+
+# base URL override (if unset/blank, default OpenAI endpoint is used)
+base_url = (os.getenv("OPENAI_BASE_URL") or "").strip() or "https://api.openai.com/v1"
+
+# models
+MODEL_NANO = os.getenv("OPENAI_MODEL_LIGHT", "gpt-5-nano")
+MODEL_MINI = os.getenv("OPENAI_MODEL_HEAVY", "gpt-5-mini")
 
 rep_key = os.getenv("REPLICATE_API_TOKEN")
 
@@ -46,7 +51,7 @@ def desc_gpt4(base64_image):
     }
 
     payload = {
-        "model": "gpt-4-vision-preview",
+        "model": MODEL_NANO,
         "messages": [
           {
             "role": "user",
@@ -69,7 +74,7 @@ def desc_gpt4(base64_image):
         "max_tokens": 300
     }
 
-    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+    response = requests.post(f"{base_url}/chat/completions", headers=headers, json=payload)
     response = response.json()
     #print(response)
     return response['choices'][0]['message']['content']
@@ -207,7 +212,7 @@ def run(req, model):
     }
 
     payload = {
-        "model": "gpt-4",
+        "model": MODEL_MINI,
         "messages": [
           {
             "role": "user",
@@ -222,7 +227,7 @@ def run(req, model):
         "max_tokens": 300
     }
 
-    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+    response = requests.post(f"{base_url}/chat/completions", headers=headers, json=payload)
     response = response.json()
     d = response['choices'][0]['message']['content']
     #print(d)
