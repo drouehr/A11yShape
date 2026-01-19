@@ -1,62 +1,33 @@
 # A11yShape
 
-## Starting the server
+## Changes made in this fork
+This redux makes several modifications to the original code.
 
-Here are the instructions for setting up the backend server on your own computer:
+### Backend
+- Refactored main program to store API keys and model definitions in the environment file instead of hardcoded authorization headers
+- Added support for an OpenAI-compatible API base URL override
+- Updated `requirements.txt` to use an updated version of Flask to avoid dependency on a deprecated version of jinja2
+- Updated mode detection logic
 
-Install OpenSCAD (https://openscad.org/downloads.html) and make sure the folder containing openscad.exe is added to the system PATH environment variable.
+### Interface
+- Responsive CSS used instead of per-div styling
+- Added a manual switcher for describe/modify modes, with a default automatic mode
+- Added image carousel/tile view image viewer allowing access to all rendered views of the model
+- Added light/dark mode toggle
 
-Optional: Install Ngrok from https://ngrok.com/download (only needed for remote access)
+### Accessibility
+- Added automatic prerequisite installation scripts for windows and macOS
+- Increased verbosity of errors displayed in the errors panel
 
-In commandline, run:
+### AI pipeline
+- Removed hardcoded OpenSCAD code responses to certain prompts bypassing the LLM generation pipeline
+- Added deduplication for rendered images from different views using sha256 hashes before uploading to the LLM to save tokens
+- Updated default models to GPT-5 line for improved performance
+- Changed prompting for describe/modify modes for improved adherence and output
+- Expanded API responses and logging
 
-```
-ngrok config edit
-```
-
-Set the contents of ngrok.yml to be the same as the ngrok.yml file from this repo
-
-Run:
-
-```
-ngrok start --all
-```
-
-In the A11yShape folder run:
-
-```
-pip install -r requirements.txt
-python app.py
-```
-
-Local-only mode
-
-- Open http://127.0.0.1:3000 or http://localhost:3000 in your browser.
-- The frontend calls the local origin for API requests by default.
-- To use ngrok, set A11YSHAPE_API_BASE to your ngrok https URL and restart Flask.
-
-Test the backend server at https://livid-memorisingly-lavonne.ngrok-free.dev/ (only when ngrok is enabled)
-
-If it's running successfully, it should display:
-
-```
-Hello from Flask6!
-```
-
-The frontend is always running at https://a11yshape.pages.dev/. It will use the local API base by default when served from Flask.
-
-## Updating changes to the server
-
-In the A11yShape folder on the server, run:
-
-```
-git pull
-```
-
-Stop the frontend and backend and restart with:
-
-```
-python app.py
-python -m http.server 9000
-```
-
+## Setup
+1. Clone the repository to a local folder.
+2. Run `setup_windows.bat` (windows) or `setup_macos.sh` (macOS) to install Python and OpenSCAD (if not already installed and accessible in PATH), and the project dependencies via pip.
+3. Rename the `.env.example` file to `.env` and change the value of `OPENAI_API_KEY` to your OpenAI API key. (For third-party model providers, change `OPENAI_BASE_URL` to the model provider's OpenAI-compatible base URL, and use your API token as the `OPENAI_API_KEY`).
+4. Open `app.py` (or run `python app.py` in a terminal opened to the project directory). a new tab should open to http://localhost:3000/ in your default browser.

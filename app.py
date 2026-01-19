@@ -12,7 +12,7 @@ The API endpoints include:
 - /api/improve: Accepts a POST request with text and code, and uses gpt-5 to provide suggestions for improving the code.
 The code also includes configuration settings for the gpt-5 models, agent definitions for model descriptor, code interpreter, and user proxy, and a Flask route for serving the index.html file.
 
-Note: The code includes sensitive information such as API keys and authorization headers. Make sure to handle this information securely in a production environment.
+Note: The code includes sensitive authorization headers. Make sure to handle this information securely in a production environment.
 """
 from flask import (
     Flask,
@@ -27,9 +27,12 @@ import base64
 import requests
 import logging
 import os
+import hashlib
 from os.path import isfile, join
 import subprocess
 import shutil
+import threading
+import webbrowser
 
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -117,6 +120,10 @@ def client_config():
     body = f'window.__A11YSHAPE_API_BASE__ = "{api_base}";\n'
     return Response(body, mimetype="text/javascript")
 
+@app.route("/favicon/<path:filename>")
+def favicon_files(filename):
+    return send_from_directory(os.path.join(APP_ROOT, "favicon"), filename)
+
 @app.route('/code2fab', methods=['POST'])
 def code2fab():
     req = request.json
@@ -129,9 +136,14 @@ def encode_image(image_path):
 
 def pil_to_bytes(img):
     buf = io.BytesIO()
-    img.save(buf, format='JPEG')
+    img.save(buf, format="JPEG")
     byte_im = buf.getvalue()
     return base64.b64encode(byte_im).decode("utf-8")
+
+def image_signature(img):
+    normalized = img.convert("RGB")
+    normalized = normalized.resize((128, 128), Image.Resampling.LANCZOS)
+    return hashlib.sha256(normalized.tobytes()).hexdigest()
 
 def upload_image(image_path):
     headers = {'Authorization': 'ICcEBQDFvmdJGPfwpGMSYxgkSEYHnVyw'}
@@ -182,6 +194,7 @@ def gen_image(views, code, output_dir):
 
     encoded_imgs = []
     encoded_imgs_sm = []
+    seen_signatures = set()
 
     processes = []
     for index in views:
@@ -237,12 +250,23 @@ def gen_image(views, code, output_dir):
         output_path = os.path.join(output_dir, f"{index}.png")
 
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.debug("Checking output image exists=%s path=%s", os.path.exists(output_path), output_path)
+            logging.debug(
+                "Checking output image exists=%s path=%s",
+                os.path.exists(output_path),
+                output_path,
+            )
 
         if not os.path.exists(output_path):
             raise Exception(f"OpenSCAD did not produce expected output file: {output_path}")
 
         img = Image.open(output_path)
+        signature = image_signature(img)
+        if signature in seen_signatures:
+            if logging.getLogger().isEnabledFor(logging.DEBUG):
+                logging.debug("Skipping duplicate view=%s signature=%s", index, signature)
+            continue
+
+        seen_signatures.add(signature)
         fullsize = pil_to_bytes(img)
         imgsize = 256, 256
         img.thumbnail(imgsize, Image.Resampling.LANCZOS)
@@ -285,7 +309,13 @@ availableFunctions = [
 ]
 
 def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs):
-    instructions = "Describe only the physical geometry of the model (shape, size, proportions, relative positions, intersections, symmetry, and orientation). Avoid background, color, lighting, or rendering details. Do not explain how to create the model unless explicitly asked."
+    instructions = (
+        "Describe only the physical geometry of the model (shape, size, proportions, relative positions, intersections, symmetry, and orientation). "
+        "Avoid background, color, lighting, or rendering details. Do not explain how to create the model unless explicitly asked. "
+        "The rendered images show the same single model from different viewpoints, not different models. "
+        "Views are ordered as: view 0 = 50,50,50; view 1 = 0,0,0; view 2 = 0,0,-50; view 3 = -50,0,0; "
+        "view 4 = 50,0,0; view 5 = 0,50,0; view 6 = 0,-50,0."
+    )
     if len(text) > 0:
         instructions = text
     
@@ -294,7 +324,7 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
         if len(text) > 0:
             instructions = text
         content = [
-                    {"type": "text", "text": "Given the part of a 3D model and its OpenSCAD code, "+instructions+". The part of the model in the code is marked with the comment \"part of the model -->\". Do not mention it was marked with the comment. The first "+str(len(fullImgs))+" images are the full model in different angles with the part of the model highlighted in red and the last "+str(len(imgs))+" images are the part of the model in different angles."},
+                    {"type": "text", "text": "Given the part of a 3D model and its OpenSCAD code, "+instructions+" The part of the model in the code is marked with the comment \"part of the model -->\". Do not mention it was marked with the comment. The first "+str(len(fullImgs))+" images are the full model in different angles with the part of the model highlighted in red and the last "+str(len(imgs))+" images are the part of the model in different angles."},
                     {"type": "text", "text": partCode},
                 ]
         
@@ -307,7 +337,7 @@ def getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullIm
         
     elif len(prevCode) > 0:
         content = [
-                    {"type": "text", "text": "Given the two versions of a 3D model and its OpenSCAD code, with the last "+str(len(imgs))+" images and code referred to as the current model and the first "+str(len(prevImgs))+" images and code referred to as the previous model, describe the changes between the two versions focusing on physical geometry (shape, size, proportions, relative positions, intersections, symmetry, and orientation). Avoid background, color, lighting, or rendering details."},
+                    {"type": "text", "text": "Given the two versions of a 3D model and its OpenSCAD code, with the last "+str(len(imgs))+" images and code referred to as the current model and the first "+str(len(prevImgs))+" images and code referred to as the previous model, describe the changes between the two versions focusing on physical geometry (shape, size, proportions, relative positions, intersections, symmetry, and orientation). Avoid background, color, lighting, or rendering details. The images for each version are different views of the same model, not separate models."},
                     {"type": "text", "text": prevCode},
                 ]
         for img in prevImgs:
@@ -568,26 +598,45 @@ def generate_images():
         logData["timestamps"]["getChanges"] = time.time()
         
         
-        views = {
-            "display": "50,50,50,60,30,-210,300",   
-        }
+        views = [
+            "50,50,50,60,30,-210,300",
+            "0,0,0,0,0,0,200",
+            "0,0,-50,180,0,180,200",
+            "-50,0,0,90,0,0,200",
+            "50,0,0,-90,180,0,200",
+            "0,50,0,90,0,90,200",
+            "0,-50,0,90,0,-90,200",
+        ]
+        views = dict(enumerate(views))
 
         encoded_imgs, encoded_imgs_sm = gen_image(views, code, output_dir)
         if encoded_imgs is None:
             return jsonify(error=f"Failed to generate image {index}"), 500
-        
-        
+
         if len(fullCode) > 0:
-            _, encoded_imgs_full = gen_image(views, fullCode, output_dir)
+            encoded_imgs_full, encoded_imgs_full_sm = gen_image(
+                views, fullCode, output_dir
+            )
         else:
             encoded_imgs_full = [""]
-            
+            encoded_imgs_full_sm = [""]
+
         logData["timestamps"]["getImg"] = time.time()
         with open('log.txt', 'a') as f:
             f.write(json.dumps(logData)+'\n')
-        
-        
-        return jsonify({"message": "Images generated successfully", "mode": mode, "changes": changes, "image": encoded_imgs[0], "thumbnail": encoded_imgs_sm[0], "fullImg": encoded_imgs_full[0]})
+
+        return jsonify({
+            "message": "Images generated successfully",
+            "mode": mode,
+            "changes": changes,
+            "image": encoded_imgs[0],
+            "thumbnail": encoded_imgs_sm[0],
+            "images": encoded_imgs,
+            "thumbnails": encoded_imgs_sm,
+            "fullImg": encoded_imgs_full[0],
+            "fullImages": encoded_imgs_full,
+            "fullThumbnails": encoded_imgs_full_sm,
+        })
     except Exception as e:
         logging.exception("/generate-img failed")
         logData["error"] = str(e)
@@ -1014,5 +1063,12 @@ Follow the template below to output the result:
 
 
 if __name__ == "__main__":
+    def open_browser():
+        try:
+            webbrowser.open(f"http://localhost:{PORT}/")
+        except Exception:
+            logging.exception("Failed to open browser")
+
+    threading.Timer(1.0, open_browser).start()
     app.run(host="0.0.0.0", port=PORT)
     

@@ -5,11 +5,16 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>
-        A11yShape
+        A11yShape Redux
     </title>
     <script src="https://cdn.tailwindcss.com">
     </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon/favicon-64x64.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"
         integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
@@ -45,19 +50,104 @@
             --input-bg: #ffffff;
         }
 
-        body {
+        .app-body {
             background: var(--bg);
             color: var(--text);
             font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-main {
+            flex: 1 1 auto;
+            min-height: 0;
+            padding: 0.5rem;
+            gap: 0.75rem;
+            overflow: auto;
+        }
+
+        @media (max-height: 500px) {
+            .app-body {
+                height: auto;
+                overflow: auto;
+            }
+
+            .app-main {
+                min-height: auto;
+            }
+        }
+
+        @media (max-height: 700px) {
+            .app-body {
+                height: auto;
+                overflow: auto;
+            }
+
+            .app-main {
+                min-height: auto;
+                align-items: stretch;
+                flex-direction: column;
+                overflow: visible;
+            }
+
+            .editor-panel,
+            .model-panel,
+            .app-main > .panel {
+                width: 100%;
+                height: auto;
+                min-height: 0;
+                overflow: visible;
+            }
+
+            .editor-panel > *,
+            .model-panel > * {
+                flex: 0 0 auto;
+                min-height: 0;
+            }
+
+            .editor-textarea {
+                max-height: 45vh;
+            }
+
+            .response-box,
+            .history-responses,
+            .status-message,
+            .code-changes {
+                max-height: 30vh;
+                overflow-y: auto;
+            }
+
+            #col2 {
+                height: auto;
+                min-height: 0;
+            }
+
+            .parts-panel,
+            .rendered-panel {
+                max-height: none;
+                height: auto;
+            }
+
+            .rendered-region,
+            .rendered-carousel,
+            .rendered-tile-grid {
+                min-height: 0;
+            }
         }
 
         header.app-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0.75rem 1rem;
+            font-size: 25px;
+            font-weight: bold;
+            padding: 0.5rem;
             border-bottom: 1px solid var(--border);
             background: var(--panel);
+            flex: 0 0 auto;
         }
 
         .panel {
@@ -65,6 +155,7 @@
             border-radius: 0.9rem;
             border: 1px solid var(--border);
             box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+            padding: 0.5rem;
         }
 
         .theme-toggle {
@@ -86,29 +177,121 @@
             background: var(--button-hover);
         }
 
-        .btn-primary {
+        .btn-primary,
+        button:not(.theme-toggle) {
             background: var(--accent);
             color: var(--text);
             border: 1px solid transparent;
             font-weight: 600;
             box-shadow: 0 8px 16px rgba(15, 23, 42, 0.2);
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.6rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover,
+        button:not(.theme-toggle):hover {
             transform: translateY(-1px);
             box-shadow: 0 12px 22px rgba(15, 23, 42, 0.3);
+        }
+
+        .btn-primary:disabled,
+        button:not(.theme-toggle):disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         button,
         input,
         textarea,
         select {
+            box-sizing: border-box;
             border-radius: 0.6rem;
             border-color: var(--border);
             background: var(--input-bg);
             color: var(--text);
             transition: border-color 0.2s ease, background 0.2s ease;
+        }
+
+        input,
+        textarea,
+        select {
+            margin: 0.35rem 0.5rem;
+            max-width: calc(100% - 1rem);
+        }
+
+        .field-spacing {
+            margin: 0.5rem;
+            width: calc(100% - 1rem);
+        }
+
+        .hidden-input {
+            display: none;
+        }
+
+        .editor-textarea {
+            resize: none;
+            min-height: 320px;
+            height: auto;
+            max-height: 90vh;
+            width: 100%;
+            overflow-y: auto;
+        }
+
+        .status-message {
+            min-height: 3rem;
+            height: auto;
+        }
+
+        .code-changes {
+            min-height: 6rem;
+            height: auto;
+        }
+
+        .prompt-textarea {
+            resize: none;
+            height: 6vh;
+        }
+
+        .response-container {
+            height: 75%;
+        }
+
+        .response-box {
+            height: 40vh;
+            overflow-y: auto;
+        }
+
+        .history-responses {
+            height: 22vh;
+            overflow-y: auto;
+        }
+
+        .parts-panel {
+            min-height: 160px;
+            height: auto;
+            flex: 0 1 auto;
+        }
+
+        .parts-content {
+            height: 92%;
+            width: 100%;
+        }
+
+        .rendered-panel {
+            min-height: 240px;
+            height: auto;
+            flex: 1 1 auto;
+        }
+
+        .rendered-region {
+            position: relative;
         }
 
         button:focus,
@@ -131,11 +314,23 @@
             background: var(--panel-muted);
             color: var(--text);
             border-radius: 0.5rem;
-            border: 1px solid var(--border);
+            border: none;
         }
 
         .hidden {
             display: none;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
         }
 
         .text-left {
@@ -146,13 +341,32 @@
             white-space: pre-wrap;
         }
 
-        h1{
-            font-size: 40px;
+        h2{
+            font-size: 20px;
         }
 
-        h1, h2 {
-            padding-left: 0.5rem;
+        h2, h3 {
+            padding: 0.5rem;
             color: var(--text);
+        }
+
+        .section-divider {
+            border-top: 1px solid var(--border);
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+        }
+
+        .section-divider:first-child {
+            border-top: none;
+            margin-top: 0;
+            padding-top: 0;
+        }
+
+        .subsection-body {
+            margin: 0.25rem 0;
+            padding: 0.5rem 0;
+            border: none;
+            background: transparent;
         }
 
         .bg-white {
@@ -200,93 +414,302 @@
                 transform: rotate(360deg);
             }
         }
+
+        .rendered-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: left;
+            gap: 0.5rem;
+        }
+
+        .rendered-toolbar button {
+            font-size: 0.85rem;
+            padding: 0.35rem 0.6rem;
+        }
+
+        .rendered-toolbar select {
+            font-size: 0.85rem;
+            padding: 0.35rem 0.6rem;
+            border: 1px solid var(--border);
+            background: var(--button-bg);
+            color: var(--text);
+        }
+
+        .rendered-counter {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .toolbar-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0 0.5rem;
+        }
+
+        .rendered-carousel {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
+            height: auto;
+            min-height: 100%;
+            padding: 0rem;
+        }
+
+        .rendered-carousel img {
+            max-height: none;
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.6rem;
+            border: 1px solid var(--border);
+            background: var(--panel-muted);
+        }
+
+        .rendered-thumbnails {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .rendered-thumb {
+            width: 56px;
+            height: 56px;
+            border-radius: 0.4rem;
+            border: 2px solid transparent;
+            object-fit: cover;
+            cursor: pointer;
+            flex: 0 0 auto;
+            aspect-ratio: 1 / 1;
+        }
+
+        .rendered-thumb.is-active {
+            border-color: var(--accent);
+        }
+
+        .rendered-tile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+            padding: 0.75rem;
+        }
+
+        .rendered-tile-grid img {
+            width: 100%;
+            height: auto;
+            border-radius: 0.6rem;
+            border: 1px solid var(--border);
+            background: var(--panel-muted);
+        }
+
+        .editor-panel,
+        .model-panel {
+            min-height: 400px;
+            height: 100%;
+        }
+
+        .editor-panel {
+            min-height: 520px;
+        }
+
+        .editor-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-height: 0;
+        }
+
+        .editor-block {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            min-height: 0;
+        }
+
+        .editor-block.scrollable {
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .editor-panel .section-divider.flex {
+            margin-top: 0;
+            padding-top: 0;
+        }
+
+        .editor-panel,
+        .editor-panel > .section-divider,
+        .editor-panel > .section-divider + .section-divider,
+        .editor-panel > .section-divider + .section-divider + .section-divider {
+            min-height: 0;
+        }
+
+        .editor-panel,
+        .editor-panel > .section-divider,
+        .editor-panel > .section-divider + .section-divider + .section-divider {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-panel > .section-divider {
+            flex: 1 1 auto;
+        }
+
+        .editor-panel > .section-divider + .section-divider {
+            flex: 0 0 auto;
+        }
+
+        .editor-panel > .section-divider + .section-divider + .section-divider {
+            flex: 0 0 auto;
+        }
+
+        .editor-panel > .section-divider + .section-divider + .section-divider + .section-divider {
+            flex: 1 1 auto;
+        }
+
+        .editor-panel textarea.editor-textarea {
+            min-height: 320px;
+            max-height: 90vh;
+        }
+
+        .editor-panel .status-message,
+        .editor-panel .code-changes {
+            max-height: 30vh;
+        }
+
+        #col2 {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
+        }
+
+        .parts-panel {
+            height: auto !important;
+            flex: 0 0 auto;
+            max-height: 35vh;
+        }
+
+        .rendered-panel {
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .rendered-region {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .rendered-carousel,
+        .rendered-tile-grid {
+            flex: 1 1 auto;
+        }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 
 
-<body class="bg-white h-screen ">
+<body class="bg-white app-body">
 
     <header class="app-header">
-        <h1>A11yShape</h1>
+        <div class="flex items-center gap-3">
+            <img src="/favicon/favicon-180x180.png" alt="A11yShape logo" class="w-10 h-10" />
+            <h1>A11yShape Redux</h1>
+        </div>
         <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle color theme">
             <i id="theme-icon" class="fas fa-sun" aria-hidden="true"></i>
         </button>
     </header>
     <!-- Main Content -->
-    <div class="flex w-full height:98vh">
+    <div class="app-main flex w-full">
         <!-- Code Editor area -->
-        <div class="w-1/3 bg-white border border-gray-300 m-2 flex-col flex flex-col panel" tabindex="0"
+        <div class="w-1/3 bg-white border border-gray-300 flex-col flex flex-col panel editor-panel" tabindex="0"
             aria-labelledby="editor-heading" role="region">
-            <h1 role="heading" id="editor-heading">Code Editor Panel</h1>
-
-            <div tabindex="0" aria-label="editor-toolbar" role="toolbar">
-                <div class=" border-b border-gray-300 px-2 py-1 flex justify-between items-center flex-none  ">
-                    <div class="flex items-center space-x-1">
-                        <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black" id="upload-file"
-                            tabindex="0" aria-label="Upload OpenSCAD file" aria-controls="file-input">
-                            <i class="fas fa-upload" aria-hidden="true"></i>
-                        </button>
-
-                        <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black" id="save-code"
-                            tabindex="0" aria-label="Save the OpenSCAD code">
-                            <i class="fas fa-save" aria-hidden="true"></i>
-                        </button>
-
-                        <input type="file" id="file-input" style="display: none;" accept=".scad"
-                            aria-label="Open an OpenSCAD file.">
-                            
-                        <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black" id="undo-code"
-                            tabindex="0" aria-label="Undo code changes" disabled>
-                            Undo
-                        </button>
-                        <button class="text-gray-600 hover:bg-gray-100 p-1 rounded border border-black" id="redo-code"
-                            tabindex="0" aria-label="Redo code changes" disabled>
-                            Redo
-                        </button>
-                        <button tabindex="0" aria-label="Generate Model"
-                            class="text-gray-600 hover:bg-gray-100 p-1 rounded interactive border border-black"
-                            id="generate-model">
-                            <!--<i class="fas fa-cube"></i>-->
-                            Generate Model
-                        </button>
-                        
+            <h2 role="heading" id="editor-heading">Code Editor Panel</h2>
+            <div class="editor-stack">
+                <div class="section-divider editor-block" tabindex="0" aria-labelledby="code-editor-heading" role="region">
+                    <h3 role="heading" id="editor-controls-heading">Editor Controls</h3>
+                    <div tabindex="0" aria-label="editor-toolbar" role="toolbar" aria-labelledby="editor-controls-heading">
+                        <div class="section-divider flex justify-between items-center flex-none">
+                            <div class="toolbar-row">
+                                <button class="btn-primary" id="upload-file"
+                                    tabindex="0" aria-label="Upload OpenSCAD file" aria-controls="file-input">
+                                    <i class="fas fa-upload" aria-hidden="true"></i>
+                                    <span>Import file</span>
+                                    <span class="sr-only">Upload OpenSCAD file</span>
+                                </button>
+        
+                                <button class="btn-primary" id="save-code"
+                                    tabindex="0" aria-label="Save the OpenSCAD code">
+                                    <i class="fas fa-save" aria-hidden="true"></i>
+                                    <span>Save</span>
+                                    <span class="sr-only">Save OpenSCAD code</span>
+                                </button>
+        
+                                <input type="file" id="file-input" class="hidden-input" accept=".scad"
+                                    aria-label="Open an OpenSCAD file.">
+                                    
+                                <button class="btn-primary" id="undo-code"
+                                    tabindex="0" aria-label="Undo code changes" disabled>
+                                    Undo
+                                </button>
+                                <button class="btn-primary" id="redo-code"
+                                    tabindex="0" aria-label="Redo code changes" disabled>
+                                    Redo
+                                </button>
+                                <button tabindex="0" aria-label="Generate Model"
+                                    class="btn-primary interactive"
+                                    id="generate-model">
+                                    <!--<i class="fas fa-cube"></i>-->
+                                    Generate Model
+                                </button>
+                                
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <h2 role="heading" id="editor-input-heading"> Code Editor Input Area</h2>
-            <textarea tabindex="0" aria-labelledby="editor-input-heading" role="textbox"
-                class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive" id="openscad-code"
-                placeholder="Enter OpenSCAD code here"
-                style="resize: none; height: calc(70vh - 40px); width: calc(100% - 4px);"
-                data-hover-text="Enter OpenSCAD code here."></textarea>
+                <div class="section-divider editor-block scrollable" tabindex="0" aria-labelledby="editor-input-heading" role="region">
+                    <h2 role="heading" id="editor-input-heading"> Code Editor</h2>
+                    <textarea tabindex="0" aria-labelledby="editor-input-heading" role="textbox"
+                        class="p-2 text-sm text-gray-700 font-mono focus:outline-none interactive editor-textarea field-spacing" id="openscad-code"
+                        placeholder="Enter OpenSCAD code here"
+                        data-hover-text="Enter OpenSCAD code here."></textarea>
+                </div>
+                    
+                <div class="section-divider editor-block" tabindex="0" aria-labelledby="status-heading" role="status">
+                  <h2 role="heading" id="status-heading"> Errors</h2>
+                  <div class="w-full overflow-auto field-spacing status-message"
+                      id="status-message">
+                      
+                  </div>
+                </div>
                 
-            <div tabindex="0" aria-labelledby="status-heading" role="status">
-              <h2 role="heading" id="status-heading"> Errors</h2>
-              <div class="w-full h-1/2 overflow-auto"
-                  id="status-message" style="height: 5vh;">
-                  
-              </div>
+                <div class="section-divider editor-block" tabindex="0" aria-labelledby="changes-heading" role="region">
+                    <h2 role="heading" id="changes-heading"> Code Changes</h2>
+                    <ul tabindex="0" class="w-full overflow-auto field-spacing code-changes"
+                        id="code-changes" aria-labelledby="changes-heading" role="list">
+                    </ul>
+                </div>
             </div>
-            
-            <h2 role="heading" id="changes-heading"> Code Changes</h2>
-            <ul tabindex="0" class="w-full h-1/2 overflow-auto"
-                id="code-changes" aria-labelledby="changes-heading" role="list" style="height: 12vh;">
-            </ul>
         </div>
         <!-- AI Area -->
-        <div class="w-1/3 border border-gray-300 m-2 flex-col overflow-auto panel" tabindex="0"
+        <div class="w-1/3 border border-gray-300 flex-col overflow-auto panel" tabindex="0"
             aria-labelledby="ai-panel-heading" role="region">
-            <h1 role="heading" id="ai-panel-heading">AI Assistance Panel</h1>
-            <div class="border border-gray-300" tabindex="0" aria-labelledby="prompt-heading" role="region">
+            <h2 role="heading" id="ai-panel-heading">AI Assistance Panel</h2>
+            <div class="section-divider" tabindex="0" aria-labelledby="prompt-heading" role="region">
                 <!-- Prompt Area at the top-->
-                <h2 role="heading" id="prompt-heading"> Command:</h2>
-                <div class="h-1/4 mb-1 overflow-auto flex flex-col border border-black mx-1">
+                <h3 role="heading" id="prompt-heading"> Command:</h3>
+                <div class="h-1/4 mb-1 overflow-auto flex flex-col subsection-body">
 
                     <div class="flex items-center gap-2 p-2">
                         <label for="mode-select" class="text-sm text-gray-700">Mode</label>
-                        <select id="mode-select" class="text-sm text-gray-700 border border-black rounded px-2 py-1"
+                        <select id="mode-select" class="text-sm text-gray-700 px-2 py-1"
                             aria-label="Select mode">
                             <option value="auto">Auto</option>
                             <option value="describe">Describe</option>
@@ -300,68 +723,82 @@
                             <span id="action-text">Working</span>
                         </div>
                         <textarea
-                            class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive bg-gray-100"
-                            id="gpt-input" placeholder="Enter your prompt here" style="resize: none; height: 6vh;"
+                            class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive bg-gray-100 prompt-textarea field-spacing"
+                            id="gpt-input" placeholder="Enter your prompt here"
                             aria-label="Prompt box" role="textbox"></textarea>
                         <!-- Buttons below the prompt textbox -->
-                        <button aria-label="Submit prompt"
-                            class="flex justify-end items-end font-bold py-1 px-4 rounded border border-black m-2 btn-primary"
-                            id="callGPT">
-                            Enter
-                        </button>
+                        <div class="toolbar-row" role="toolbar" aria-label="Prompt actions">
+                            <button aria-label="Submit prompt"
+                                class="btn-primary"
+                                id="callGPT">
+                                Enter
+                            </button>
+                        </div>
 
                     </div>
                 </div>
             </div>
             <!-- Response Area at the bottom -->
-            <div class=" mt-2 pt-2 " tabindex="0" aria-labelledby="response-heading" role="status" aria-live="polite">
-                <h2 role="heading" id="response-heading"> A11yShape Response:</h2>
-                <div class="code2fab-container w-full text-sm text-gray-700 font-mono flex-col" style="height: 3/4;">
+            <div class="section-divider" tabindex="0" aria-labelledby="response-heading" role="status" aria-live="polite">
+                <h3 role="heading" id="response-heading"> A11yShape Response:</h3>
+                <div class="code2fab-container w-full text-sm text-gray-700 font-mono flex-col response-container">
                     <!-- GPT response content goes here -->
                     <div id="code2fab-response"
-                        class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0"
-                        data-hover-text="code2fab's response" style="height: 40vh; overflow-y: auto;"><br><br> Model description not yet generated<br>
+                        class="code2fab-content h-full overflow-auto text-gray-500 interactive flex-shrink-0 field-spacing response-box"
+                        data-hover-text="code2fab's response"><br><br> Model description not yet generated<br>
                     </div>
                 </div>
             </div>
-            <div id="history-responses-area" class="mt-4 pt-4 border-t border-gray-300 overflow-y: scroll"
+            <div id="history-responses-area" class="section-divider overflow-y: scroll"
                 role="region" aria-label="History" tabindex="0">
-                <h2 role="heading" id="history-heading"> Response History:</h2>
-                <button aria-label="Clear history"
-                    class="flex justify-end items-end font-bold py-1 px-4 rounded border border-black m-2 btn-primary"
-                    id="clearHistory">
-                    Clear
-                </button>
-                <div id="history-responses" style="height: 22vh; overflow-y: auto;"></div>
+                <h3 role="heading" id="history-heading"> Response History:</h3>
+                <div class="toolbar-row" role="toolbar" aria-label="History actions">
+                    <button aria-label="Clear history"
+                        class="btn-primary"
+                        id="clearHistory">
+                        Clear
+                    </button>
+                </div>
+                <div id="history-responses" class="history-responses field-spacing"></div>
             </div>
         </div>
         <!-- Rendering Area -->
-        <div class="w-1/3 flex-col border border-gray-300 m-2 panel" tabindex="0" aria-labelledby="model-panel-heading"
+        <div class="w-1/3 flex-col border border-gray-300 panel model-panel" tabindex="0" aria-labelledby="model-panel-heading"
             role="region">
-            <h1 role="heading" id="model-panel-heading">Model Panel</h1>
-            <div class="flex-col  m-1" id="col2">
+            <h2 role="heading" id="model-panel-heading">Model Panel</h2>
+            <div class="section-divider" aria-hidden="true"></div>
+            <div class="flex-col" id="col2">
 
-                <div class="w-full h-1/2 overflow-auto" tabindex="0" aria-labelledby="parts-heading"
-                    style="height: calc(50vh - 40px);">
-                    <h2 role="heading" id="parts-heading"> Model parts</h2>
-                    <div class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive"
-                        id="openscad-code2" placeholder="The modular structure of the code will appear here"
-                        style="resize: none; height: 92%; width: calc(100% - 2px);">
+                <div class="section-divider w-full h-1/2 overflow-auto parts-panel" tabindex="0" aria-labelledby="parts-heading">
+                    <h3 role="heading" id="parts-heading"> Model parts</h3>
+                    <div class="h-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive parts-content field-spacing"
+                        id="openscad-code2" placeholder="The modular structure of the code will appear here">
                         <p>The parts of model will appear here...</p>
                     </div>
                 </div>
 
                 <!-- Viewport Content -->
-                <div class="flex-grow  flex border border-black" style="height: calc(50vh - 40px);">
-                    <div class="w-full flex-grow justify-center items-center overflow-auto" style="position: relative;"
+                <div class="section-divider flex-grow flex rendered-panel">
+                    <div class="w-full flex-grow justify-center items-center overflow-auto rendered-region"
                         tabindex="0" aria-labelledby="rendered-heading" role="region">
-                        <h2 role="heading" id="rendered-heading"> Rendered model</h2>
+                        <h3 role="heading" id="rendered-heading"> Rendered model</h3>
+                        <div class="rendered-toolbar toolbar-row" role="toolbar" aria-label="Rendered model view controls">
+                            <button id="rendered-prev" type="button" aria-label="Previous view" class="btn-primary">Prev</button>
+                            <button id="rendered-next" type="button" aria-label="Next view" class="btn-primary">Next</button>
+                            <label for="rendered-view-select" class="sr-only">Select view mode</label>
+                            <select id="rendered-view-select" aria-label="View mode">
+                                <option value="carousel">Carousel</option>
+                                <option value="tiles">Tile view</option>
+                            </select>
+                            <span id="rendered-counter" class="rendered-counter" aria-live="polite">View 1 of 1</span>
+                        </div>
 
-                        <!-- Model viewer goes here -->
-                        <img id="modelImage" src="/static/img/logo.png" tabindex="0" aria-label="Rendered model"
-                            aria-describedby="code2fab-response" role="img" class="max-w-full" style="max-height: 90%;">
-                        <!-- Initially hide the image -->
-
+                        <div id="rendered-carousel" class="rendered-carousel" aria-live="polite">
+                            <img id="modelImage" src="/static/img/logo.png" tabindex="0" aria-label="Rendered model"
+                                aria-describedby="code2fab-response" role="img" class="max-w-full">
+                            <div id="rendered-thumbnails" class="rendered-thumbnails" aria-label="Rendered model thumbnails"></div>
+                        </div>
+                        <div id="rendered-tiles" class="rendered-tile-grid hidden" aria-label="Rendered model tile view"></div>
                     </div>
                 </div>
             </div>
@@ -434,6 +871,23 @@
             actionIndicator.setAttribute('aria-busy', 'false');
         }
 
+        const editorTextarea = document.getElementById('openscad-code');
+
+        function resizeEditorTextarea() {
+            if (!editorTextarea) {
+                return;
+            }
+            editorTextarea.style.height = 'auto';
+            const targetHeight = Math.min(editorTextarea.scrollHeight, window.innerHeight * 0.9);
+            editorTextarea.style.height = `${targetHeight}px`;
+        }
+
+        if (editorTextarea) {
+            resizeEditorTextarea();
+            editorTextarea.addEventListener('input', resizeEditorTextarea);
+            window.addEventListener('resize', resizeEditorTextarea);
+        }
+
         const elements = [
             { id: "save-code", key: "Ctrl+Shift+S", text: "Save the OpenSCAD code." },
             //{ id: "refresh-files", key: "Ctrl+Shift+R", text: "Clear the file list." },
@@ -446,7 +900,7 @@
 
 
         document.addEventListener('keydown', function (event) {
-            //console.log(event.key, event.ctrlKey, event.shiftKey); 
+            //console.log(event.key, event.ctrlKey, event.shiftKey);
             if (event.ctrlKey && event.shiftKey) {
                 elements.forEach(item => {
                     if (event.key.toUpperCase() === item.key.split('+').pop()) {
@@ -457,6 +911,20 @@
                         }
                     }
                 });
+            } else if (event.altKey && !event.shiftKey && !event.ctrlKey) {
+                if (event.key.toUpperCase() === "E") {
+                    const element = document.getElementById("openscad-code");
+                    if (element) {
+                        element.focus();
+                        updateStatusAndSpeak("Focused OpenSCAD code editor.");
+                    }
+                } else if (event.key.toUpperCase() === "P") {
+                    const element = document.getElementById("gpt-input");
+                    if (element) {
+                        element.focus();
+                        updateStatusAndSpeak("Focused prompt input.");
+                    }
+                }
             }
         });
 
@@ -477,6 +945,20 @@
         const imageBasePath = '/static/img/model/';
         const totalImages = 7; // Assuming images are named from 0.jpg to 6.jpg
         let currentImageIndex = 0;
+        let renderedImages = [];
+        let renderedThumbnails = [];
+        let renderedFullImages = [];
+        let renderedFullThumbnails = [];
+        let renderedViewMode = 'carousel';
+
+        const renderedPrevButton = document.getElementById('rendered-prev');
+        const renderedNextButton = document.getElementById('rendered-next');
+        const renderedViewSelect = document.getElementById('rendered-view-select');
+        const renderedCounter = document.getElementById('rendered-counter');
+        const renderedTiles = document.getElementById('rendered-tiles');
+        const renderedCarousel = document.getElementById('rendered-carousel');
+        const renderedThumbnailsContainer = document.getElementById('rendered-thumbnails');
+        const imageElement = document.getElementById('modelImage');
 
         var prevCode = '';
         var parts = [];
@@ -592,6 +1074,93 @@
           document.getElementById('code-changes').innerHTML = output;
         }
 
+        function updateRenderedCounter() {
+            const total = renderedImages.length || 1;
+            const current = renderedImages.length ? currentImageIndex + 1 : 1;
+            if (renderedCounter) {
+                renderedCounter.textContent = `View ${current} of ${total}`;
+            }
+        }
+
+        function buildRenderedThumbnails() {
+            if (!renderedThumbnailsContainer) {
+                return;
+            }
+            renderedThumbnailsContainer.innerHTML = "";
+            renderedThumbnails.forEach((thumb, index) => {
+                const thumbImg = document.createElement('img');
+                thumbImg.src = thumb;
+                thumbImg.alt = `Thumbnail view ${index + 1}`;
+                thumbImg.className = "rendered-thumb" + (index === currentImageIndex ? " is-active" : "");
+                thumbImg.addEventListener('click', () => {
+                    setRenderedIndex(index);
+                });
+                renderedThumbnailsContainer.appendChild(thumbImg);
+            });
+        }
+
+        function buildRenderedTiles() {
+            if (!renderedTiles) {
+                return;
+            }
+            renderedTiles.innerHTML = "";
+            renderedImages.forEach((img, index) => {
+                const tileImg = document.createElement('img');
+                tileImg.src = img;
+                tileImg.alt = `Rendered model view ${index + 1}`;
+                renderedTiles.appendChild(tileImg);
+            });
+        }
+
+        function setRenderedIndex(index) {
+            if (!renderedImages.length) {
+                currentImageIndex = 0;
+                updateRenderedCounter();
+                return;
+            }
+            const total = renderedImages.length;
+            currentImageIndex = (index + total) % total;
+            if (imageElement) {
+                imageElement.src = renderedImages[currentImageIndex];
+            }
+            updateRenderedCounter();
+            buildRenderedThumbnails();
+        }
+
+        function setRenderedMode(mode) {
+            renderedViewMode = mode;
+            if (renderedViewSelect) {
+                renderedViewSelect.value = mode;
+            }
+            if (renderedCarousel && renderedTiles) {
+                if (mode === 'tiles') {
+                    renderedCarousel.classList.add('hidden');
+                    renderedTiles.classList.remove('hidden');
+                } else {
+                    renderedCarousel.classList.remove('hidden');
+                    renderedTiles.classList.add('hidden');
+                }
+            }
+        }
+
+        if (renderedPrevButton) {
+            renderedPrevButton.addEventListener('click', () => {
+                setRenderedIndex(currentImageIndex - 1);
+            });
+        }
+
+        if (renderedNextButton) {
+            renderedNextButton.addEventListener('click', () => {
+                setRenderedIndex(currentImageIndex + 1);
+            });
+        }
+
+        if (renderedViewSelect) {
+            renderedViewSelect.addEventListener('change', (event) => {
+                setRenderedMode(event.target.value);
+            });
+        }
+
         async function genImageAndDescribe(index, text) {
             clockSound.play();
             var callId = new Date().getTime();
@@ -642,21 +1211,33 @@
                     if (mode == "modify" && text != "") {
                       currentPart = { index: 0, code: "", offset: 0 };
                     }
-					
+     
                     if (generateData.changes != '') {
                       displayChanges(code, JSON.parse(generateData.changes));
                     }
-                    
 
-                    const byteCharacters = atob(generateData.image);
-                    const byteNumbers = new Array(byteCharacters.length);
-                    for (let i = 0; i < byteCharacters.length; i++) {
-                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    renderedImages = (generateData.images || []).map((img) => `data:image/jpeg;base64,${img}`);
+                    renderedThumbnails = (generateData.thumbnails || []).map((img) => `data:image/jpeg;base64,${img}`);
+                    renderedFullImages = (generateData.fullImages || []).map((img) => `data:image/jpeg;base64,${img}`);
+                    renderedFullThumbnails = (generateData.fullThumbnails || []).map((img) => `data:image/jpeg;base64,${img}`);
+
+                    if (renderedImages.length) {
+                        setRenderedIndex(0);
+                    } else if (generateData.image) {
+                        const byteCharacters = atob(generateData.image);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }
+                        const byteArray = new Uint8Array(byteNumbers);
+                        if (imageElement) {
+                            imageElement.src = URL.createObjectURL(new Blob([byteArray], { type: 'image/png' }));
+                        }
                     }
-                    const byteArray = new Uint8Array(byteNumbers);
 
-                    const imageElement = document.getElementById('modelImage');
-                    imageElement.src = URL.createObjectURL(new Blob([byteArray], { type: 'image/png' }));
+                    buildRenderedTiles();
+                    buildRenderedThumbnails();
+                    updateRenderedCounter();
 
                     //const instructions = document.getElementById('placeholder');
                     //instructions.style["display"] = "none";
@@ -773,17 +1354,17 @@
                                     return reader.read().then(processStream);
                                 }
                                 reader.read().then(processStream);
-                                updateStatusAndSpeak("Please try again.");
+                                updateStatusAndSpeak("The response stream finished without a usable reply. Please try again or check the server logs for details.");
 
 
                             })
                             .catch(error => {
                                 console.error('Error:', error);
-                                updateStatusAndSpeak("Please try again.");
+                                updateStatusAndSpeak("The request to the description service failed. Please verify the backend is running and try again.");
                                 clockSound.pause();
                                 errorSound.play();
                                 clearLoading();
-                                statusContainer.innerHTML = "Failed to generate a system reply. Please try again";
+                                statusContainer.innerHTML = "Failed to generate a system reply. The description API request failed or was interrupted. Please confirm the backend service is running and your network connection is stable, then retry.";
                             });
 
                         prevCode = code;
@@ -803,16 +1384,16 @@
                     if (generateData.message == "OpenSCAD code error") {
                       statusContainer.innerHTML = '<pre>'+generateData.error+'<\pre>';
                     } else {
-                      statusContainer.innerHTML = "Failed to generate a system reply. Please try again";
+                      statusContainer.innerHTML = "Failed to generate a system reply. Please check if the backend is running and try again!";
                     }
                 }
             } catch (error) {
                 console.error('Error during generation or loading:', error);
-                updateStatusAndSpeak("An error occurred during image generation.");
+                updateStatusAndSpeak("An error occurred during image generation. This could be caused by invalid OpenSCAD code or a backend processing failure.");
                 clockSound.pause();
                 errorSound.play();
                 clearLoading();
-                statusContainer.innerHTML = "Failed to generate a system reply. Please try again";
+                statusContainer.innerHTML = "Failed to generate a system reply. Image generation or parsing failed before a response could be returned. Please check the OpenSCAD code for errors and verify the backend service is online.";
             }
 
         }
@@ -907,13 +1488,12 @@
 
         document.addEventListener('keydown', async function (event) {
             if (event.shiftKey && event.key.toUpperCase() === 'V') {
-                //if (event.key === 'ArrowRight') {
-                currentImageIndex = (currentImageIndex + 1) % totalImages; // Increment index and loop back to 0
-                /*} else if (event.key === 'ArrowLeft') {
-                    currentImageIndex = (currentImageIndex - 1 + totalImages) % totalImages; // Decrement index and loop back to 6
-                }*/
-                //updateImageDisplay(currentImageIndex);
-                await genImageAndDescribe(currentImageIndex, "");
+                if (renderedImages.length) {
+                    setRenderedIndex(currentImageIndex + 1);
+                } else {
+                    currentImageIndex = (currentImageIndex + 1) % totalImages; // Increment index and loop back to 0
+                    await genImageAndDescribe(currentImageIndex, "");
+                }
                 updateStatusAndSpeak(`Viewing image number ${currentImageIndex}.`);
             }
 
