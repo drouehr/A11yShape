@@ -18,6 +18,7 @@ from flask import (
     Flask,
     request,
     send_from_directory,
+    send_file,
     jsonify,
     Response,
     stream_with_context,
@@ -67,6 +68,8 @@ if not api_key:
     )
 
 base_url = (os.environ.get("OPENAI_BASE_URL") or "").strip() or None
+
+LLM_TIMEOUT_SECONDS = int(os.environ.get("OPENAI_TIMEOUT", "120"))
 
 MODEL_NANO = os.environ.get("OPENAI_MODEL_LIGHT", "gpt-5-nano")
 MODEL_MINI = os.environ.get("OPENAI_MODEL_HEAVY", "gpt-5-mini")
@@ -162,7 +165,7 @@ def find_openscad_errors(code):
     response = client.chat.completions.create(
         model=MODEL_NANO,
         temperature=0.0,
-        timeout=10,
+        timeout=LLM_TIMEOUT_SECONDS,
         #stream=True,
         messages=[
             {
@@ -406,7 +409,7 @@ def summarize():
                 completion = client.chat.completions.create(
                     model=MODEL_NANO,
                     temperature=0.0,
-                    timeout=10,
+                    timeout=LLM_TIMEOUT_SECONDS,
                     stream=True,
                     messages=[
                         {
@@ -502,6 +505,98 @@ def infer_mode_from_text(text):
     return None
 
 
+def generate_stl_from_code(code, output_dir, output_basename):
+    if not code.strip():
+        raise ValueError("OpenSCAD code is required to export STL.")
+
+    file = "model.scad"
+    input_scad_path = os.path.join(output_dir, file)
+    with open(input_scad_path, "w", encoding="utf-8") as f:
+        f.write(code)
+
+    output_path = os.path.join(output_dir, f"{output_basename}.stl")
+    cmd = [
+        OPENSCAD_PATH,
+        "-o",
+        output_path,
+        input_scad_path,
+    ]
+
+    if logging.getLogger().isEnabledFor(logging.DEBUG):
+        logging.debug("OpenSCAD STL command: %s", cmd)
+        logging.debug("input_scad_path exists=%s", os.path.exists(input_scad_path))
+
+    try:
+        result = subprocess.run(
+            cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+    except FileNotFoundError as e:
+        raise Exception(
+            "OpenSCAD executable not found. "
+            "Set OPENSCAD_PATH in your .env to the full path of openscad.exe, e.g. "
+            "OPENSCAD_PATH=C:\\Program Files\\OpenSCAD\\openscad.exe. "
+            f"Currently OPENSCAD_PATH='{OPENSCAD_PATH}'."
+        ) from e
+
+    if logging.getLogger().isEnabledFor(logging.DEBUG):
+        logging.debug("OpenSCAD STL returncode: %s", result.returncode)
+        logging.debug("OpenSCAD STL stdout: %s", (result.stdout or "").strip())
+        logging.debug("OpenSCAD STL stderr: %s", (result.stderr or "").strip())
+
+    if result.stderr and "ERROR" in result.stderr:
+        raise Exception("OpenSCAD code error: " + find_openscad_errors(code))
+
+    if result.returncode != 0:
+        raise Exception(
+            "OpenSCAD STL export failed. "
+            + (result.stderr or result.stdout or "Unknown error")
+        )
+
+    if not os.path.exists(output_path):
+        raise Exception(f"OpenSCAD did not produce expected STL file: {output_path}")
+
+    return output_path
+
+
+@app.route("/generate-stl", methods=["POST"])
+def generate_stl():
+    try:
+        payload = request.get_json(silent=True) or {}
+        code = payload.get("code") or ""
+        file_name = (payload.get("fileName") or "model").strip()
+
+        base_name = os.path.splitext(os.path.basename(file_name))[0] or "model"
+        output_dir = os.path.join("temp", "stl")
+        os.makedirs(output_dir, exist_ok=True)
+
+        output_basename = f"{base_name}-{int(time.time())}"
+        output_path = generate_stl_from_code(code, output_dir, output_basename)
+
+        return send_file(
+            output_path,
+            as_attachment=True,
+            download_name=f"{base_name}.stl",
+            mimetype="application/sla",
+        )
+    except ValueError as e:
+        return jsonify({"message": str(e)}), 400
+    except Exception as e:
+        logging.exception("/generate-stl failed")
+        if "OpenSCAD code error:" in str(e):
+            return jsonify(
+                {
+                    "message": "OpenSCAD code error",
+                    "error": str(e).replace("OpenSCAD code error: ", ""),
+                }
+            ), 400
+        return jsonify({"message": "Failed to export STL.", "error": str(e)}), 500
+
+
 @app.route("/generate-img", methods=["POST"])
 def generate_images():
     global current_process
@@ -577,7 +672,7 @@ def generate_images():
                 response = client.chat.completions.create(
                     model=MODEL_NANO,
                     temperature=0.0,
-                    timeout=10,
+                    timeout=LLM_TIMEOUT_SECONDS,
                     #stream=True,
                     messages=[
                         {
@@ -709,8 +804,8 @@ def describe():
                 completion = client.chat.completions.create(
                     model=MODEL_NANO,
                     temperature=0.0,
-                    timeout=10,
-                    #stream=True,
+                    timeout=LLM_TIMEOUT_SECONDS,
+                    stream=True,
                     messages=[
                         {
                         "role": "user",
@@ -718,23 +813,19 @@ def describe():
                         }
                     ],
                 )
-                return completion.choices[0].message.content
-                
-                """
                 for chunk in completion:
                     if chunk.choices[0].delta:
                         yield chunk.choices[0].delta.content.encode("utf-8")
                     else:
-                        yield b"Processing...\n"
-                """
+                        yield b""
             except (AttributeError, TypeError) as e:
                 if str(e) != "'NoneType' object has no attribute 'encode'":
-                    return "Error: " + str(e) 
+                    yield ("Error: " + str(e)).encode("utf-8")
         
-        response = gpt_action(content, mode) 
+        response = gpt_action(content, mode)
         
         
-        logData["response"] = response
+        logData["response"] = "<streamed>"
         logData["timestamps"]["genDesc"] = time.time()
         with open('log.txt', 'a') as f:
             f.write(json.dumps(logData)+'\n')
@@ -799,7 +890,7 @@ Code2Fab is a system that helps the blind to use OpenSCAD to model for 3D printi
                 completion = client.chat.completions.create(
                     model=MODEL_NANO,
                     temperature=0.0,
-                    timeout=10,
+                    timeout=LLM_TIMEOUT_SECONDS,
                     stream=True,
                     messages=[
                         {
@@ -877,7 +968,7 @@ Use the follow format for output:
                 completion = client.chat.completions.create(
                     model=MODEL_NANO,
                     temperature=0.0,
-                    timeout=10,
+                    timeout=LLM_TIMEOUT_SECONDS,
                     stream=True,
                     messages=[
                         {
@@ -943,7 +1034,7 @@ Improved Code: [Improved content of Code2]
                 completion = client.chat.completions.create(
                     model=MODEL_NANO,
                     temperature=0.0,
-                    timeout=10,
+                    timeout=LLM_TIMEOUT_SECONDS,
                     stream=True,
                     messages=[
                         {
@@ -1035,7 +1126,7 @@ Follow the template below to output the result:
                 completion = client.chat.completions.create(
                     model=MODEL_NANO,
                     temperature=0.0,
-                    timeout=10,
+                    timeout=LLM_TIMEOUT_SECONDS,
                     stream=True,
                     messages=[
                         {
