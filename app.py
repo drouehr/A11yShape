@@ -71,8 +71,10 @@ base_url = (os.environ.get("OPENAI_BASE_URL") or "").strip() or None
 
 LLM_TIMEOUT_SECONDS = int(os.environ.get("OPENAI_TIMEOUT", "120"))
 
-MODEL_NANO = os.environ.get("OPENAI_MODEL_LIGHT", "gpt-5-nano")
-MODEL_MINI = os.environ.get("OPENAI_MODEL_HEAVY", "gpt-5-mini")
+MODEL_NANO_LIST = [m.strip() for m in os.environ.get("OPENAI_MODEL_LIGHT", "gpt-5-nano").split(",") if m.strip()]
+MODEL_MINI_LIST = [m.strip() for m in os.environ.get("OPENAI_MODEL_HEAVY", "gpt-5-mini").split(",") if m.strip()]
+MODEL_NANO = MODEL_NANO_LIST[0]
+MODEL_MINI = MODEL_MINI_LIST[0]
 
 client = OpenAI(api_key=api_key, base_url=base_url)
 
@@ -393,6 +395,15 @@ def getModificationPrompts(code, text, imgs):
         ]
 
     return content
+
+@app.route("/api/models", methods=["GET"])
+def get_models():
+    """Return the available describe (light) and modify (heavy) model lists."""
+    return jsonify({
+        "light": MODEL_NANO_LIST,
+        "heavy": MODEL_MINI_LIST,
+    })
+
 
 @app.route("/api/summarize", methods=["POST"])
 def summarize():
@@ -749,6 +760,8 @@ def describe():
         text = request.json.get("text")
         code = request.json.get("code")
         mode = request.json.get("mode")
+        describe_model = (request.json.get("describeModel") or "").strip() or MODEL_NANO
+        modify_model = (request.json.get("modifyModel") or "").strip() or MODEL_MINI
         prevCode = request.json.get("prevCode")
         fullCode = request.json.get("fullCode")
         partCode = request.json.get("partCode")
@@ -799,10 +812,11 @@ def describe():
             else:
                 content = getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs)
         
+        chosen_model = modify_model if mode == "modify" else describe_model
         def gpt_action(content, mode):
             try:
                 completion = client.chat.completions.create(
-                    model=MODEL_NANO,
+                    model=chosen_model,
                     temperature=0.0,
                     timeout=LLM_TIMEOUT_SECONDS,
                     stream=True,

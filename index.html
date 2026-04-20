@@ -829,6 +829,18 @@
                         </select>
                     </div>
 
+                    <div class="flex items-center gap-2 p-2">
+                        <label for="describe-model-select" class="text-sm text-gray-700">Describe&nbsp;model</label>
+                        <select id="describe-model-select" class="text-sm text-gray-700 px-2 py-1"
+                            aria-label="Select describe model"></select>
+                    </div>
+
+                    <div class="flex items-center gap-2 p-2">
+                        <label for="modify-model-select" class="text-sm text-gray-700">Modify&nbsp;model</label>
+                        <select id="modify-model-select" class="text-sm text-gray-700 px-2 py-1"
+                            aria-label="Select modify model"></select>
+                    </div>
+
                     <div class="flex-1 min-h-0">
                         <div id="action-indicator" class="action-indicator hidden mb-2" role="status" aria-live="polite" aria-busy="false">
                             <span class="spinner" aria-hidden="true"></span>
@@ -1335,7 +1347,82 @@
             
             const statusContainer = document.getElementById('status-message');
             statusContainer.innerHTML = "";
-            
+
+            // --- Empty-editor fast path ------------------------------------------
+            // When the code editor is empty, force modify mode and skip OpenSCAD
+            // rendering entirely; send the prompt straight to the LLM for code gen.
+            if (!code.trim()) {
+                if (!text.trim()) {
+                    // Nothing to render or generate — bail out silently.
+                    clockSound.pause();
+                    clockSound.currentTime = 0;
+                    clearLoading();
+                    return;
+                }
+                const emptyMode = "modify";
+                const describeModelSelE = document.getElementById('describe-model-select');
+                const modifyModelSelE  = document.getElementById('modify-model-select');
+                const emptyBody = {
+                    sessionId: session_id,
+                    callId: callId,
+                    text: text,
+                    code: "",
+                    mode: emptyMode,
+                    prevCode: "",
+                    fullCode: "",
+                    partCode: "",
+                    describeModel: describeModelSelE ? describeModelSelE.value : "",
+                    modifyModel:   modifyModelSelE  ? modifyModelSelE.value  : "",
+                };
+                const responseContainerE = document.getElementById('code2fab-response');
+                responseContainerE.innerHTML = '';
+                const responsePreE = document.createElement('pre');
+                responseContainerE.appendChild(responsePreE);
+                responseContainerE.ariaLabel = "";
+                let newCodeE = "";
+                setLoadingDetailed(mainActionLabel, "waiting for LLM response");
+                try {
+                    const respE = await fetch(serverUrl + '/api/describe', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(emptyBody)
+                    });
+                    if (!respE.ok) throw new Error(`HTTP error! Status: ${respE.status}`);
+                    const readerE = respE.body.getReader();
+                    setLoadingDetailed(mainActionLabel, "streaming LLM output");
+                    const processStreamE = ({ done, value }) => {
+                        if (done) {
+                            newCodeE = newCodeE.replace("```openscad", "").replace(/```/g, "").trim();
+                            document.getElementById('openscad-code').value = newCodeE;
+                            parseCode(newCodeE);
+                            document.getElementById('undo-code').disabled = false;
+                            document.getElementById('redo-code').disabled = true;
+                            prevPrompt = text;
+                            clockSound.pause();
+                            clockSound.currentTime = 0;
+                            dingSound.play();
+                            clearLoading();
+                            document.getElementById('generate-model').click();
+                            return;
+                        }
+                        const chunk = new TextDecoder().decode(value);
+                        newCodeE += chunk;
+                        responsePreE.textContent = newCodeE;
+                        responseContainerE.ariaLabel = responsePreE.textContent;
+                        return readerE.read().then(processStreamE);
+                    };
+                    readerE.read().then(processStreamE);
+                } catch (err) {
+                    console.error('Error generating code from empty editor:', err);
+                    clockSound.pause();
+                    errorSound.play();
+                    clearLoading();
+                    statusContainer.innerHTML = "Failed to generate code. Please check the backend is running and try again.";
+                }
+                return;
+            }
+            // --- end empty-editor fast path --------------------------------------
+
             //console.log("Generating images for code:", code);
 
             try {
@@ -1421,7 +1508,20 @@
                         var newCode = "";
                         var newResponse = "";
 
-                        var body = { sessionId: session_id, callId: callId, text: text, code: code, mode: mode, prevCode: prevCode, fullCode: fullCode, partCode: partCode };
+                        const describeModelSel = document.getElementById('describe-model-select');
+                        const modifyModelSel = document.getElementById('modify-model-select');
+                        var body = {
+                            sessionId: session_id,
+                            callId: callId,
+                            text: text,
+                            code: code,
+                            mode: mode,
+                            prevCode: prevCode,
+                            fullCode: fullCode,
+                            partCode: partCode,
+                            describeModel: describeModelSel ? describeModelSel.value : "",
+                            modifyModel: modifyModelSel ? modifyModelSel.value : "",
+                        };
                         if (text != "") {
                             body["prevCode"] = "";
                         }
@@ -1586,6 +1686,30 @@
             }
 
         }
+
+        // Fetch available models from backend and populate the dropdowns
+        (async function loadModels() {
+            try {
+                const res = await fetch(serverUrl + '/api/models');
+                if (!res.ok) return;
+                const data = await res.json();
+                function populateSelect(selectId, models) {
+                    const sel = document.getElementById(selectId);
+                    if (!sel || !Array.isArray(models)) return;
+                    sel.innerHTML = '';
+                    models.forEach(function(m) {
+                        const opt = document.createElement('option');
+                        opt.value = m;
+                        opt.textContent = m;
+                        sel.appendChild(opt);
+                    });
+                }
+                populateSelect('describe-model-select', data.light);
+                populateSelect('modify-model-select', data.heavy);
+            } catch (e) {
+                console.warn('Could not load model list from /api/models:', e);
+            }
+        })();
 
         document.getElementById('generate-model').addEventListener('click', async function () {
             console.log("gen");

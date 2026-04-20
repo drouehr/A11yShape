@@ -22,8 +22,8 @@ if not api_key:
 base_url = (os.getenv("OPENAI_BASE_URL") or "").strip() or "https://api.openai.com/v1"
 
 # models
-MODEL_NANO = os.getenv("OPENAI_MODEL_LIGHT", "gpt-5-nano")
-MODEL_MINI = os.getenv("OPENAI_MODEL_HEAVY", "gpt-5-mini")
+MODEL_NANO = os.getenv("OPENAI_MODEL_LIGHT", "gpt-5.4-nano")
+MODEL_MINI = os.getenv("OPENAI_MODEL_HEAVY", "gpt-5.4-mini")
 
 rep_key = os.getenv("REPLICATE_API_TOKEN")
 
