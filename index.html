@@ -10,11 +10,11 @@
     <script src="https://cdn.tailwindcss.com">
     </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="48x48" href="/favicon/favicon-48x48.png" />
-    <link rel="icon" type="image/png" sizes="64x64" href="/favicon/favicon-64x64.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/img/favicon/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/img/favicon/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/static/img/favicon/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/static/img/favicon/favicon-64x64.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/img/favicon/apple-touch-icon.png" />
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"
         integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
@@ -275,10 +275,15 @@
             border-right: 1px solid var(--border);
             font-family: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
             font-size: 0.85rem;
-            line-height: 1.4;
+            line-height: 1.48;
             white-space: pre;
             user-select: none;
-            overflow: hidden;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            scrollbar-width: none; /* Firefox */
+        }
+        .editor-line-numbers::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
         }
 
         .editor-textarea {
@@ -720,7 +725,7 @@
 
     <header class="app-header">
         <div class="flex items-center gap-3">
-            <img src="/favicon/favicon-180x180.png" alt="A11yShape logo" class="w-10 h-10" />
+            <img src="/static/img/favicon/favicon-180x180.png" alt="A11yShape logo" class="w-10 h-10" />
             <h1>A11yShape Redux</h1>
         </div>
         <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle color theme">
@@ -1326,23 +1331,24 @@
         async function genImageAndDescribe(index, text) {
             clockSound.play();
             var callId = new Date().getTime();
+            var t0 = performance.now();
             var code = document.getElementById('openscad-code').value;
             const selectedMode = document.getElementById('mode-select')?.value || "describe";
             const mainActionLabel = text ? "Processing prompt" : "Generating model";
             setLoadingDetailed(mainActionLabel, "starting request");
-            console.log(codeHistory);
+            console.group(`[A11y] genImageAndDescribe callId=${callId}`);
+            console.log(`[A11y] START  mode=${selectedMode} text_len=${text.length} code_len=${code.length} prevCode_len=${prevCode.length}`);
             if (prevCode != code && code != codeHistory[historyIndex]) {
               codeHistory.length = historyIndex+1;
               codeHistory.push(code);
               historyIndex++;
             }
-                        
-            console.log(code);
+
             var fullCode = "";
             if (currentPart.index != 0) {
                 fullCode = code;
                 code = code.slice(0, currentPart.offset) + "#" + code.slice(currentPart.offset);
-                console.log(code);
+                console.log(`[A11y] part mode: fullCode_len=${fullCode.length} code_len=${code.length}`);
             }
             
             const statusContainer = document.getElementById('status-message');
@@ -1353,10 +1359,12 @@
             // rendering entirely; send the prompt straight to the LLM for code gen.
             if (!code.trim()) {
                 if (!text.trim()) {
-                    // Nothing to render or generate — bail out silently.
+                    // nothing to render or generate
                     clockSound.pause();
                     clockSound.currentTime = 0;
+                    errorSound.play();
                     clearLoading();
+                    statusContainer.innerHTML = "Please input a prompt.";
                     return;
                 }
                 const emptyMode = "modify";
@@ -1374,12 +1382,14 @@
                     describeModel: describeModelSelE ? describeModelSelE.value : "",
                     modifyModel:   modifyModelSelE  ? modifyModelSelE.value  : "",
                 };
+                console.log(`[A11y] empty-editor path: sending /api/describe  model=${emptyBody.modifyModel} text="${text}"`);
                 const responseContainerE = document.getElementById('code2fab-response');
                 responseContainerE.innerHTML = '';
                 const responsePreE = document.createElement('pre');
                 responseContainerE.appendChild(responsePreE);
                 responseContainerE.ariaLabel = "";
                 let newCodeE = "";
+                let t_empty = performance.now();
                 setLoadingDetailed(mainActionLabel, "waiting for LLM response");
                 try {
                     const respE = await fetch(serverUrl + '/api/describe', {
@@ -1387,12 +1397,24 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(emptyBody)
                     });
+                    console.log(`[A11y] empty-editor /api/describe responded status=${respE.status} (${(performance.now()-t_empty).toFixed(0)}ms)`);
                     if (!respE.ok) throw new Error(`HTTP error! Status: ${respE.status}`);
                     const readerE = respE.body.getReader();
                     setLoadingDetailed(mainActionLabel, "streaming LLM output");
                     const processStreamE = ({ done, value }) => {
                         if (done) {
                             newCodeE = newCodeE.replace("```openscad", "").replace(/```/g, "").trim();
+                            console.log(`[A11y] empty-editor stream done  response_len=${newCodeE.length} elapsed=${(performance.now()-t_empty).toFixed(0)}ms`);
+                            if (newCodeE.startsWith("Error:")) {
+                                console.warn(`[A11y] empty-editor LLM returned error:`, newCodeE);
+                                statusContainer.innerHTML = '<pre>' + newCodeE + '</pre>';
+                                clockSound.pause();
+                                clockSound.currentTime = 0;
+                                errorSound.play();
+                                clearLoading();
+                                console.groupEnd();
+                                return;
+                            }
                             document.getElementById('openscad-code').value = newCodeE;
                             parseCode(newCodeE);
                             document.getElementById('undo-code').disabled = false;
@@ -1402,6 +1424,8 @@
                             clockSound.currentTime = 0;
                             dingSound.play();
                             clearLoading();
+                            console.log(`[A11y] empty-editor: code inserted into editor, triggering generate`);
+                            console.groupEnd();
                             document.getElementById('generate-model').click();
                             return;
                         }
@@ -1413,11 +1437,12 @@
                     };
                     readerE.read().then(processStreamE);
                 } catch (err) {
-                    console.error('Error generating code from empty editor:', err);
+                    console.error(`[A11y] empty-editor /api/describe failed (${(performance.now()-t_empty).toFixed(0)}ms):`, err);
                     clockSound.pause();
                     errorSound.play();
                     clearLoading();
                     statusContainer.innerHTML = "Failed to generate code. Please check the backend is running and try again.";
+                    console.groupEnd();
                 }
                 return;
             }
@@ -1428,6 +1453,8 @@
             try {
                 // Generate images from code
                 setLoadingDetailed(mainActionLabel, "rendering OpenSCAD views");
+                console.log(`[A11y] stage=generate-img  code_len=${code.length} prevCode_len=${prevCode.length} fullCode_len=${fullCode.length} text="${text}" mode=${selectedMode}`);
+                var t_img = performance.now();
                 const generateResponse = await fetch(serverUrl + '/generate-img', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1439,10 +1466,16 @@
                 }
 
                 const generateData = await generateResponse.json();
-
-                console.log(generateData);
+                console.log(`[A11y] /generate-img done  status=${generateResponse.status} mode=${generateData.mode} imgs=${(generateData.images||[]).length} codeError=${!!generateData.codeError} elapsed=${(performance.now()-t_img).toFixed(0)}ms`);
+                if (generateData.codeError) {
+                    console.warn(`[A11y] /generate-img codeError:`, generateData.codeError);
+                }
+                console.log(`[A11y] /generate-img response:`, generateData);
 
                 if (generateData.message && generateData.message === "Images generated successfully") {
+                    if (generateData.codeError) {
+                        statusContainer.innerHTML = '<pre>' + generateData.codeError + '</pre>';
+                    }
                     updateStatusAndSpeak("Images have been successfully generated.");
 
                     const mode = generateData.mode;
@@ -1532,6 +1565,9 @@
                         responseContainer.appendChild(responsePre);
                         responseContainer.ariaLabel = "";
 
+                        var t_describe = performance.now();
+                        console.log(`[A11y] stage=api/describe  mode=${mode} code_len=${code.length} text="${text}" model_describe=${body.describeModel} model_modify=${body.modifyModel}`);
+
                         const fetchDescribeWithRetry = async () => {
                             let attempt = 0;
                             while (attempt <= describeMaxRetries) {
@@ -1539,10 +1575,12 @@
                                 const timeoutId = setTimeout(() => controller.abort(), describeTimeoutMs);
                                 try {
                                     if (attempt > 0) {
+                                        console.warn(`[A11y] /api/describe retry attempt=${attempt}/${describeMaxRetries}`);
                                         setLoadingDetailed(mainActionLabel, `retrying LLM request after timeout (${attempt}/${describeMaxRetries})`);
                                     } else {
                                         setLoadingDetailed(mainActionLabel, "waiting for LLM response");
                                     }
+                                    console.log(`[A11y] /api/describe fetch attempt=${attempt} timeout=${describeTimeoutMs}ms`);
                                     const response = await fetch(serverUrl + '/api/describe', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
@@ -1550,6 +1588,7 @@
                                         signal: controller.signal
                                     });
                                     clearTimeout(timeoutId);
+                                    console.log(`[A11y] /api/describe responded status=${response.status} elapsed=${(performance.now()-t_describe).toFixed(0)}ms`);
                                     if (!response.ok) {
                                         throw new Error(`HTTP error! Status: ${response.status}`);
                                     }
@@ -1557,6 +1596,7 @@
                                 } catch (error) {
                                     clearTimeout(timeoutId);
                                     if (error.name === "AbortError") {
+                                        console.warn(`[A11y] /api/describe aborted (timeout) attempt=${attempt} elapsed=${(performance.now()-t_describe).toFixed(0)}ms`);
                                         attempt += 1;
                                         if (attempt > describeMaxRetries) {
                                             throw error;
@@ -1571,20 +1611,26 @@
                         fetchDescribeWithRetry()
                             .then(response => {
 
-                                console.log(response);
                                 const reader = response.body.getReader();
                                 setLoadingDetailed(mainActionLabel, "streaming LLM output");
+                                let streamChars = 0;
                                 function processStream({ done, value }) {
                                     if (done) {
-                                        
-                                    
-                                        console.log('Stream completed');
+                                        console.log(`[A11y] /api/describe stream done  mode=${mode} response_len=${streamChars} elapsed=${(performance.now()-t_describe).toFixed(0)}ms`);
                                         updateStatusAndSpeak("Please check the system reply.");
                                         
                                         
                                         if (mode == "modify" && text != "") {
-                                            prevCode = document.getElementById('openscad-code').value;
                                             newCode = newCode.replace("```openscad", "").replace("```", "").trim();
+                                            if (newCode.startsWith("Error:")) {
+                                                statusContainer.innerHTML = '<pre>' + newCode + '</pre>';
+                                                clockSound.pause();
+                                                clockSound.currentTime = 0;
+                                                errorSound.play();
+                                                clearLoading();
+                                                return;
+                                            }
+                                            prevCode = document.getElementById('openscad-code').value;
                                             document.getElementById('openscad-code').value = newCode;
                                             parseCode(newCode);
                                             document.getElementById('undo-code').disabled = false;
@@ -1630,6 +1676,7 @@
                                         return;
                                     }
                                     const chunk = new TextDecoder().decode(value);
+                                    streamChars += chunk.length;
 
                                     if (mode == "modify") {
                                         newCode += chunk;
@@ -1643,17 +1690,17 @@
                                     return reader.read().then(processStream);
                                 }
                                 reader.read().then(processStream);
-                                updateStatusAndSpeak("The response stream finished without a usable reply. Please try again or check the server logs for details.");
 
 
                             })
                             .catch(error => {
-                                console.error('Error:', error);
+                                console.error(`[A11y] /api/describe failed (${(performance.now()-t_describe).toFixed(0)}ms):`, error);
                                 updateStatusAndSpeak("The request to the description service failed. Please verify the backend is running and try again.");
                                 clockSound.pause();
                                 errorSound.play();
                                 clearLoading();
                                 statusContainer.innerHTML = "Failed to generate a system reply. The description API request failed or was interrupted. Please confirm the backend service is running and your network connection is stable, then retry.";
+                                console.groupEnd();
                             });
 
                         prevCode = code;
@@ -1665,7 +1712,8 @@
                     }, 1);
 
                 } else {
-                    console.error("Failed to generate or retrieve images.");
+                    console.error(`[A11y] /generate-img returned non-success  message="${generateData.message}" error="${generateData.error}"`);
+                    console.groupEnd();
                     updateStatusAndSpeak("Failed to generate images.");
                     clockSound.pause();
                     errorSound.play();

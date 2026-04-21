@@ -127,7 +127,7 @@ def client_config():
 
 @app.route("/favicon/<path:filename>")
 def favicon_files(filename):
-    return send_from_directory(os.path.join(APP_ROOT, "favicon"), filename)
+    return send_from_directory(os.path.join(APP_ROOT, "static", "img", "favicon"), filename)
 
 @app.route('/code2fab', methods=['POST'])
 def code2fab():
@@ -168,7 +168,7 @@ def find_openscad_errors(code):
         model=MODEL_NANO,
         temperature=0.0,
         timeout=LLM_TIMEOUT_SECONDS,
-        #stream=True,
+        #stream=False,
         messages=[
             {
             "role": "user",
@@ -248,7 +248,7 @@ def gen_image(views, code, output_dir):
             logging.debug("OpenSCAD stdout: %s", (out or "").strip())
             logging.debug("OpenSCAD stderr: %s", (err or "").strip())
         if err and "ERROR" in err:
-            raise Exception("OpenSCAD code error: " + find_openscad_errors(code))
+            raise Exception("OpenSCAD code error: " + err.strip())
         p.wait()
 
     for index in views:
@@ -421,7 +421,7 @@ def summarize():
                     model=MODEL_NANO,
                     temperature=0.0,
                     timeout=LLM_TIMEOUT_SECONDS,
-                    stream=True,
+                    stream=False,
                     messages=[
                         {
                             "role": "user",
@@ -560,7 +560,7 @@ def generate_stl_from_code(code, output_dir, output_basename):
         logging.debug("OpenSCAD STL stderr: %s", (result.stderr or "").strip())
 
     if result.stderr and "ERROR" in result.stderr:
-        raise Exception("OpenSCAD code error: " + find_openscad_errors(code))
+        raise Exception("OpenSCAD code error: " + result.stderr.strip())
 
     if result.returncode != 0:
         raise Exception(
@@ -645,22 +645,30 @@ def generate_images():
         #if current_process and current_process.poll() is None:
         #    current_process.terminate()
 
-        logData = {"sessionId": sessionId, "callId": callId, "function": "generate_images", "timestamps": {"start": time.time()}}
+        t0 = time.time()
+        logData = {"sessionId": sessionId, "callId": callId, "function": "generate_images", "timestamps": {"start": t0}}
 
-    
+        logging.info(
+            "/generate-img START  callId=%s sessionId=%s text_len=%d code_len=%d prevCode_len=%d fullCode_len=%d mode_requested=%r",
+            callId, sessionId, len(text), len(code), len(prevCode), len(fullCode), requested_mode,
+        )
+
         output_dir = "temp/"+str(sessionId)
         os.makedirs(output_dir, exist_ok=True)
-        if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.debug("/generate-img output_dir created=%s", output_dir)
-        
+        logging.debug("/generate-img output_dir=%s", output_dir)
+
         mode = "describe"
         if requested_mode in {"describe", "modify"}:
             mode = requested_mode
+            logging.info("/generate-img mode=%s (explicit)", mode)
         else:
             heuristic_mode = infer_mode_from_text(text)
             if heuristic_mode:
                 mode = heuristic_mode
+                logging.info("/generate-img mode=%s (heuristic)", mode)
             elif text != "":
+                logging.info("/generate-img mode detection: calling LLM (model=%s)", MODEL_NANO)
+                t_mode = time.time()
                 try:
                     response = client.chat.completions.create(
                         model=MODEL_NANO,
@@ -672,19 +680,25 @@ def generate_images():
                     fn_call = getattr(response.choices[0].message, "function_call", None)
                     if fn_call and getattr(fn_call, "name", None):
                         mode = fn_call.name
+                    logging.info("/generate-img mode=%s via LLM (%.3fs)", mode, time.time() - t_mode)
                 except Exception as e:
-                    logging.warning(f"/generate-img mode detection failed; defaulting to describe: {e}")
+                    logging.warning("/generate-img mode detection failed (%.3fs); defaulting to describe: %s", time.time() - t_mode, e)
+            else:
+                logging.info("/generate-img mode=%s (no text default)", mode)
 
         logData["timestamps"]["getMode"] = time.time()
-        
+        logging.info("/generate-img stage=getMode elapsed=%.3fs", logData["timestamps"]["getMode"] - t0)
+
         changes = ""
         if prevCode != "" and prevCode != code:
+            logging.info("/generate-img changes detection: calling LLM (model=%s prevCode_len=%d code_len=%d)",
+                         MODEL_NANO, len(prevCode), len(code))
+            t_changes = time.time()
             try:
                 response = client.chat.completions.create(
                     model=MODEL_NANO,
                     temperature=0.0,
                     timeout=LLM_TIMEOUT_SECONDS,
-                    #stream=True,
                     messages=[
                         {
                         "role": "user",
@@ -697,11 +711,14 @@ def generate_images():
                     ],
                 )
                 changes = response.choices[0].message.content.replace('```json', '').replace('```', '')
-                json.loads(changes)
-                #print(changes)
-            except:
-                pass
+                parsed_changes = json.loads(changes)
+                logging.info("/generate-img changes detected=%d chunks (%.3fs)", len(parsed_changes), time.time() - t_changes)
+            except Exception as e:
+                logging.warning("/generate-img changes detection failed (%.3fs): %s", time.time() - t_changes, e)
+        else:
+            logging.info("/generate-img changes detection: skipped (no prevCode diff)")
         logData["timestamps"]["getChanges"] = time.time()
+        logging.info("/generate-img stage=getChanges elapsed=%.3fs", logData["timestamps"]["getChanges"] - t0)
         
         
         views = [
@@ -715,41 +732,60 @@ def generate_images():
         ]
         views = dict(enumerate(views))
 
-        encoded_imgs, encoded_imgs_sm = gen_image(views, code, output_dir)
-        if encoded_imgs is None:
-            return jsonify(error=f"Failed to generate image {index}"), 500
+        code_error = None
+        t_render = time.time()
+        logging.info("/generate-img rendering code (views=%d code_len=%d)", len(views), len(code))
+        try:
+            encoded_imgs, encoded_imgs_sm = gen_image(views, code, output_dir)
+            logging.info("/generate-img render done imgs=%d (%.3fs)", len(encoded_imgs), time.time() - t_render)
+        except Exception as img_err:
+            logging.warning("/generate-img render failed (%.3fs): %s", time.time() - t_render, img_err)
+            encoded_imgs = []
+            encoded_imgs_sm = []
+            code_error = str(img_err).replace("OpenSCAD code error: ", "")
 
+        encoded_imgs_full = []
+        encoded_imgs_full_sm = []
         if len(fullCode) > 0:
-            encoded_imgs_full, encoded_imgs_full_sm = gen_image(
-                views, fullCode, output_dir
-            )
-        else:
-            encoded_imgs_full = [""]
-            encoded_imgs_full_sm = [""]
+            t_render_full = time.time()
+            logging.info("/generate-img rendering fullCode (views=%d code_len=%d)", len(views), len(fullCode))
+            try:
+                encoded_imgs_full, encoded_imgs_full_sm = gen_image(
+                    views, fullCode, output_dir
+                )
+                logging.info("/generate-img fullCode render done imgs=%d (%.3fs)", len(encoded_imgs_full), time.time() - t_render_full)
+            except Exception as full_err:
+                logging.warning("/generate-img fullCode render failed (%.3fs): %s", time.time() - t_render_full, full_err)
 
         logData["timestamps"]["getImg"] = time.time()
+        logging.info("/generate-img stage=getImg elapsed=%.3fs", logData["timestamps"]["getImg"] - t0)
         with open('log.txt', 'a') as f:
             f.write(json.dumps(logData)+'\n')
 
-        return jsonify({
+        result = {
             "message": "Images generated successfully",
             "mode": mode,
             "changes": changes,
-            "image": encoded_imgs[0],
-            "thumbnail": encoded_imgs_sm[0],
+            "image": encoded_imgs[0] if encoded_imgs else "",
+            "thumbnail": encoded_imgs_sm[0] if encoded_imgs_sm else "",
             "images": encoded_imgs,
             "thumbnails": encoded_imgs_sm,
-            "fullImg": encoded_imgs_full[0],
+            "fullImg": encoded_imgs_full[0] if encoded_imgs_full else "",
             "fullImages": encoded_imgs_full,
             "fullThumbnails": encoded_imgs_full_sm,
-        })
+        }
+        if code_error:
+            result["codeError"] = code_error
+        logging.info(
+            "/generate-img DONE  callId=%s mode=%s imgs=%d codeError=%s totalElapsed=%.3fs",
+            callId, mode, len(encoded_imgs), bool(code_error), time.time() - t0,
+        )
+        return jsonify(result)
     except Exception as e:
         logging.exception("/generate-img failed")
         logData["error"] = str(e)
         with open('log.txt', 'a') as f:
             f.write(json.dumps(logData)+'\n')
-        if 'OpenSCAD code error: ' in str(e):
-            return jsonify({'message': "OpenSCAD code error", 'error': str(e).replace('OpenSCAD code error: ','')})
         return jsonify({'message': "Failed to generate images.", 'error': str(e)}), 500
 
 @app.route("/api/describe", methods=["POST"])
@@ -765,9 +801,14 @@ def describe():
         prevCode = request.json.get("prevCode")
         fullCode = request.json.get("fullCode")
         partCode = request.json.get("partCode")
-        logging.info(f"Received text: {text}")
-        
-        logData = {"sessionId": sessionId, "callId": callId, "function": "describe", "prompt": text, "mode": mode, "code": code, "timestamps": {"start": time.time()}}
+        t0 = time.time()
+        logging.info(
+            "/api/describe START  callId=%s sessionId=%s mode=%r text_len=%d code_len=%d prevCode_len=%d fullCode_len=%d describeModel=%s modifyModel=%s",
+            callId, sessionId, mode, len(text or ""), len(code or ""), len(prevCode or ""), len(fullCode or ""),
+            describe_model, modify_model,
+        )
+
+        logData = {"sessionId": sessionId, "callId": callId, "function": "describe", "prompt": text, "mode": mode, "code": code, "timestamps": {"start": t0}}
         
         
         if prevCode == code:
@@ -794,13 +835,32 @@ def describe():
         os.makedirs(output_dir, exist_ok=True)
 
         if len(fullCode) > 0:
-            _, fullImgs = gen_image(views, fullCode, output_dir)
+            t_r = time.time()
+            logging.info("/api/describe rendering fullCode (views=%d len=%d)", len(views), len(fullCode))
+            try:
+                _, fullImgs = gen_image(views, fullCode, output_dir)
+                logging.info("/api/describe fullCode render done imgs=%d (%.3fs)", len(fullImgs), time.time() - t_r)
+            except Exception as e:
+                logging.warning("/api/describe fullCode render failed (%.3fs): %s", time.time() - t_r, e)
         if len(prevCode) > 0:
-            _, prevImgs = gen_image(views, prevCode, output_dir)
+            t_r = time.time()
+            logging.info("/api/describe rendering prevCode (views=%d len=%d)", len(views), len(prevCode))
+            try:
+                _, prevImgs = gen_image(views, prevCode, output_dir)
+                logging.info("/api/describe prevCode render done imgs=%d (%.3fs)", len(prevImgs), time.time() - t_r)
+            except Exception as e:
+                logging.warning("/api/describe prevCode render failed (%.3fs): %s", time.time() - t_r, e)
         if len(code) > 0:
-            _, imgs = gen_image(views, code, output_dir)
-            
+            t_r = time.time()
+            logging.info("/api/describe rendering code (views=%d len=%d)", len(views), len(code))
+            try:
+                _, imgs = gen_image(views, code, output_dir)
+                logging.info("/api/describe code render done imgs=%d (%.3fs)", len(imgs), time.time() - t_r)
+            except Exception as e:
+                logging.warning("/api/describe code render failed (%.3fs): %s", time.time() - t_r, e)
+
         logData["timestamps"]["genViews"] = time.time()
+        logging.info("/api/describe stage=genViews elapsed=%.3fs", logData["timestamps"]["genViews"] - t0)
 
         if text == "":
             content = getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs)
@@ -813,13 +873,20 @@ def describe():
                 content = getDescriptionPrompts(code, text, prevCode, fullCode, partCode, imgs, fullImgs, prevImgs)
         
         chosen_model = modify_model if mode == "modify" else describe_model
+        content_text_len = sum(len(c.get("text","")) for c in content if isinstance(c, dict) and c.get("type") == "text")
+        content_img_count = sum(1 for c in content if isinstance(c, dict) and c.get("type") == "image_url")
+        logging.info(
+            "/api/describe LLM request callId=%s model=%s mode=%s text_len=%d image_count=%d",
+            callId, chosen_model, mode, content_text_len, content_img_count,
+        )
+        t_llm = time.time()
         def gpt_action(content, mode):
             try:
                 completion = client.chat.completions.create(
                     model=chosen_model,
                     temperature=0.0,
                     timeout=LLM_TIMEOUT_SECONDS,
-                    stream=True,
+                    stream=False,
                     messages=[
                         {
                         "role": "user",
@@ -827,15 +894,16 @@ def describe():
                         }
                     ],
                 )
-                for chunk in completion:
-                    if chunk.choices[0].delta:
-                        yield chunk.choices[0].delta.content.encode("utf-8")
-                    else:
-                        yield b""
-            except (AttributeError, TypeError) as e:
-                if str(e) != "'NoneType' object has no attribute 'encode'":
-                    yield ("Error: " + str(e)).encode("utf-8")
-        
+                text_out = completion.choices[0].message.content or ""
+                logging.info(
+                    "/api/describe LLM response callId=%s response_len=%d elapsed=%.3fs",
+                    callId, len(text_out), time.time() - t_llm,
+                )
+                yield text_out.encode("utf-8")
+            except Exception as e:
+                logging.error("/api/describe LLM error callId=%s elapsed=%.3fs: %s", callId, time.time() - t_llm, e)
+                yield ("Error: " + str(e)).encode("utf-8")
+
         response = gpt_action(content, mode)
         
         
@@ -905,7 +973,7 @@ Code2Fab is a system that helps the blind to use OpenSCAD to model for 3D printi
                     model=MODEL_NANO,
                     temperature=0.0,
                     timeout=LLM_TIMEOUT_SECONDS,
-                    stream=True,
+                    stream=False,
                     messages=[
                         {
                         "role": "user",
@@ -983,7 +1051,7 @@ Use the follow format for output:
                     model=MODEL_NANO,
                     temperature=0.0,
                     timeout=LLM_TIMEOUT_SECONDS,
-                    stream=True,
+                    stream=False,
                     messages=[
                         {
                             "role": "user",
@@ -1049,7 +1117,7 @@ Improved Code: [Improved content of Code2]
                     model=MODEL_NANO,
                     temperature=0.0,
                     timeout=LLM_TIMEOUT_SECONDS,
-                    stream=True,
+                    stream=False,
                     messages=[
                         {
                             "role": "user",
@@ -1141,7 +1209,7 @@ Follow the template below to output the result:
                     model=MODEL_NANO,
                     temperature=0.0,
                     timeout=LLM_TIMEOUT_SECONDS,
-                    stream=True,
+                    stream=False,
                     messages=[
                         {
                             "role": "user",
