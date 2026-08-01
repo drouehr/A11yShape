@@ -1,5 +1,3 @@
-# https://stackoverflow.com/questions/77284901/upload-an-image-to-chat-gpt-using-the-api
-
 from difference import get_difference
 
 import base64

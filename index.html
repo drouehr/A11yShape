@@ -352,6 +352,15 @@
             flex: 1 1 auto;
         }
 
+        .ai-panel > .section-divider[aria-labelledby="env-heading"] {
+            flex: 0 0 auto;
+        }
+
+        .ai-panel > .section-divider[aria-labelledby="env-heading"] .subsection-body {
+            margin: 0;
+            padding: 0.25rem 0;
+        }
+
         .ai-panel > .section-divider[aria-labelledby="prompt-heading"] .subsection-body {
             flex: 1 1 auto;
             min-height: 0;
@@ -821,7 +830,7 @@
             <h2 role="heading" id="ai-panel-heading">AI Assistance Panel</h2>
             <div class="section-divider" tabindex="0" aria-labelledby="prompt-heading" role="region">
                 <!-- Prompt Area at the top-->
-                <h3 role="heading" id="prompt-heading"> Command:</h3>
+                <h3 role="heading" id="prompt-heading"> Prompt</h3>
                 <div class="flex-1 mb-1 overflow-auto flex flex-col subsection-body">
 
                     <div class="flex items-center gap-2 p-2">
@@ -851,6 +860,7 @@
                             <span class="spinner" aria-hidden="true"></span>
                             <span id="action-text">Working</span>
                         </div>
+                        <label for="gpt-input" class="text-sm text-gray-700 block ml-2 mt-1">Command:</label>
                         <textarea
                             class="w-full p-2 text-sm text-gray-700 font-mono focus:outline-none interactive bg-gray-100 prompt-textarea field-spacing"
                             id="gpt-input" placeholder="Enter your prompt here"
@@ -864,6 +874,35 @@
                             </button>
                         </div>
 
+                    </div>
+                </div>
+            </div>
+            <div class="section-divider" tabindex="0" aria-labelledby="env-heading" role="region">
+                <h3 role="heading" id="env-heading"> Model Provider Settings</h3>
+                <div class="subsection-body">
+                    <div class="flex items-center gap-2 p-2">
+                        <label for="openai-base-url" class="text-sm text-gray-700" style="min-width: 7rem;">Base&nbsp;URL</label>
+                        <input type="text" id="openai-base-url"
+                            class="text-sm text-gray-700 px-2 py-1 flex-1"
+                            placeholder="https://api.openai.com/v1"
+                            aria-label="OpenAI base URL override"
+                            autocomplete="off" spellcheck="false" />
+                    </div>
+                    <div class="flex items-center gap-2 p-2">
+                        <label for="openai-api-key" class="text-sm text-gray-700" style="min-width: 7rem;">API&nbsp;key</label>
+                        <input type="password" id="openai-api-key"
+                            class="text-sm text-gray-700 px-2 py-1 flex-1"
+                            aria-label="OpenAI-compatible API key"
+                            autocomplete="off" spellcheck="false" />
+                    </div>
+                    <div class="toolbar-row" role="toolbar" aria-label="model provider toolbar">
+                        <button aria-label="save model provider settings to environment file"
+                            class="btn-primary"
+                            id="save-env">
+                            <i class="fas fa-save" aria-hidden="true"></i>
+                            <span>Save</span>
+                        </button>
+                        <span id="env-save-status" class="text-sm text-gray-500" role="status" aria-live="polite"></span>
                     </div>
                 </div>
             </div>
@@ -1758,6 +1797,108 @@
                 console.warn('Could not load model list from /api/models:', e);
             }
         })();
+
+        // --- OpenAI settings (.env) load / save --------------------------------
+        const envBaseUrlInput = document.getElementById('openai-base-url');
+        const envApiKeyInput  = document.getElementById('openai-api-key');
+        const envSaveBtn      = document.getElementById('save-env');
+        const envSaveStatus   = document.getElementById('env-save-status');
+        let envApiKeySaved = false; // when true, input holds obfuscated placeholder
+
+        function obfuscateKey(key) {
+            // Fully mask the key with no hints of the original value.
+            return key ? '********' : '';
+        }
+
+        (async function loadEnvSettings() {
+            try {
+                const res = await fetch(serverUrl + '/api/env');
+                if (!res.ok) return;
+                const data = await res.json();
+                if (envBaseUrlInput && data.OPENAI_BASE_URL !== undefined) {
+                    envBaseUrlInput.value = data.OPENAI_BASE_URL || '';
+                }
+                if (envApiKeyInput && data.OPENAI_API_KEY) {
+                    envApiKeyInput.value = obfuscateKey(data.OPENAI_API_KEY);
+                    envApiKeyInput.type = 'text';
+                    envApiKeySaved = true;
+                }
+            } catch (e) {
+                console.warn('Could not load OpenAI settings from /api/env:', e);
+            }
+        })();
+
+        if (envApiKeyInput) {
+            envApiKeyInput.addEventListener('focus', function () {
+                // clear obfuscated placeholder so user can type a new key
+                if (envApiKeySaved) {
+                    envApiKeyInput.value = '';
+                    envApiKeyInput.type = 'password';
+                    envApiKeySaved = false;
+                }
+            });
+        }
+
+        if (envSaveBtn) {
+            envSaveBtn.addEventListener('click', async function () {
+                if (!envBaseUrlInput || !envApiKeyInput) return;
+                const baseUrl = envBaseUrlInput.value.trim();
+                // if the key field still holds the obfuscated placeholder, send empty
+                // so the backend keeps the existing key unchanged.
+                const apiKey = envApiKeySaved ? '' : envApiKeyInput.value.trim();
+                if (!envSaveStatus) return;
+                envSaveStatus.textContent = 'Saving...';
+                try {
+                    const res = await fetch(serverUrl + '/api/env', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            OPENAI_BASE_URL: baseUrl,
+                            OPENAI_API_KEY: apiKey
+                        })
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    // always show a fully-masked placeholder when a key exists
+                    if (data.OPENAI_API_KEY) {
+                        envApiKeyInput.value = '********';
+                        envApiKeyInput.type = 'text';
+                        envApiKeySaved = true;
+                    } else {
+                        envApiKeyInput.value = '';
+                        envApiKeyInput.type = 'password';
+                        envApiKeySaved = false;
+                    }
+                    if (data.OPENAI_BASE_URL !== undefined) {
+                        envBaseUrlInput.value = data.OPENAI_BASE_URL || '';
+                    }
+                    // restart the backend so the new .env values take effect
+                    if (data.changed) {
+                        envSaveStatus.textContent = 'Saved. Restarting backend...';
+                        try {
+                            await fetch(serverUrl + '/api/restart', { method: 'POST' });
+                        } catch (restartErr) {
+                            // expected: connection drops during restart
+                        }
+                        // poll until the backend is back up
+                        let backUp = false;
+                        for (let i = 0; i < 30; i++) {
+                            await new Promise(r => setTimeout(r, 1000));
+                            try {
+                                const probe = await fetch(serverUrl + '/api/env', { method: 'GET' });
+                                if (probe.ok) { backUp = true; break; }
+                            } catch (e2) { /* still down */ }
+                        }
+                        envSaveStatus.textContent = backUp ? 'Saved & restarted.' : 'Saved. Backend may still be restarting.';
+                    } else {
+                        envSaveStatus.textContent = 'Saved (no changes).';
+                    }
+                } catch (e) {
+                    console.error('Failed to save OpenAI settings:', e);
+                    envSaveStatus.textContent = 'Failed to save.';
+                }
+            });
+        }
 
         document.getElementById('generate-model').addEventListener('click', async function () {
             console.log("gen");

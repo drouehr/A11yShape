@@ -1,5 +1,7 @@
 # A11yShape
 
+This project has moved to [Text2Shape Studio](https://github.com/drouehr/text2shape-studio).
+
 ![A11yShape demo](static/img/demo.png)
 
 A11yShape is an LLM-powered 3D modeling web interface designed to support visually impaired users in creating and modifying OpenSCAD models through natural language.

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 This code defines a Flask application that serves as an API for generating STL files, saving and loading OpenSCAD code files, and performing model description and code matching tasks using OpenAI's gpt-5 models.
 
@@ -32,6 +33,7 @@ import hashlib
 from os.path import isfile, join
 import subprocess
 import shutil
+import sys
 import threading
 import webbrowser
 
@@ -402,6 +404,155 @@ def get_models():
     return jsonify({
         "light": MODEL_NANO_LIST,
         "heavy": MODEL_MINI_LIST,
+    })
+
+
+ENV_PATH = os.path.join(APP_ROOT, ".env")
+# keys the UI is allowed to read / write through /api/env
+ENV_ALLOWED_KEYS = ("OPENAI_API_KEY", "OPENAI_BASE_URL")
+
+
+def _read_env_file():
+    """Return a dict of key->value parsed from the .env file (best-effort)."""
+    values = {}
+    if not os.path.isfile(ENV_PATH):
+        return values
+    try:
+        with open(ENV_PATH, "r", encoding="utf-8") as f:
+            for raw in f:
+                line = raw.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, val = line.partition("=")
+                key = key.strip()
+                val = val.strip()
+                # strip optional surrounding quotes
+                if len(val) >= 2 and val[0] == val[-1] and val[0] in ("'", '"'):
+                    val = val[1:-1]
+                values[key] = val
+    except Exception as e:
+        logging.warning("Failed to read .env: %s", e)
+    return values
+
+
+def _write_env_file(updates):
+    """Update selected keys in the .env file, preserving other lines.
+
+    `updates` is a dict of {key: value}. A value of None means "leave unchanged".
+    Returns the resulting values dict for the updated keys.
+    """
+    # read existing lines (preserve order/comments)
+    lines = []
+    if os.path.isfile(ENV_PATH):
+        try:
+            with open(ENV_PATH, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+        except Exception as e:
+            logging.warning("Failed to read .env for update: %s", e)
+
+    existing = _read_env_file()
+    result = {}
+
+    # figure out final values for each allowed key
+    for key in ENV_ALLOWED_KEYS:
+        new_val = updates.get(key, None)
+        if new_val is None or new_val == "":
+            # keep existing value (or empty)
+            new_val = existing.get(key, "")
+        result[key] = new_val
+
+    # update or append each key in the file
+    seen_keys = set()
+    for i, raw in enumerate(lines):
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key = line.partition("=")[0].strip()
+        if key in ENV_ALLOWED_KEYS:
+            lines[i] = f"{key}={result[key]}\n"
+            seen_keys.add(key)
+
+    # append any allowed keys that were not present
+    for key in ENV_ALLOWED_KEYS:
+        if key not in seen_keys:
+            lines.append(f"{key}={result[key]}\n")
+
+    try:
+        with open(ENV_PATH, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+    except Exception as e:
+        logging.error("Failed to write .env: %s", e)
+        raise
+
+    return result
+
+
+@app.route("/api/env", methods=["GET"])
+def get_env():
+    """Return the current OpenAI base URL and (fully masked) API key from .env."""
+    values = _read_env_file()
+    api_key = values.get("OPENAI_API_KEY", "")
+    masked = "********" if api_key else ""
+    return jsonify({
+        "OPENAI_BASE_URL": values.get("OPENAI_BASE_URL", ""),
+        "OPENAI_API_KEY": masked,
+    })
+
+
+@app.route("/api/restart", methods=["POST"])
+def restart_backend():
+    """Restart the Flask backend process so new .env values take effect.
+
+    Sets a flag and shuts down the Werkzeug server cleanly; the
+    `if __name__ == "__main__"` block then re-execs the process so the
+    new .env values are loaded.
+    """
+    logging.info("Restart requested via /api/restart; shutting down to re-exec.")
+    os.environ["A11YSHAPE_RESTART_REQUESTED"] = "1"
+
+    # Shut down the Werkzeug server cleanly from a background thread so
+    # the HTTP response can be sent first.
+    def _shutdown():
+        time.sleep(0.5)
+        # werkzeug exposes shutdown via the enqueued request environ;
+        # the simplest portable approach is to raise SystemExit, which
+        # Flask's dev server will propagate and exit.
+        raise SystemExit(0)
+
+    threading.Thread(target=_shutdown, daemon=True).start()
+    return jsonify({"status": "restarting"})
+
+
+@app.route("/api/env", methods=["POST"])
+def save_env():
+    """Update OPENAI_BASE_URL / OPENAI_API_KEY in the .env file.
+
+    Request body: {"OPENAI_BASE_URL": "...", "OPENAI_API_KEY": "..."}
+    If OPENAI_API_KEY is empty/missing, the existing key is preserved.
+    Returns the resulting (masked) values.
+    """
+    req = request.get_json(silent=True) or {}
+    updates = {
+        "OPENAI_BASE_URL": (req.get("OPENAI_BASE_URL") or "").strip(),
+        "OPENAI_API_KEY": (req.get("OPENAI_API_KEY") or "").strip(),
+    }
+    try:
+        result = _write_env_file(updates)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    # reload os.environ so subsequent requests in this process use new values
+    for key, val in result.items():
+        if val:
+            os.environ[key] = val
+
+    # mask the key in the response (no hints of the original value)
+    api_key = result.get("OPENAI_API_KEY", "")
+    masked = "********" if api_key else ""
+    return jsonify({
+        "OPENAI_BASE_URL": result.get("OPENAI_BASE_URL", ""),
+        "OPENAI_API_KEY": masked,
+        "changed": bool(updates["OPENAI_BASE_URL"]) or bool(updates["OPENAI_API_KEY"]),
     })
 
 
@@ -1235,7 +1386,8 @@ Follow the template below to output the result:
 
 
 
-if __name__ == "__main__":
+def _run_server():
+    """Run the dev server; return True if the process should re-exec itself."""
     def open_browser():
         try:
             webbrowser.open(f"http://localhost:{PORT}/")
@@ -1243,5 +1395,22 @@ if __name__ == "__main__":
             logging.exception("Failed to open browser")
 
     threading.Timer(1.0, open_browser).start()
-    app.run(host="0.0.0.0", port=PORT)
+    try:
+        app.run(host="0.0.0.0", port=PORT)
+        return False
+    except SystemExit:
+        # raised by /api/restart to break out of app.run()
+        return os.environ.get("A11YSHAPE_RESTART_REQUESTED") == "1"
+
+
+if __name__ == "__main__":
+    while True:
+        should_restart = _run_server()
+        if not should_restart:
+            break
+        # /api/restart was called: clear the flag and re-exec to reload .env
+        logging.info("Re-executing backend to apply new .env settings.")
+        os.environ.pop("A11YSHAPE_RESTART_REQUESTED", None)
+        python_exe = sys.executable or "python"
+        os.execv(python_exe, [python_exe] + sys.argv)
     
